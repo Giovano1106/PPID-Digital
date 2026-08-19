@@ -234,7 +234,9 @@ begin
     insert into public.profiles (
         id,
         nama,
+        nik,
         email,
+        telepon,
         role
     )
     values (
@@ -244,8 +246,17 @@ begin
             new.raw_user_meta_data ->> 'name',
             ''
         ),
+        new.raw_user_meta_data ->> 'nik',
         new.email,
-        'pemohon'
+        coalesce(
+            new.raw_user_meta_data ->> 'telepon',
+            new.raw_user_meta_data ->> 'no_hp',
+            ''
+        ),
+        coalesce(
+            new.raw_user_meta_data ->> 'role',
+            'pemohon'
+        )
     );
 
     return new;

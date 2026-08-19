@@ -3,38 +3,53 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/app/lib/supabase/client'
 
+type Profile = {
+  nama: string
+  nik: string | null
+  email: string | null
+  telepon: string | null
+}
+
 type Permohonan = {
-  id: string
-  nama_pemohon: string
-  nik: string
-  no_hp: string
-  alamat: string
-  rincian_informasi: string
-  tujuan_penggunaan: string
+  id: number
+  user_id: string
+  jenis_informasi: string
+  deskripsi: string
   cara_memperoleh: string
-  cara_mendapatkan: string
-  lampiran_ktp: string | null
-  status: 'diajukan' | 'diproses' | 'disetujui' | 'ditolak'
-  alasan_penolakan: string | null
+  status: 'diajukan' | 'diproses' | 'dijawab' | 'ditolak'
+  jawaban_admin: string | null
+  deadline_awal: string | null
+  diperpanjang: boolean
+  alasan_perpanjangan: string | null
+  deadline_akhir: string | null
   created_at: string
+  profiles?: Profile | null
 }
 
 export default function AdminDashboardPage() {
   const supabase = createClient()
   const [listPermohonan, setListPermohonan] = useState<Permohonan[]>([])
   const [loading, setLoading] = useState(true)
-  const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [updatingId, setUpdatingId] = useState<number | null>(null)
 
-  // Fetch semua permohonan
+  // Fetch semua permohonan beserta profil pemohon
   const fetchPermohonan = async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from('permohonan')
-      .select('*')
+      .select(`
+        *,
+        profiles (
+          nama,
+          nik,
+          email,
+          telepon
+        )
+      `)
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      setListPermohonan(data)
+      setListPermohonan(data as unknown as Permohonan[])
     }
     setLoading(false)
   }
@@ -43,56 +58,138 @@ export default function AdminDashboardPage() {
     fetchPermohonan()
   }, [])
 
-  // Fungsi update status permohonan
-  const handleUpdateStatus = async (id: string, newStatus: Permohonan['status']) => {
+  // Update status (Diproses)
+  const handleSetDiproses = async (id: number) => {
     setUpdatingId(id)
-    let alasan = null
+    const { error } = await supabase
+      .from('permohonan')
+      .update({ status: 'diproses' })
+      .eq('id', id)
 
-    if (newStatus === 'ditolak') {
-      alasan = prompt('Masukkan alasan penolakan permohonan ini:')
-      if (!alasan) {
-        setUpdatingId(null)
-        return
-      }
+    if (error) alert('Gagal memperbarui status: ' + error.message)
+    else fetchPermohonan()
+    setUpdatingId(null)
+  }
+
+  // Jawab permohonan (Dijawab)
+  const handleJawab = async (id: number) => {
+    const jawaban = prompt('Masukkan teks jawaban / tautan dokumen untuk pemohon:')
+    if (!jawaban || !jawaban.trim()) return
+
+    setUpdatingId(id)
+    const { error } = await supabase
+      .from('permohonan')
+      .update({
+        status: 'dijawab',
+        jawaban_admin: jawaban.trim(),
+      })
+      .eq('id', id)
+
+    if (error) alert('Gagal mengirim jawaban: ' + error.message)
+    else fetchPermohonan()
+    setUpdatingId(null)
+  }
+
+  // Tolak permohonan (Ditolak)
+  const handleTolak = async (id: number) => {
+    const alasan = prompt('Masukkan alasan penolakan permohonan ini:')
+    if (!alasan || !alasan.trim()) return
+
+    setUpdatingId(id)
+    const { error } = await supabase
+      .from('permohonan')
+      .update({
+        status: 'ditolak',
+        jawaban_admin: `[DITOLAK] Alasan: ${alasan.trim()}`,
+      })
+      .eq('id', id)
+
+    if (error) alert('Gagal menolak permohonan: ' + error.message)
+    else fetchPermohonan()
+    setUpdatingId(null)
+  }
+
+  // Perpanjang SLA (+7 Hari Kerja)
+  const handlePerpanjangSLA = async (item: Permohonan) => {
+    const alasan = prompt('Masukkan alasan perpanjangan waktu SLA (+7 hari kerja):')
+    if (!alasan || !alasan.trim()) return
+
+    setUpdatingId(item.id)
+
+    // Hitung deadline akhir (+7 hari kerja dari deadline_awal)
+    const baseDate = new Date(item.deadline_awal || item.created_at)
+    let count = 0
+    const newDeadline = new Date(baseDate)
+    while (count < 7) {
+      newDeadline.setDate(newDeadline.getDate() + 1)
+      const day = newDeadline.getDay()
+      if (day !== 0 && day !== 6) count++
     }
+    const deadlineAkhirStr = newDeadline.toISOString().split('T')[0]
 
     const { error } = await supabase
       .from('permohonan')
       .update({
-        status: newStatus,
-        alasan_penolakan: alasan,
+        diperpanjang: true,
+        alasan_perpanjangan: alasan.trim(),
+        deadline_akhir: deadlineAkhirStr,
       })
-      .eq('id', id)
+      .eq('id', item.id)
 
-    if (error) {
-      alert('Gagal memperbarui status: ' + error.message)
-    } else {
-      fetchPermohonan()
-    }
+    if (error) alert('Gagal memperpanjang SLA: ' + error.message)
+    else fetchPermohonan()
     setUpdatingId(null)
   }
 
+  // Hitung statistik ringkas
+  const countDiajukan = listPermohonan.filter((p) => p.status === 'diajukan').length
+  const countDiproses = listPermohonan.filter((p) => p.status === 'diproses').length
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      {/* HEADER DASHBOARD */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Kelola Permohonan Informasi</h1>
-          <p className="text-sm text-gray-600">
-            Daftar seluruh permohonan informasi publik yang diajukan oleh pemohon.
+          <h1 className="text-2xl font-black text-slate-900">Kelola Permohonan Informasi</h1>
+          <p className="text-sm text-slate-600 mt-1">
+            Tinjau permohonan masuk, berikan jawaban resmi, dan kelola SLA.
           </p>
         </div>
         <button
           onClick={fetchPermohonan}
-          className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition"
         >
-          Refresh Data
+          🔄 Refresh Data
         </button>
       </div>
 
+      {/* STATS BADGES */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+          <p className="text-xs font-bold uppercase text-slate-400">Total Permohonan</p>
+          <p className="text-2xl font-black text-slate-900 mt-1">{listPermohonan.length}</p>
+        </div>
+        <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 shadow-sm">
+          <p className="text-xs font-bold uppercase text-amber-700">Perlu Diproses</p>
+          <p className="text-2xl font-black text-amber-900 mt-1">{countDiajukan}</p>
+        </div>
+        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 shadow-sm">
+          <p className="text-xs font-bold uppercase text-blue-700">Sedang Diproses</p>
+          <p className="text-2xl font-black text-blue-900 mt-1">{countDiproses}</p>
+        </div>
+        <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 shadow-sm">
+          <p className="text-xs font-bold uppercase text-emerald-700">Selesai / Dijawab</p>
+          <p className="text-2xl font-black text-emerald-900 mt-1">
+            {listPermohonan.filter((p) => p.status === 'dijawab').length}
+          </p>
+        </div>
+      </div>
+
+      {/* LIST PERMOHONAN */}
       {loading ? (
-        <div className="p-8 text-center text-gray-500">Memuat data permohonan...</div>
+        <div className="p-8 text-center text-slate-500 font-medium">Memuat data permohonan...</div>
       ) : listPermohonan.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-12 text-center text-gray-500">
+        <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center text-slate-500 font-medium">
           Belum ada permohonan informasi yang masuk.
         </div>
       ) : (
@@ -100,18 +197,23 @@ export default function AdminDashboardPage() {
           {listPermohonan.map((item) => (
             <div
               key={item.id}
-              className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition"
             >
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b pb-4">
+              {/* HEADER KARTU */}
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-bold text-gray-900">{item.nama_pemohon}</h2>
-                    <span className="text-xs bg-gray-100 px-2.5 py-1 rounded-md text-gray-600">
-                      NIK: {item.nik}
-                    </span>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      {item.profiles?.nama || 'Pemohon'}
+                    </h2>
+                    {item.profiles?.nik && (
+                      <span className="text-xs bg-slate-100 px-2.5 py-1 rounded-md text-slate-600 font-mono">
+                        NIK: {item.profiles.nik}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    No HP/WA: {item.no_hp} | Diajukan pada:{' '}
+                  <p className="text-xs text-slate-500 mt-1">
+                    Email: {item.profiles?.email || '-'} | WA/Telp: {item.profiles?.telepon || '-'} | Diajukan:{' '}
                     {new Date(item.created_at).toLocaleDateString('id-ID', {
                       day: 'numeric',
                       month: 'long',
@@ -120,69 +222,97 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
 
-                {/* BADGE STATUS */}
-                <div className="flex items-center gap-2">
+                {/* BADGE STATUS & SLA */}
+                <div className="flex flex-col items-end gap-1">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
-                      item.status === 'disetujui'
-                        ? 'bg-green-100 text-green-700'
+                    className={`rounded-full px-3 py-1 text-xs font-black uppercase ${
+                      item.status === 'dijawab'
+                        ? 'bg-emerald-100 text-emerald-800'
                         : item.status === 'ditolak'
-                        ? 'bg-red-100 text-red-700'
+                        ? 'bg-rose-100 text-rose-800'
                         : item.status === 'diproses'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-blue-100 text-blue-700'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-blue-100 text-blue-800'
                     }`}
                   >
                     {item.status}
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Deadline SLA: {item.deadline_akhir || item.deadline_awal || '-'}
                   </span>
                 </div>
               </div>
 
               {/* DETAIL PERMOHONAN */}
-              <div className="mt-4 grid gap-4 md:grid-cols-2 text-sm">
+              <div className="mt-4 text-sm space-y-2">
                 <div>
-                  <p className="font-semibold text-gray-700">Rincian Informasi:</p>
-                  <p className="text-gray-600 mt-1">{item.rincian_informasi}</p>
+                  <span className="inline-block bg-blue-50 text-[#0e4891] font-bold text-xs px-2.5 py-0.5 rounded-md mb-1">
+                    {item.jenis_informasi}
+                  </span>
+                  <p className="font-bold text-slate-800">Deskripsi / Rincian Kebutuhan:</p>
+                  <p className="text-slate-600 whitespace-pre-line leading-relaxed mt-0.5">
+                    {item.deskripsi}
+                  </p>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-700">Tujuan Penggunaan:</p>
-                  <p className="text-gray-600 mt-1">{item.tujuan_penggunaan}</p>
-                </div>
+                <p className="text-xs text-slate-500 italic">
+                  Cara Memperoleh: {item.cara_memperoleh}
+                </p>
               </div>
 
-              {item.alasan_penolakan && (
-                <div className="mt-4 rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200">
-                  <strong>Alasan Penolakan:</strong> {item.alasan_penolakan}
+              {/* JAWABAN ADMIN (JIKA ADA) */}
+              {item.jawaban_admin && (
+                <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs">
+                  <p className="font-bold text-slate-900">Jawaban Admin Saat Ini:</p>
+                  <p className="text-slate-700 whitespace-pre-line mt-1">{item.jawaban_admin}</p>
                 </div>
               )}
 
-              {/* ACTION BUTTONS ADMIN */}
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t pt-4">
-                <span className="text-xs text-gray-500">
-                  Cara Memperoleh: {item.cara_memperoleh.replace('_', ' ')}
-                </span>
+              {/* ALASAN PERPANJANGAN (JIKA ADA) */}
+              {item.diperpanjang && item.alasan_perpanjangan && (
+                <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
+                  <strong>Status Perpanjangan SLA:</strong> Diperpanjang 7 hari kerja ({item.alasan_perpanjangan})
+                </div>
+              )}
+
+              {/* ACTION BUTTONS */}
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                <div className="flex flex-wrap gap-2">
+                  {!item.diperpanjang && item.status !== 'dijawab' && item.status !== 'ditolak' && (
+                    <button
+                      disabled={updatingId === item.id}
+                      onClick={() => handlePerpanjangSLA(item)}
+                      className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      ⏱️ Perpanjang SLA (+7 Hari)
+                    </button>
+                  )}
+                </div>
 
                 <div className="flex flex-wrap gap-2">
+                  {item.status === 'diajukan' && (
+                    <button
+                      disabled={updatingId === item.id}
+                      onClick={() => handleSetDiproses(item.id)}
+                      className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-50"
+                    >
+                      Proses Permohonan
+                    </button>
+                  )}
+
                   <button
                     disabled={updatingId === item.id}
-                    onClick={() => handleUpdateStatus(item.id, 'diproses')}
-                    className="rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-yellow-600 disabled:opacity-50"
+                    onClick={() => handleJawab(item.id)}
+                    className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    Proses
+                    💬 Jawab Permohonan
                   </button>
+
                   <button
                     disabled={updatingId === item.id}
-                    onClick={() => handleUpdateStatus(item.id, 'disetujui')}
-                    className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                    onClick={() => handleTolak(item.id)}
+                    className="rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50"
                   >
-                    Setujui
-                  </button>
-                  <button
-                    disabled={updatingId === item.id}
-                    onClick={() => handleUpdateStatus(item.id, 'ditolak')}
-                    className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                  >
-                    Tolak
+                    ❌ Tolak
                   </button>
                 </div>
               </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/client'
 
 export default function FormPermohonanPage() {
@@ -9,21 +10,17 @@ export default function FormPermohonanPage() {
   const supabase = createClient()
 
   const [form, setForm] = useState({
-    nama_pemohon: '',
-    nik: '',
-    no_hp: '',
-    alamat: '',
-    rincian_informasi: '',
-    tujuan_penggunaan: '',
-    cara_memperoleh: 'melihat_membaca',
-    cara_mendapatkan: 'salinan_cetak',
+    jenis_informasi: 'Informasi Berkala',
+    deskripsi: '',
+    cara_memperoleh: 'Melihat / Membaca / Mendengarkan',
   })
 
-  const [fileKtp, setFileKtp] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
@@ -32,7 +29,9 @@ export default function FormPermohonanPage() {
     setLoading(true)
     setErrorMsg('')
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
     if (!user) {
       setErrorMsg('Sesi Anda telah berakhir. Silakan login kembali.')
@@ -40,43 +39,27 @@ export default function FormPermohonanPage() {
       return
     }
 
-    let fileUrl = null
-
-    // 1. Upload KTP ke Supabase Storage
-    if (fileKtp) {
-      const fileExt = fileKtp.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('berkas-ktp')
-        .upload(fileName, fileKtp)
-
-      if (uploadError) {
-        setErrorMsg(`Gagal mengunggah file KTP: ${uploadError.message}`)
-        setLoading(false)
-        return
+    // Hitung SLA 10 Hari Kerja dari hari ini
+    const now = new Date()
+    let count = 0
+    const deadline = new Date(now)
+    while (count < 10) {
+      deadline.setDate(deadline.getDate() + 1)
+      const day = deadline.getDay()
+      if (day !== 0 && day !== 6) {
+        count++
       }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('berkas-ktp')
-        .getPublicUrl(fileName)
-
-      fileUrl = publicUrlData.publicUrl
     }
+    const deadlineAwalStr = deadline.toISOString().split('T')[0]
 
-    // 2. Simpan permohonan ke Database
+    // Simpan permohonan ke Database sesuai skema PRD
     const { error: insertError } = await supabase.from('permohonan').insert({
       user_id: user.id,
-      nama_pemohon: form.nama_pemohon,
-      nik: form.nik,
-      no_hp: form.no_hp,
-      alamat: form.alamat,
-      rincian_informasi: form.rincian_informasi,
-      tujuan_penggunaan: form.tujuan_penggunaan,
+      jenis_informasi: form.jenis_informasi,
+      deskripsi: form.deskripsi,
       cara_memperoleh: form.cara_memperoleh,
-      cara_mendapatkan: form.cara_mendapatkan,
-      lampiran_ktp: fileUrl,
       status: 'diajukan',
+      deadline_awal: deadlineAwalStr,
     })
 
     if (insertError) {
@@ -89,13 +72,21 @@ export default function FormPermohonanPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-3xl mx-auto py-8 px-4">
+      {/* Navigation link back */}
+      <Link
+        href="/permohonan-saya"
+        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0e4891] hover:underline mb-6"
+      >
+        ← Kembali ke Riwayat Permohonan
+      </Link>
+
       {/* Header Form CIKASDA */}
       <div className="bg-[#0e4891] rounded-2xl p-6 md:p-8 text-white shadow-lg mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400 opacity-10 rounded-full blur-2xl"></div>
         <div className="inline-block w-12 h-1 bg-amber-400 mb-3 rounded-full"></div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-wide">
-          FORMULIR PERMOHONAN INFORMASI PUBLIK
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-wide uppercase">
+          Formulir Permohonan Informasi
         </h1>
         <p className="text-sm text-blue-100 mt-1 font-medium">
           Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah
@@ -109,160 +100,63 @@ export default function FormPermohonanPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* SECTION 1: IDENTITAS PEMOHON */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <div className="flex items-center gap-3 border-b-2 border-[#0e4891] pb-2 mb-6">
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#0e4891] text-white text-xs font-bold">1</span>
-              <h2 className="text-lg font-bold text-slate-900 tracking-wide uppercase">Identitas Pemohon</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                  Nama Lengkap (Sesuai KTP) <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="nama_pemohon"
-                  required
-                  value={form.nama_pemohon}
-                  onChange={handleChange}
-                  placeholder="Masukkan nama lengkap"
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                  NIK (KTP) <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="nik"
-                  required
-                  value={form.nik}
-                  onChange={handleChange}
-                  placeholder="16 digit angka NIK"
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                  No. WhatsApp / Telepon <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="no_hp"
-                  required
-                  value={form.no_hp}
-                  onChange={handleChange}
-                  placeholder="0812xxxxxxxx"
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                  Unggah File KTP (JPG / PNG / PDF) <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="file"
-                  required
-                  accept="image/*,.pdf"
-                  onChange={(e) => setFileKtp(e.target.files?.[0] || null)}
-                  className="w-full rounded-lg border-2 border-slate-300 p-2 text-sm font-medium text-slate-800 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-[#0e4891] file:text-white file:text-xs file:font-bold hover:file:bg-[#0a366f]"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                  Alamat Lengkap <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  name="alamat"
-                  required
-                  rows={2}
-                  value={form.alamat}
-                  onChange={handleChange}
-                  placeholder="Alamat domisili lengkap sesuai KTP"
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
-                />
-              </div>
-            </div>
+            <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
+              Kategori Jenis Informasi Publik <span className="text-red-600">*</span>
+            </label>
+            <select
+              name="jenis_informasi"
+              value={form.jenis_informasi}
+              onChange={handleChange}
+              className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-semibold text-slate-900 bg-white focus:border-[#0e4891] focus:outline-none"
+            >
+              <option value="Informasi Berkala">Informasi Berkala</option>
+              <option value="Informasi Serta Merta">Informasi Serta Merta</option>
+              <option value="Informasi Setiap Saat">Informasi Setiap Saat</option>
+              <option value="Informasi Dikecualikan">Informasi Dikecualikan</option>
+            </select>
           </div>
 
-          {/* SECTION 2: RINCIAN PERMOHONAN */}
           <div>
-            <div className="flex items-center gap-3 border-b-2 border-[#0e4891] pb-2 mb-6">
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#0e4891] text-white text-xs font-bold">2</span>
-              <h2 className="text-lg font-bold text-slate-900 tracking-wide uppercase">Rincian Informasi Publik</h2>
-            </div>
+            <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
+              Deskripsi & Rincian Kebutuhan Informasi <span className="text-red-600">*</span>
+            </label>
+            <textarea
+              name="deskripsi"
+              required
+              rows={5}
+              value={form.deskripsi}
+              onChange={handleChange}
+              placeholder="Jelaskan dokumen/informasi publik yang Anda minta secara spesifik beserta tujuan penggunaannya..."
+              className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
+            />
+          </div>
 
-            <div className="space-y-6">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                  Rincian Informasi yang Dibutuhkan <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  name="rincian_informasi"
-                  required
-                  rows={4}
-                  value={form.rincian_informasi}
-                  onChange={handleChange}
-                  placeholder="Jelaskan secara spesifik dokumen atau data informasi publik yang Anda minta..."
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
-                />
-              </div>
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
+              Cara Memperoleh / Bentuk Salinan <span className="text-red-600">*</span>
+            </label>
+            <select
+              name="cara_memperoleh"
+              value={form.cara_memperoleh}
+              onChange={handleChange}
+              className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-semibold text-slate-900 bg-white focus:border-[#0e4891] focus:outline-none"
+            >
+              <option value="Melihat / Membaca / Mendengarkan">
+                Melihat / Membaca / Mendengarkan
+              </option>
+              <option value="Salinan Elektronik (Softcopy / Digital)">
+                Salinan Elektronik (Softcopy / Digital)
+              </option>
+              <option value="Salinan Cetak (Hardcopy)">
+                Salinan Cetak (Hardcopy)
+              </option>
+            </select>
+          </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                  Tujuan Penggunaan Informasi <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  name="tujuan_penggunaan"
-                  required
-                  rows={3}
-                  value={form.tujuan_penggunaan}
-                  onChange={handleChange}
-                  placeholder="Sebutkan tujuan penggunaan informasi tersebut (misal: Penelitian Akademis / Bahan Analisis)..."
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                    Cara Memperoleh Informasi
-                  </label>
-                  <select
-                    name="cara_memperoleh"
-                    value={form.cara_memperoleh}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-semibold text-slate-900 bg-white focus:border-[#0e4891] focus:outline-none"
-                  >
-                    <option value="melihat_membaca">Melihat / Membaca / Mendengarkan</option>
-                    <option value="mendapatkan_salinan">Mendapatkan Salinan Informasi</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                    Bentuk Salinan Informasi
-                  </label>
-                  <select
-                    name="cara_mendapatkan"
-                    value={form.cara_mendapatkan}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-semibold text-slate-900 bg-white focus:border-[#0e4891] focus:outline-none"
-                  >
-                    <option value="salinan_cetak">Salinan Cetak (Hardcopy)</option>
-                    <option value="salinan_elektronik">Salinan Elektronik (Softcopy / Digital)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+          <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 text-xs text-blue-900 leading-relaxed">
+            ℹ️ <strong>Batas Waktu Pengolahan (SLA):</strong> Sesuai UU KIP No. 14 Tahun 2008, permohonan ini memiliki batas waktu jawaban maksimal <strong>10 hari kerja</strong> sejak diajukan.
           </div>
 
           <button

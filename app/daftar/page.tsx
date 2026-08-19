@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [noHp, setNoHp] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -22,30 +23,37 @@ export default function RegisterPage() {
     setLoading(true)
     setErrorMsg('')
 
-    // 1. Sign Up Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Validasi NIK 16 Digit
+    const cleanNik = nik.trim()
+    if (!/^\d{16}$/.test(cleanNik)) {
+      setErrorMsg('NIK harus terdiri dari 16 digit angka.')
+      setLoading(false)
+      return
+    }
+
+    if (!consent) {
+      setErrorMsg('Anda wajib menyetujui persetujuan pemrosesan data pribadi.')
+      setLoading(false)
+      return
+    }
+
+    // 1. Sign Up Supabase Auth dengan User Metadata
+    const { error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          nama: nama,
+          nik: cleanNik,
+          telepon: noHp,
+        },
+      },
     })
 
     if (authError) {
       setErrorMsg(`Pendaftaran gagal: ${authError.message}`)
       setLoading(false)
       return
-    }
-
-    // 2. Simpan profil tambahan ke tabel profiles
-    if (authData.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: authData.user.id,
-        nama_lengkap: nama,
-        nik: nik,
-        no_hp: noHp,
-      })
-
-      if (profileError) {
-        console.error('Gagal menyimpan profil:', profileError.message)
-      }
     }
 
     router.push('/permohonan-saya')
@@ -100,8 +108,9 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   required
+                  maxLength={16}
                   value={nik}
-                  onChange={(e) => setNik(e.target.value)}
+                  onChange={(e) => setNik(e.target.value.replace(/\D/g, ''))}
                   placeholder="16 digit NIK"
                   className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
                 />
@@ -149,6 +158,20 @@ export default function RegisterPage() {
                 placeholder="Minimal 6 karakter"
                 className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
               />
+            </div>
+
+            <div className="flex items-start gap-2 pt-2">
+              <input
+                type="checkbox"
+                id="consent"
+                required
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-[#0e4891] focus:ring-[#0e4891]"
+              />
+              <label htmlFor="consent" className="text-xs text-slate-600 leading-snug">
+                Saya menyetujui data pribadi saya (termasuk NIK) diproses oleh PPID CIKASDA untuk keperluan layanan informasi publik sesuai UU Pelindungan Data Pribadi.
+              </label>
             </div>
 
             <button
