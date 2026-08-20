@@ -41,7 +41,7 @@ export default function LoginPage() {
       targetEmail = profileData.email
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: targetEmail,
       password,
     })
@@ -50,7 +50,23 @@ export default function LoginPage() {
       setErrorMsg('Email/NIK atau kata sandi tidak cocok. Silakan periksa kembali.')
       setLoading(false)
     } else {
-      router.push('/permohonan-saya')
+      // Cek role user setelah login berhasil
+      if (authData?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', authData.user.id)
+          .single()
+
+        if (profile?.role === 'admin') {
+          router.push('/admin')
+        } else {
+          router.push('/permohonan-saya')
+        }
+      } else {
+        router.push('/permohonan-saya')
+      }
+      
       router.refresh()
     }
   }
