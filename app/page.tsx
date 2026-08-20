@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/app/lib/supabase/client'
+
+const supabase = createClient()
 
 type KontenLanding = {
   id: number
@@ -13,10 +16,9 @@ type KontenLanding = {
 }
 
 export default function HomePage() {
-  const supabase = createClient()
   const [listKonten, setListKonten] = useState<KontenLanding[]>([])
 
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const fetchUserAndKonten = async () => {
@@ -116,7 +118,7 @@ export default function HomePage() {
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
-              href="/permohonan-saya/ajukan"
+              href={user ? '/permohonan-saya/ajukan' : '/login'}
               className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-extrabold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 text-sm tracking-wider uppercase"
             >
               Ajukan Permohonan Informasi
