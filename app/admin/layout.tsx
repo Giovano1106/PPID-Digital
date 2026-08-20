@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
+import AdminNav from '@/components/AdminNav'
 
 export default async function AdminLayout({
   children,
@@ -29,49 +30,43 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta text-slate-900 flex flex-col md:flex-row antialiased selection:bg-[#0e4891] selection:text-white">
       {/* SIDEBAR ADMIN */}
-      <aside className="w-full md:w-64 bg-slate-900 text-white p-6 flex flex-col justify-between shrink-0">
+      <aside className="w-full md:w-64 bg-white border-r border-slate-200 p-6 flex flex-col justify-between shrink-0 shadow-sm">
         <div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="h-8 w-8 rounded-lg bg-[#0e4891] flex items-center justify-center font-bold text-amber-400">
+          <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-100">
+            <div className="h-10 w-10 rounded-xl bg-[#0e4891] flex items-center justify-center font-bold text-white text-lg shadow-sm">
               P
             </div>
-            <div>
-              <span className="font-extrabold text-base block">Admin PPID</span>
-              <span className="text-[11px] text-slate-400 block truncate">{profile.nama || user.email}</span>
+            <div className="overflow-hidden">
+              <span className="font-extrabold text-sm tracking-tight text-slate-900 block leading-tight truncate">
+                Admin Console
+              </span>
+              <span className="text-xs text-slate-500 font-medium block truncate max-w-[140px] mt-0.5">
+                {profile.nama || user.email}
+              </span>
             </div>
           </div>
 
-          <nav className="space-y-2">
-            <Link
-              href="/admin"
-              className="block rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition"
-            >
-              📋 Kelola Permohonan
-            </Link>
-            <Link
-              href="/admin/konten"
-              className="block rounded-lg px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              🖼️ Kelola Landing Page
-            </Link>
-          </nav>
+          {/* ACTIVE NAV LINK COMPONENT */}
+          <AdminNav />
         </div>
 
-        <div className="pt-6 border-t border-slate-800">
+        <div className="pt-6 border-t border-slate-100">
           <Link
             href="/"
-            className="text-xs text-slate-400 hover:text-white transition block mb-2"
+            className="text-xs font-bold text-slate-500 hover:text-[#0e4891] transition-colors flex items-center gap-2"
           >
-            ← Halaman Depan Web
+            ← Kembali ke Web Depan
           </Link>
         </div>
       </aside>
 
       {/* CONTENT AREA */}
       <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-        {children}
+        <div className="max-w-6xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   )

@@ -9,7 +9,7 @@ export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('') // Bisa Email atau NIK
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -19,13 +19,35 @@ export default function LoginPage() {
     setLoading(true)
     setErrorMsg('')
 
+    let targetEmail = identifier.trim()
+
+    // Cek apakah input berupa NIK (16 digit angka)
+    const isNik = /^\d{16}$/.test(targetEmail)
+
+    if (isNik) {
+      // Cari email yang terikat dengan NIK tersebut di tabel profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('nik', targetEmail)
+        .maybeSingle()
+
+      if (profileError || !profileData || !profileData.email) {
+        setErrorMsg('NIK tidak ditemukan dalam sistem. Silakan periksa kembali.')
+        setLoading(false)
+        return
+      }
+
+      targetEmail = profileData.email
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: targetEmail,
       password,
     })
 
     if (error) {
-      setErrorMsg('Email atau kata sandi tidak cocok. Silakan periksa kembali.')
+      setErrorMsg('Email/NIK atau kata sandi tidak cocok. Silakan periksa kembali.')
       setLoading(false)
     } else {
       router.push('/permohonan-saya')
@@ -34,48 +56,50 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-        {/* Header Tema CIKASDA */}
-        <div className="bg-[#0e4891] p-8 text-center text-white relative">
-          <div className="inline-block w-12 h-1 bg-amber-400 mb-3 rounded-full"></div>
-          <h1 className="text-2xl font-extrabold tracking-wide uppercase">PPID DIGITAL</h1>
-          <p className="text-xs text-blue-100 mt-1 font-medium">
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Header CIKASDA */}
+        <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
+          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3 shadow-inner">
+            P
+          </div>
+          <h1 className="text-xl font-extrabold tracking-wide uppercase">PPID DIGITAL</h1>
+          <p className="text-xs text-blue-100 mt-1 font-medium leading-relaxed">
             Dinas Cipta Karya & Sumber Daya Air Provinsi Sulawesi Tengah
           </p>
         </div>
 
         {/* Form Container */}
         <div className="p-8">
-          <h2 className="text-xl font-bold text-slate-900 mb-1">Masuk ke Akun</h2>
-          <p className="text-sm text-slate-600 mb-6">
-            Silakan masuk untuk mengajukan atau memantau permohonan informasi.
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Masuk ke Akun</h2>
+          <p className="text-xs text-slate-600 mb-6 font-medium">
+            Masuk menggunakan Alamat Email atau 16 Digit NIK terdaftar.
           </p>
 
           {errorMsg && (
-            <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4 text-xs font-semibold text-red-700">
+            <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700">
               {errorMsg}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                Alamat Email <span className="text-red-600">*</span>
+              <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                Email / NIK (16 Digit) <span className="text-rose-600">*</span>
               </label>
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="contoh@gmail.com"
-                className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="contoh@gmail.com atau 720101XXXXXXXXXX"
+                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-2">
-                Kata Sandi <span className="text-red-600">*</span>
+              <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                Kata Sandi <span className="text-rose-600">*</span>
               </label>
               <input
                 type="password"
@@ -83,24 +107,24 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
+                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-md transition active:scale-98 disabled:opacity-50 mt-2"
+              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-50 mt-2 focus:outline-none focus:ring-4 focus:ring-[#0e4891]/20"
             >
               {loading ? 'Memproses Masuk...' : 'MASUK SEKARANG'}
             </button>
           </form>
 
-          <div className="mt-8 border-t border-slate-200 pt-6 text-center text-sm font-medium text-slate-600">
+          <div className="mt-8 border-t border-slate-100 pt-6 text-center text-xs font-semibold text-slate-600">
             Belum punya akun pemohon?{' '}
             <Link
               href="/daftar"
-              className="font-bold text-[#0e4891] hover:underline hover:text-[#0a366f]"
+              className="font-bold text-[#0e4891] hover:underline"
             >
               Daftar Akun Baru
             </Link>

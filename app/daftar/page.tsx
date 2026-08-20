@@ -9,101 +9,144 @@ export default function RegisterPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [nama, setNama] = useState('')
+  const [namaLengkap, setNamaLengkap] = useState('')
   const [nik, setNik] = useState('')
-  const [noHp, setNoHp] = useState('')
+  const [telepon, setTelepon] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [consent, setConsent] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
+
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setErrorMsg('')
+    setSuccessMsg('')
 
-    // Validasi NIK 16 Digit
-    const cleanNik = nik.trim()
-    if (!/^\d{16}$/.test(cleanNik)) {
-      setErrorMsg('NIK harus terdiri dari 16 digit angka.')
+    // 1. Validasi Nama Lengkap (hanya huruf, spasi, petik tunggal, dan titik)
+    const namaClean = namaLengkap.trim()
+    if (namaClean.length < 3) {
+      setErrorMsg('Nama lengkap minimal harus terdiri dari 3 karakter.')
       setLoading(false)
       return
     }
 
-    if (!consent) {
-      setErrorMsg('Anda wajib menyetujui persetujuan pemrosesan data pribadi.')
+    const nameRegex = /^[a-zA-Z\s'\.]+$/
+    if (!nameRegex.test(namaClean)) {
+      setErrorMsg('Nama lengkap hanya boleh berisi huruf, spasi, titik (.), dan tanda petik (\'). Simbol lain dan angka tidak diperbolehkan.')
       setLoading(false)
       return
     }
 
-    // 1. Sign Up Supabase Auth dengan User Metadata
-    const { error: authError } = await supabase.auth.signUp({
-      email,
+    // 2. Validasi NIK (harus 16 digit angka)
+    if (!/^\d{16}$/.test(nik)) {
+      setErrorMsg('NIK harus terdiri dari tepat 16 digit angka.')
+      setLoading(false)
+      return
+    }
+
+    // 3. Validasi Nomor Telepon / WA
+    const cleanTelepon = telepon.trim().replace(/\s+/g, '')
+    const phoneRegex = /^(\+62|62|0)8[1-9][0-9]{7,11}$/
+    if (!phoneRegex.test(cleanTelepon)) {
+      setErrorMsg('Nomor telepon/WA tidak valid. Masukkan nomor yang diawali 08... atau 628... (10-14 digit).')
+      setLoading(false)
+      return
+    }
+
+    // 4. Validasi Kata Sandi
+    if (password.length < 6) {
+      setErrorMsg('Kata sandi minimal terdiri dari 6 karakter.')
+      setLoading(false)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Konfirmasi kata sandi tidak cocok dengan kata sandi yang dimasukkan.')
+      setLoading(false)
+      return
+    }
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
       options: {
         data: {
-          nama: nama,
-          nik: cleanNik,
-          telepon: noHp,
+          nama: namaClean,
+          nik: nik,
+          telepon: cleanTelepon,
+          role: 'pemohon',
         },
       },
     })
 
-    if (authError) {
-      setErrorMsg(`Pendaftaran gagal: ${authError.message}`)
-      setLoading(false)
-      return
+    if (signUpError) {
+      setErrorMsg(signUpError.message)
+    } else {
+      setSuccessMsg(
+        'Pendaftaran berhasil! Silakan masuk ke akun Anda.'
+      )
+      setTimeout(() => {
+        router.push('/login')
+      }, 2500)
     }
-
-    router.push('/permohonan-saya')
-    router.refresh()
+    setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 py-10">
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-        {/* Header Tema CIKASDA */}
-        <div className="bg-[#0e4891] p-8 text-center text-white relative">
-          <div className="inline-block w-12 h-1 bg-amber-400 mb-3 rounded-full"></div>
-          <h1 className="text-2xl font-extrabold tracking-wide uppercase">PENDAFTARAN PEMOHON</h1>
-          <p className="text-xs text-blue-100 mt-1 font-medium">
-            Layanan Informasi Publik CIKASDA Sulawesi Tengah
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex items-center justify-center p-6 py-12">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Header CIKASDA */}
+        <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
+          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3 shadow-inner">
+            P
+          </div>
+          <h1 className="text-xl font-extrabold tracking-wide uppercase">Pendaftaran Pemohon PPID</h1>
+          <p className="text-xs text-blue-100 mt-1 font-medium leading-relaxed">
+            Dinas Cipta Karya & Sumber Daya Air Provinsi Sulawesi Tengah
           </p>
         </div>
 
-        {/* Form Container */}
         <div className="p-8">
-          <h2 className="text-xl font-bold text-slate-900 mb-1">Buat Akun Pemohon Baru</h2>
-          <p className="text-sm text-slate-600 mb-6">
-            Lengkapi data diri Anda sesuai KTP untuk dapat menggunakan layanan.
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Form Registrasi Akun Baru</h2>
+          <p className="text-xs text-slate-600 mb-6 font-medium">
+            Lengkapi data identitas pemohon di bawah ini dengan benar.
           </p>
 
           {errorMsg && (
-            <div className="mb-6 rounded-xl bg-red-50 border border-red-200 p-4 text-xs font-semibold text-red-700">
-              {errorMsg}
+            <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 leading-relaxed">
+              ⚠️ {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="mb-6 rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-semibold text-emerald-700 leading-relaxed">
+              ✅ {successMsg}
             </div>
           )}
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-1.5">
-                Nama Lengkap (Sesuai KTP) <span className="text-red-600">*</span>
+              <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
+                Nama Lengkap (Sesuai KTP) <span className="text-rose-600">*</span>
               </label>
               <input
                 type="text"
                 required
-                value={nama}
-                onChange={(e) => setNama(e.target.value)}
-                placeholder="Masukkan nama lengkap Anda"
-                className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
+                value={namaLengkap}
+                onChange={(e) => setNamaLengkap(e.target.value)}
+                placeholder="Contoh: Ahmad Abdullah, S.T."
+                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
               />
+              <p className="text-[11px] text-slate-500 mt-1">Hanya huruf, spasi, titik (.), dan tanda petik (\'). Tanpa simbol/angka.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-1.5">
-                  NIK (KTP) <span className="text-red-600">*</span>
+                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
+                  NIK (16 Digit) <span className="text-rose-600">*</span>
                 </label>
                 <input
                   type="text"
@@ -111,85 +154,86 @@ export default function RegisterPage() {
                   maxLength={16}
                   value={nik}
                   onChange={(e) => setNik(e.target.value.replace(/\D/g, ''))}
-                  placeholder="16 digit NIK"
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
+                  placeholder="720101XXXXXXXXXX"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-1.5">
-                  No. WhatsApp / HP <span className="text-red-600">*</span>
+                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
+                  No. Telepon / WA <span className="text-rose-600">*</span>
                 </label>
                 <input
-                  type="text"
+                  type="tel"
                   required
-                  value={noHp}
-                  onChange={(e) => setNoHp(e.target.value)}
-                  placeholder="0812xxxxxxxx"
-                  className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
+                  value={telepon}
+                  onChange={(e) => setTelepon(e.target.value)}
+                  placeholder="081234567890"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-1.5">
-                Alamat Email <span className="text-red-600">*</span>
+              <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
+                Alamat Email <span className="text-rose-600">*</span>
               </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nama@email.com"
-                className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
+                placeholder="contoh@gmail.com"
+                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-800 tracking-wider mb-1.5">
-                Kata Sandi <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimal 6 karakter"
-                className="w-full rounded-lg border-2 border-slate-300 p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:bg-blue-50/20 focus:outline-none transition"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
+                  Kata Sandi <span className="text-rose-600">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 6 karakter"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                />
+              </div>
 
-            <div className="flex items-start gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="consent"
-                required
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-[#0e4891] focus:ring-[#0e4891]"
-              />
-              <label htmlFor="consent" className="text-xs text-slate-600 leading-snug">
-                Saya menyetujui data pribadi saya (termasuk NIK) diproses oleh PPID CIKASDA untuk keperluan layanan informasi publik sesuai UU Pelindungan Data Pribadi.
-              </label>
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
+                  Ulangi Kata Sandi <span className="text-rose-600">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Sama dengan kata sandi"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-md transition active:scale-98 disabled:opacity-50 mt-4"
+              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-50 mt-4 focus:outline-none focus:ring-4 focus:ring-[#0e4891]/20"
             >
-              {loading ? 'Mendaftarkan Akun...' : 'DAFTAR AKUN PEMOHON'}
+              {loading ? 'Memproses Pendaftaran...' : 'DAFTAR SEKARANG'}
             </button>
           </form>
 
-          <div className="mt-6 border-t border-slate-200 pt-6 text-center text-sm font-medium text-slate-600">
-            Sudah memiliki akun?{' '}
+          <div className="mt-8 border-t border-slate-100 pt-6 text-center text-xs font-semibold text-slate-600">
+            Sudah punya akun?{' '}
             <Link
               href="/login"
-              className="font-bold text-[#0e4891] hover:underline hover:text-[#0a366f]"
+              className="font-bold text-[#0e4891] hover:underline"
             >
-              Masuk di Sini
+              Masuk di sini
             </Link>
           </div>
         </div>
