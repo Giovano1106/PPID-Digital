@@ -287,9 +287,9 @@ export default function HomePage() {
               <span className="w-8 h-8 bg-[#0e4891] text-white font-bold text-sm rounded-full flex items-center justify-center mx-auto mb-4">
                 2
               </span>
-              <h4 className="font-bold text-slate-900 text-sm">Isi Form & Upload KTP</h4>
+              <h4 className="font-bold text-slate-900 text-sm">Isi Form </h4>
               <p className="text-xs text-slate-600 mt-2">
-                Isi rincian informasi yang dicari beserta lampiran foto/scan KTP.
+                Isi rincian informasi yang dicari
               </p>
             </div>
 
