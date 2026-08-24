@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/app/lib/supabase/client'
 import Modal from '@/components/Modal'
+import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
 
 type Profile = {
@@ -39,8 +40,9 @@ export default function AdminDashboardPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
 
-  // State Toast
+  // State Toast & Confirm Modal
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
+  const [confirmProcessItem, setConfirmProcessItem] = useState<Permohonan | null>(null)
 
   // State Modals
   const [activeModal, setActiveModal] = useState<'jawab' | 'tolak' | 'perpanjang' | null>(null)
@@ -78,17 +80,23 @@ export default function AdminDashboardPage() {
   }
 
   // Update status (Diproses)
-  const handleSetDiproses = async (id: number) => {
-    setUpdatingId(id)
+  const openProcessModal = (item: Permohonan) => {
+    setConfirmProcessItem(item)
+  }
+
+  const executeSetDiproses = async () => {
+    if (!confirmProcessItem) return
+    setUpdatingId(confirmProcessItem.id)
     const { error } = await supabase
       .from('permohonan')
       .update({ status: 'diproses' })
-      .eq('id', id)
+      .eq('id', confirmProcessItem.id)
 
+    setConfirmProcessItem(null)
     if (error) {
       showToast('Gagal memperbarui status: ' + error.message, 'error')
     } else {
-      showToast('Status permohonan diubah menjadi DIPROSES.', 'info')
+      showToast('Status permohonan berhasil diubah menjadi DIPROSES.', 'info')
       fetchPermohonan()
     }
     setUpdatingId(null)
@@ -401,7 +409,7 @@ export default function AdminDashboardPage() {
                   {item.status === 'diajukan' && (
                     <button
                       disabled={updatingId === item.id}
-                      onClick={() => handleSetDiproses(item.id)}
+                      onClick={() => openProcessModal(item)}
                       className="rounded-xl bg-slate-800 hover:bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-50 transition-all"
                     >
                       Proses Permohonan
@@ -585,6 +593,19 @@ export default function AdminDashboardPage() {
           </div>
         </form>
       </Modal>
+
+      {/* CONFIRM PROCESS MODAL */}
+      <ConfirmModal
+        isOpen={confirmProcessItem !== null}
+        onClose={() => setConfirmProcessItem(null)}
+        onConfirm={executeSetDiproses}
+        title="Konfirmasi Proses Permohonan"
+        message={`Apakah Anda yakin ingin memproses permohonan informasi dari ${confirmProcessItem?.profiles?.nama || 'Pemohon'}? Status permohonan akan diperbarui menjadi "Diproses".`}
+        confirmText="Ya, Proses Permohonan"
+        cancelText="Batal"
+        variant="primary"
+        loading={updatingId !== null}
+      />
     </div>
   )
 }

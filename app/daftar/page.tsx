@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/client'
+import Toast, { ToastType } from '@/components/Toast'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -19,6 +20,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,12 +88,12 @@ export default function RegisterPage() {
     if (signUpError) {
       setErrorMsg(signUpError.message)
     } else {
-      setSuccessMsg(
-        'Pendaftaran berhasil! Silakan masuk ke akun Anda.'
-      )
+      const msg = 'Pendaftaran berhasil! Mengalihkan ke halaman login...'
+      setSuccessMsg(msg)
+      setToast({ message: msg, type: 'success' })
       setTimeout(() => {
         router.push('/login')
-      }, 2500)
+      }, 2000)
     }
     setLoading(false)
   }
@@ -248,6 +250,15 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

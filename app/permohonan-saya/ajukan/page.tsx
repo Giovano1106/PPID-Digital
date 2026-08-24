@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/client'
+import ConfirmModal from '@/components/ConfirmModal'
+import Toast, { ToastType } from '@/components/Toast'
 
 export default function FormPermohonanPage() {
   const router = useRouter()
@@ -17,6 +19,8 @@ export default function FormPermohonanPage() {
 
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -24,8 +28,17 @@ export default function FormPermohonanPage() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.deskripsi.trim()) {
+      setErrorMsg('Mohon isi deskripsi & rincian kebutuhan informasi.')
+      return
+    }
+    setErrorMsg('')
+    setShowConfirmModal(true)
+  }
+
+  const executeSubmit = async () => {
     setLoading(true)
     setErrorMsg('')
 
@@ -36,6 +49,7 @@ export default function FormPermohonanPage() {
     if (!user) {
       setErrorMsg('Sesi Anda telah berakhir. Silakan login kembali.')
       setLoading(false)
+      setShowConfirmModal(false)
       return
     }
 
@@ -62,12 +76,20 @@ export default function FormPermohonanPage() {
       deadline_awal: deadlineAwalStr,
     })
 
+    setShowConfirmModal(false)
+
     if (insertError) {
       setErrorMsg(`Gagal mengirim permohonan: ${insertError.message}`)
       setLoading(false)
     } else {
-      router.push('/permohonan-saya')
-      router.refresh()
+      setToast({
+        message: 'Permohonan informasi publik berhasil diajukan!',
+        type: 'success',
+      })
+      setTimeout(() => {
+        router.push('/permohonan-saya')
+        router.refresh()
+      }, 1500)
     }
   }
 
@@ -104,7 +126,7 @@ export default function FormPermohonanPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleFormSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
                 Kategori Jenis Informasi Publik <span className="text-rose-600">*</span>
@@ -173,6 +195,28 @@ export default function FormPermohonanPage() {
           </form>
         </div>
       </div>
+
+      {/* MODAL KONFIRMASI SUBMIT */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={executeSubmit}
+        title="Konfirmasi Pengiriman Permohonan"
+        message="Apakah Anda yakin data rincian kebutuhan informasi yang dimasukkan sudah benar? Permohonan akan langsung masuk ke antrean pemrosesan Admin PPID."
+        confirmText="Ya, Kirim Sekarang"
+        cancelText="Batal & Cek Lagi"
+        variant="primary"
+        loading={loading}
+      />
+
+      {/* TOAST NOTIFIKASI */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

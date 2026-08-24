@@ -5,6 +5,8 @@ import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/app/lib/supabase/client'
 import KategoriCard from '@/components/KategoriCard'
+import ConfirmModal from '@/components/ConfirmModal'
+import Toast, { ToastType } from '@/components/Toast'
 
 const supabase = createClient()
 
@@ -29,6 +31,11 @@ export default function HomePage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // State Modal Konfirmasi & Toast
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,11 +68,21 @@ export default function HomePage() {
     fetchData()
   }, [])
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true)
+  }
+
+  const confirmLogout = async () => {
+    setLoggingOut(true)
     await supabase.auth.signOut()
     setUser(null)
     setIsAdmin(false)
-    window.location.reload()
+    setShowLogoutModal(false)
+    setLoggingOut(false)
+    setToast({ message: 'Anda berhasil keluar dari akun.', type: 'info' })
+    setTimeout(() => {
+      window.location.reload()
+    }, 1200)
   }
 
   const getKontenBySection = (key: string) => {
@@ -115,7 +132,7 @@ export default function HomePage() {
                       Admin Console
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={handleLogoutClick}
                       className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shadow-sm"
                     >
                       Keluar
@@ -130,7 +147,7 @@ export default function HomePage() {
                       Riwayat Permohonan
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={handleLogoutClick}
                       className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
                     >
                       Keluar
@@ -198,7 +215,7 @@ export default function HomePage() {
                       Admin Console
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={handleLogoutClick}
                       className="w-full text-center bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-4 py-3 rounded-xl text-sm font-bold transition-all shadow-sm"
                     >
                       Keluar
@@ -219,7 +236,7 @@ export default function HomePage() {
                       Ajukan Permohonan
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={handleLogoutClick}
                       className="w-full text-center bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-4 py-3 rounded-xl text-sm font-bold transition-all mt-2"
                     >
                       Keluar
@@ -484,6 +501,28 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* CONFIRM LOGOUT MODAL */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Konfirmasi Keluar"
+        message="Apakah Anda yakin ingin keluar dari akun PPID Digital?"
+        confirmText="Keluar Akun"
+        cancelText="Batal"
+        variant="danger"
+        loading={loggingOut}
+      />
+
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }
