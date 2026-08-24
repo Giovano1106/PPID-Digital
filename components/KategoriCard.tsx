@@ -22,8 +22,8 @@ export default function KategoriCard({
           <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-slate-100 text-slate-700">
             {badge}
           </span>
-          <span className="text-xs font-bold text-slate-400">
-            {count} File
+          <span className="text-xs font-bold text-slate-500 font-mono">
+            {count} Dokumen
           </span>
         </div>
 
@@ -38,9 +38,9 @@ export default function KategoriCard({
 
       <Link
         href={href}
-        className="w-full text-center bg-slate-50 hover:bg-[#0e4891] hover:text-white border border-slate-200 text-slate-800 text-xs font-bold py-2.5 rounded-lg transition-all block mt-4"
+        className="w-full text-center bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold py-2.5 rounded-lg transition-colors block"
       >
-        Lihat Dokumen ({count}) →
+        Lihat Dokumen →
       </Link>
     </div>
   )

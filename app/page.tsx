@@ -252,27 +252,27 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 mb-8">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            Layanan Portal Resmi Informasi Publik
+            Layanan Portal Resmi Informasi Publik Digital
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] max-w-4xl mb-6">
-            Akses Layanan Informasi Publik CIKASDA Sulawesi Tengah
+            Akses Layanan Informasi Publik <span className="text-[#0e4891]">CIKASDA</span> Sulawesi Tengah
           </h1>
 
           <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-2xl mb-10">
-            Keterbukaan informasi untuk mewujudkan tata kelola pemerintahan yang transparan, akuntabel, dan partisipatif.
+            Wujud komitmen transparansi, akuntabilitas, dan pelayanan informasi terbuka bagi seluruh masyarakat Sulawesi Tengah.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href={user ? '/permohonan-saya/ajukan' : '/daftar'}
-              className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-7 py-3.5 rounded-xl transition-all shadow-md text-base"
+              className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-7 py-3.5 rounded-xl transition-colors shadow-sm text-base"
             >
               Ajukan Permohonan Sekarang
             </Link>
             <a
               href="#kategori-informasi"
-              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-7 py-3.5 rounded-xl transition-all text-base border border-slate-200"
+              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-7 py-3.5 rounded-xl transition-colors text-base border border-slate-200"
             >
               Lihat Kategori Informasi
             </a>
@@ -303,18 +303,24 @@ export default function HomePage() {
       </section>
 
       {/* KATEGORI INFORMASI (4 SEBARIS COMPONENT GRID LAYOUT) */}
-      <section id="kategori-informasi" className="py-20 px-6 max-w-7xl mx-auto">
+      <section id="kategori-informasi" className="py-24 px-6 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">
+          <span className="text-xs font-black uppercase tracking-wider text-[#0e4891] bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+            Klasifikasi Dokumen
+          </span>
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mt-3 mb-3">
             Kategori Informasi Publik
           </h2>
           <p className="text-slate-600 text-base font-medium">
-            Pilih salah satu dari 4 kategori informasi publik untuk melihat daftar dokumen resmi.
+            Pilih salah satu dari 4 kategori informasi publik untuk mengakses dokumen resmi dan laporan publik.
           </p>
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-slate-500 font-medium">Memuat data informasi publik...</div>
+          <div className="text-center py-16 text-slate-500 font-medium bg-white rounded-2xl border border-slate-200">
+            <div className="inline-block animate-spin text-2xl mb-2">⏳</div>
+            <div>Memuat data informasi publik...</div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {KATEGORI_KEYS.map((cat) => {
@@ -337,75 +343,144 @@ export default function HomePage() {
       </section>
 
       {/* TATA CARA PERMOHONAN */}
-      <section className="py-20 px-6 bg-white border-t border-slate-200">
+      <section className="py-24 px-6 bg-white border-t border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">
+            <span className="text-xs font-black uppercase tracking-wider text-[#0e4891] bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+              Panduan Pemohon
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mt-3 mb-3">
               Tahapan Alur Pengajuan Informasi
             </h2>
-            <p className="text-slate-600 text-sm font-medium">
-              Prosedur sederhana untuk mengajukan permohonan informasi publik secara daring di PPID CIKASDA.
+            <p className="text-slate-600 text-sm md:text-base font-medium">
+              4 langkah praktis mengajukan dan memantau permohonan informasi publik secara daring.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative">
-              <div className="w-10 h-10 bg-[#0e4891] text-amber-400 font-extrabold text-base rounded-lg flex items-center justify-center mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
+              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                 01
               </div>
-              <h4 className="font-bold text-slate-900 text-base mb-2">Registrasi / Login</h4>
+              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
+                Registrasi / Login
+              </h4>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Buat akun pengguna baru dengan menyertakan identitas NIK KTP yang sah.
+                Buat akun pengguna baru dengan NIK KTP terverifikasi atau masuk ke akun yang sudah terdaftar.
               </p>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative">
-              <div className="w-10 h-10 bg-[#0e4891] text-amber-400 font-extrabold text-base rounded-lg flex items-center justify-center mb-4">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
+              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                 02
               </div>
-              <h4 className="font-bold text-slate-900 text-base mb-2">Isi Form Formulir</h4>
+              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
+                Isi Form Permohonan
+              </h4>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Pilih kategori informasi dan tuliskan rincian kebutuhan dokumen secara jelas.
+                Pilih kategori informasi, tulis rincian kebutuhan dokumen dan tujuan penggunaan secara rinci.
               </p>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative">
-              <div className="w-10 h-10 bg-[#0e4891] text-amber-400 font-extrabold text-base rounded-lg flex items-center justify-center mb-4">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
+              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                 03
               </div>
-              <h4 className="font-bold text-slate-900 text-base mb-2">Verifikasi Petugas</h4>
+              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
+                Verifikasi Petugas
+              </h4>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Admin PPID akan meninjau dan memproses permohonan sesuai standar SLA 10 hari.
+                Tim PPID akan mengkaji permohonan sesuai standar operasional SLA 10 hari kerja.
               </p>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative">
-              <div className="w-10 h-10 bg-[#0e4891] text-amber-400 font-extrabold text-base rounded-lg flex items-center justify-center mb-4">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
+              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
                 04
               </div>
-              <h4 className="font-bold text-slate-900 text-base mb-2">Terima Jawaban</h4>
+              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
+                Terima Jawaban Resmi
+              </h4>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Dapatkan tanggapan resmi dan dokumen informasi publik langsung di dashboard Anda.
+                Dapatkan jawaban resmi beserta salinan berkas digital langsung melalui dashboard permohonan.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-slate-900 text-white py-12 px-6 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#0e4891] text-amber-400 flex items-center justify-center font-bold text-base">
-              P
+      {/* FOOTER MULTI-COLUMN */}
+      <footer className="bg-slate-900 text-white pt-16 pb-12 px-6 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 pb-12 border-b border-slate-800">
+          {/* Kolom 1: Brand Info */}
+          <div>
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#0e4891] text-amber-400 flex items-center justify-center font-black text-xl shadow-inner">
+                P
+              </div>
+              <div className="flex flex-col">
+                <span className="font-black text-base tracking-tight text-white leading-none">
+                  PPID DIGITAL
+                </span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
+                  Dinas CIKASDA Prov. Sulteng
+                </span>
+              </div>
             </div>
-            <div>
-              <div className="font-bold text-sm">PPID Digital CIKASDA</div>
-              <div className="text-xs text-slate-400">Dinas Cipta Karya dan Sumber Daya Air Sulawesi Tengah</div>
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              Portal Pejabat Pengelola Informasi dan Dokumentasi (PPID) resmi Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah.
+            </p>
+          </div>
+
+          {/* Kolom 2: Kontak & Alamat */}
+          <div>
+            <h4 className="font-extrabold text-sm text-white uppercase tracking-wider mb-4 border-l-2 border-amber-400 pl-2.5">
+              Kontak & Alamat
+            </h4>
+            <ul className="space-y-2.5 text-xs text-slate-400 font-medium">
+              <li className="flex items-start gap-2">
+                <span className="text-amber-400">📍</span>
+                <span>Jl. Ir. H. Juanda No. 10, Palu, Sulawesi Tengah</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-amber-400">📞</span>
+                <span>(0451) 422111 / WA Layanan PPID</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-amber-400">✉️</span>
+                <span>ppid.cikasda@sultengprov.go.id</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Kolom 3: Jam Layanan */}
+          <div>
+            <h4 className="font-extrabold text-sm text-white uppercase tracking-wider mb-4 border-l-2 border-amber-400 pl-2.5">
+              Jam Operasional Layanan
+            </h4>
+            <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 text-xs text-slate-300 space-y-2">
+              <div className="flex justify-between">
+                <span className="font-semibold text-slate-400">Senin - Kamis:</span>
+                <span className="font-bold text-white">08:00 - 16:00 WITA</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-700/40 pt-2">
+                <span className="font-semibold text-slate-400">Jumat:</span>
+                <span className="font-bold text-white">08:00 - 16:30 WITA</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-700/40 pt-2 text-amber-400 font-semibold">
+                <span>Sabtu - Minggu:</span>
+                <span>Tutup (Hari Libur)</span>
+              </div>
             </div>
           </div>
-          <div className="text-xs text-slate-400 text-center md:text-right">
-            © {new Date().getFullYear()} PPID CIKASDA Sulawesi Tengah. All Rights Reserved.
+        </div>
+
+        <div className="max-w-7xl mx-auto pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-medium">
+          <div>
+            © {new Date().getFullYear()} PPID Dinas CIKASDA Provinsi Sulawesi Tengah. Hak Cipta Dilindungi Undang-Undang.
+          </div>
+          <div className="flex items-center gap-4 text-slate-400">
+            <span>UU No. 14 Tahun 2008 tentang Keterbukaan Informasi Publik</span>
           </div>
         </div>
       </footer>

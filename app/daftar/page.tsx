@@ -97,11 +97,21 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex items-center justify-center p-6 py-12">
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex flex-col items-center justify-center p-6 py-12 relative">
+      {/* Top navigation back link */}
+      <div className="w-full max-w-lg mb-4 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-xs font-bold text-slate-500 hover:text-[#0e4891] transition-colors flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs"
+        >
+          <span>←</span> Kembali ke Beranda
+        </Link>
+      </div>
+
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Header CIKASDA */}
         <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
-          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3 shadow-inner">
+          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3">
             P
           </div>
           <h1 className="text-xl font-extrabold tracking-wide uppercase">Pendaftaran Pemohon PPID</h1>
@@ -117,12 +127,12 @@ export default function RegisterPage() {
           </p>
 
           {errorMsg && (
-            <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 leading-relaxed">
+            <div className="mb-6 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 leading-relaxed">
               ⚠️ {errorMsg}
             </div>
           )}
           {successMsg && (
-            <div className="mb-6 rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-semibold text-emerald-700 leading-relaxed">
+            <div className="mb-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-semibold text-emerald-700 leading-relaxed">
               ✅ {successMsg}
             </div>
           )}
@@ -138,7 +148,7 @@ export default function RegisterPage() {
                 value={namaLengkap}
                 onChange={(e) => setNamaLengkap(e.target.value)}
                 placeholder="Contoh: Ahmad Abdullah, S.T."
-                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
               />
               <p className="text-[11px] text-slate-500 mt-1">Hanya huruf, spasi, titik (.), dan tanda petik (\'). Tanpa simbol/angka.</p>
             </div>
@@ -155,7 +165,7 @@ export default function RegisterPage() {
                   value={nik}
                   onChange={(e) => setNik(e.target.value.replace(/\D/g, ''))}
                   placeholder="720101XXXXXXXXXX"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all font-mono"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all font-mono shadow-2xs"
                 />
               </div>
 
@@ -169,7 +179,7 @@ export default function RegisterPage() {
                   value={telepon}
                   onChange={(e) => setTelepon(e.target.value)}
                   placeholder="081234567890"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -184,7 +194,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="contoh@gmail.com"
-                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
               />
             </div>
 
@@ -199,7 +209,7 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 6 karakter"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
                 />
               </div>
 
@@ -213,7 +223,7 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Sama dengan kata sandi"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -221,7 +231,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-50 mt-4 focus:outline-none focus:ring-4 focus:ring-[#0e4891]/20"
+              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 mt-4 focus:outline-none focus:ring-4 focus:ring-[#0e4891]/20 active:scale-[0.99]"
             >
               {loading ? 'Memproses Pendaftaran...' : 'DAFTAR SEKARANG'}
             </button>

@@ -72,11 +72,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex flex-col items-center justify-center p-6 relative">
+      {/* Top navigation back link */}
+      <div className="w-full max-w-md mb-4 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-xs font-bold text-slate-500 hover:text-[#0e4891] transition-colors flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs"
+        >
+          <span>←</span> Kembali ke Beranda
+        </Link>
+      </div>
+
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Header CIKASDA */}
         <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
-          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3 shadow-inner">
+          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3">
             P
           </div>
           <h1 className="text-xl font-extrabold tracking-wide uppercase">PPID DIGITAL</h1>
@@ -93,8 +103,9 @@ export default function LoginPage() {
           </p>
 
           {errorMsg && (
-            <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700">
-              {errorMsg}
+            <div className="mb-6 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 leading-relaxed flex items-start gap-2.5">
+              <span>⚠️</span>
+              <div>{errorMsg}</div>
             </div>
           )}
 
@@ -109,7 +120,7 @@ export default function LoginPage() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="contoh@gmail.com atau 720101XXXXXXXXXX"
-                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
               />
             </div>
 
@@ -123,14 +134,14 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-50 mt-2 focus:outline-none focus:ring-4 focus:ring-[#0e4891]/20"
+              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 mt-2 focus:outline-none focus:ring-4 focus:ring-[#0e4891]/20 active:scale-[0.99]"
             >
               {loading ? 'Memproses Masuk...' : 'MASUK SEKARANG'}
             </button>
