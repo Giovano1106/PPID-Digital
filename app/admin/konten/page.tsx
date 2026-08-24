@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/app/lib/supabase/client'
 import Modal from '@/components/Modal'
+import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
 
 type KontenLanding = {
@@ -26,11 +27,10 @@ export default function AdminKontenPage() {
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
 
-  // State Toast
+  // State Toast & Modals
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
-
-  // State Modals
-  const [activeModal, setActiveModal] = useState<'addDoc' | 'editDoc' | 'deleteDoc' | null>(null)
+  const [activeModal, setActiveModal] = useState<'addDoc' | 'editDoc' | null>(null)
+  const [deleteDocItem, setDeleteDocItem] = useState<DokumenPublik | null>(null)
   const [targetKategoriKey, setTargetKategoriKey] = useState<string>('')
   const [selectedDoc, setSelectedDoc] = useState<DokumenPublik | null>(null)
 
@@ -156,25 +156,24 @@ export default function AdminKontenPage() {
 
   // Buka Modal Hapus Dokumen
   const openDeleteDocModal = (doc: DokumenPublik) => {
-    setSelectedDoc(doc)
-    setActiveModal('deleteDoc')
+    setDeleteDocItem(doc)
   }
 
   // Submit Hapus Dokumen
   const handleDeleteDokumenSubmit = async () => {
-    if (!selectedDoc) return
+    if (!deleteDocItem) return
 
-    setSavingId(`del-doc-${selectedDoc.id}`)
+    setSavingId(`del-doc-${deleteDocItem.id}`)
     const { error } = await supabase
       .from('dokumen_publik')
       .delete()
-      .eq('id', selectedDoc.id)
+      .eq('id', deleteDocItem.id)
 
+    setDeleteDocItem(null)
     if (error) {
       showToast(`Gagal menghapus dokumen: ${error.message}`, 'error')
     } else {
       showToast('Dokumen telah berhasil dihapus dari CMS.', 'info')
-      setActiveModal(null)
       fetchData()
     }
     setSavingId(null)
@@ -208,7 +207,25 @@ export default function AdminKontenPage() {
       </div>
 
       {loading ? (
-        <div className="p-12 text-center text-xs font-bold text-slate-500 bg-white border border-slate-200 rounded-2xl">Memuat data CMS...</div>
+        <div className="space-y-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs animate-pulse">
+              <div className="h-5 w-48 bg-slate-200 rounded-md mb-4" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="h-4 w-32 bg-slate-200 rounded-md" />
+                  <div className="h-9 w-full bg-slate-100 rounded-xl" />
+                  <div className="h-16 w-full bg-slate-100 rounded-xl" />
+                </div>
+                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div className="h-4 w-40 bg-slate-200 rounded-md" />
+                  <div className="h-12 w-full bg-slate-200 rounded-xl" />
+                  <div className="h-12 w-full bg-slate-200 rounded-xl" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="space-y-8">
           {listKonten.map((kategori) => {
@@ -412,36 +429,18 @@ export default function AdminKontenPage() {
         </form>
       </Modal>
 
-      {/* MODAL HAPUS DOKUMEN */}
-      <Modal
-        isOpen={activeModal === 'deleteDoc'}
-        onClose={() => setActiveModal(null)}
-        title="🗑️ Hapus Dokumen PDF"
-      >
-        <div className="space-y-4">
-          <p className="text-xs text-slate-700 font-medium leading-relaxed">
-            Apakah Anda yakin ingin menghapus dokumen <strong className="text-slate-900 font-bold">{selectedDoc?.nama_dokumen}</strong> dari sistem? Tindakan ini tidak dapat dibatalkan.
-          </p>
-          <div className="flex gap-3 justify-end pt-2">
-            <button
-              type="button"
-              onClick={() => setActiveModal(null)}
-              className="text-xs font-bold px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              disabled={savingId?.startsWith('del-doc')}
-              onClick={handleDeleteDokumenSubmit}
-              className="text-xs px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm disabled:opacity-50 transition-all"
-            >
-              Ya, Hapus Dokumen
-            </button>
-          </div>
-        </div>
-      </Modal>
-
+      {/* CONFIRM HAPUS DOKUMEN MODAL */}
+      <ConfirmModal
+        isOpen={deleteDocItem !== null}
+        onClose={() => setDeleteDocItem(null)}
+        onConfirm={handleDeleteDokumenSubmit}
+        title="Konfirmasi Hapus Dokumen"
+        message={`Apakah Anda yakin ingin menghapus dokumen "${deleteDocItem?.nama_dokumen}" dari CMS? Dokumen tidak akan dapat diakses publik lagi.`}
+        confirmText="Ya, Hapus Dokumen"
+        cancelText="Batal"
+        variant="danger"
+        loading={savingId?.startsWith('del-doc')}
+      />
     </div>
   )
 }

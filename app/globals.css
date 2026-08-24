@@ -72,3 +72,36 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Print CSS for Clean PDF Reports */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1.2cm 1cm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide header, navigation, sidebar, and non-printable items */
+  header, nav, aside, footer, button, .print\:hidden {
+    display: none !important;
+  }
+
+  /* Force modal backdrop and container to display static and full width */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+  }
+
+  .max-w-5xl {
+    max-width: 100% !important;
+  }
+}
+
