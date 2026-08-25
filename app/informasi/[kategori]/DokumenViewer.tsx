@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { FileText, ArrowUpRight } from '@phosphor-icons/react'
 
 type DokumenPublik = {
   id: bigint
@@ -30,7 +31,7 @@ export default function DokumenViewer({ dokumenList }: { dokumenList: DokumenPub
   if (dokumenList.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
-        <div className="text-4xl mb-4 opacity-50 grayscale">📄</div>
+        <div className="text-[#0e4891] mb-4 flex justify-center opacity-50"><FileText weight="fill" size={48} /></div>
         <h3 className="text-lg font-bold text-slate-900">Belum Ada Dokumen</h3>
         <p className="text-sm font-medium text-slate-500 mt-2">PPID CIKASDA belum mengunggah dokumen untuk kategori ini.</p>
       </div>
@@ -60,8 +61,8 @@ export default function DokumenViewer({ dokumenList }: { dokumenList: DokumenPub
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <span className={`text-xl ${isSelected ? 'text-[#0e4891]' : 'grayscale opacity-50'}`}>
-                    📄
+                  <span className={`mt-0.5 ${isSelected ? 'text-[#0e4891]' : 'text-slate-400'}`}>
+                    <FileText weight="fill" size={24} />
                   </span>
                   <div>
                     <h3 className={`text-sm leading-relaxed ${isSelected ? 'font-bold text-[#0e4891]' : 'font-semibold text-slate-700'}`}>
@@ -85,9 +86,9 @@ export default function DokumenViewer({ dokumenList }: { dokumenList: DokumenPub
                 href={selectedDoc.file_url} 
                 target="_blank" 
                 rel="noreferrer"
-                className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-colors flex-shrink-0"
+                className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-colors flex-shrink-0 inline-flex items-center gap-1.5"
               >
-                Buka Tab Baru ↗
+                Buka Tab Baru <ArrowUpRight weight="bold" size={14} />
               </a>
             </div>
             <div className="flex-grow bg-slate-100 relative">

@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 
+import { XCircle, Info, CheckCircle, X } from '@phosphor-icons/react'
+
 export type ToastType = 'success' | 'error' | 'info'
 
 interface ToastProps {
@@ -33,11 +35,11 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
   const getIcon = () => {
     switch (type) {
       case 'error':
-        return '❌'
+        return <XCircle weight="fill" size={18} />
       case 'info':
-        return 'ℹ️'
+        return <Info weight="fill" size={18} />
       default:
-        return '✅'
+        return <CheckCircle weight="fill" size={18} />
     }
   }
 
@@ -46,13 +48,13 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
       <div
         className={`flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-xl text-xs font-bold leading-snug max-w-md ${getStyle()}`}
       >
-        <span className="text-sm">{getIcon()}</span>
+        <span className="flex items-center justify-center">{getIcon()}</span>
         <span className="flex-1 text-white">{message}</span>
         <button
           onClick={onClose}
-          className="ml-2 opacity-70 hover:opacity-100 text-slate-400 hover:text-white transition-opacity"
+          className="ml-2 opacity-70 hover:opacity-100 text-slate-400 hover:text-white transition-opacity flex items-center justify-center cursor-pointer"
         >
-          ✕
+          <X weight="bold" size={14} />
         </button>
       </div>
     </div>

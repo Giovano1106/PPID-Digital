@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/client'
+import { ArrowLeft, Warning, Info } from '@phosphor-icons/react'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
 
@@ -79,7 +80,8 @@ export default function FormPermohonanPage() {
     setShowConfirmModal(false)
 
     if (insertError) {
-      setErrorMsg(`Gagal mengirim permohonan: ${insertError.message}`)
+      console.error('[Submit Error]', insertError)
+      setErrorMsg('Gagal mengirim permohonan. Terjadi kesalahan sistem, silakan coba beberapa saat lagi.')
       setLoading(false)
     } else {
       setToast({
@@ -101,7 +103,7 @@ export default function FormPermohonanPage() {
           href="/permohonan-saya"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0e4891] hover:underline mb-6 transition-colors"
         >
-          ← Kembali ke Riwayat Permohonan
+          <ArrowLeft weight="bold" size={14} /> Kembali ke Riwayat Permohonan
         </Link>
 
         {/* Header Form CIKASDA */}
@@ -121,8 +123,9 @@ export default function FormPermohonanPage() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
           {errorMsg && (
-            <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700">
-              ⚠️ {errorMsg}
+            <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 flex items-start gap-2.5">
+              <Warning weight="fill" size={16} className="text-rose-500 shrink-0 mt-0.5" />
+              <div>{errorMsg}</div>
             </div>
           )}
 
@@ -181,8 +184,9 @@ export default function FormPermohonanPage() {
               </select>
             </div>
 
-            <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 text-xs text-slate-700 leading-relaxed font-medium">
-              ℹ️ <strong className="font-bold text-[#0e4891]">Batas Waktu Pengolahan (SLA):</strong> Sesuai UU KIP No. 14 Tahun 2008, permohonan ini memiliki batas waktu jawaban maksimal <strong className="font-bold">10 hari kerja</strong> sejak diajukan.
+            <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 text-xs text-slate-700 leading-relaxed font-medium flex items-start gap-2.5">
+              <Info weight="fill" size={16} className="text-[#0e4891] shrink-0 mt-0.5" />
+              <div><strong className="font-bold text-[#0e4891]">Batas Waktu Pengolahan (SLA):</strong> Sesuai UU KIP No. 14 Tahun 2008, permohonan ini memiliki batas waktu jawaban maksimal <strong className="font-bold">10 hari kerja</strong> sejak diajukan.</div>
             </div>
 
             <button

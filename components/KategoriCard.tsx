@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArrowRight } from '@phosphor-icons/react'
 
 interface KategoriCardProps {
   title: string
@@ -38,9 +39,9 @@ export default function KategoriCard({
 
       <Link
         href={href}
-        className="w-full text-center bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold py-2.5 rounded-lg transition-colors block"
+        className="w-full text-center bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5"
       >
-        Lihat Dokumen →
+        Lihat Dokumen <ArrowRight weight="bold" size={14} />
       </Link>
     </div>
   )

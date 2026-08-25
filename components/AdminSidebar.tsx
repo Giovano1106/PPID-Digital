@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { List, X, ArrowLeft } from '@phosphor-icons/react'
 import AdminNav from '@/components/AdminNav'
 import AdminLogoutButton from '@/components/AdminLogoutButton'
 
@@ -35,20 +36,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
           className="p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 focus:outline-none transition-colors"
           aria-label="Toggle navigation menu"
         >
-          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-            {isOpen ? (
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M18.278 16.864a1 1 0 01-1.414 1.414l-4.829-4.828-4.828 4.828a1 1 0 01-1.414-1.414l4.828-4.829-4.828-4.828a1 1 0 011.414-1.414l4.829 4.828 4.828-4.828a1 1 0 111.414 1.414l-4.828 4.829 4.828 4.828z"
-              />
-            ) : (
-              <path
-                fillRule="evenodd"
-                d="M4 5h16a1 1 0 010 2H4a1 1 0 110-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2z"
-              />
-            )}
-          </svg>
+          {isOpen ? <X weight="bold" size={20} /> : <List weight="bold" size={20} />}
         </button>
       </div>
 
@@ -94,7 +82,7 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
             href="/"
             className="text-xs font-bold text-slate-500 hover:text-[#0e4891] transition-colors flex items-center justify-center gap-2 pt-2"
           >
-            ← Kembali ke Web Depan
+            <ArrowLeft weight="bold" size={14} /> Kembali ke Web Depan
           </Link>
         </div>
       </aside>

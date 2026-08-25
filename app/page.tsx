@@ -7,6 +7,7 @@ import { createClient } from '@/app/lib/supabase/client'
 import KategoriCard from '@/components/KategoriCard'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
+import { SpinnerGap, MapPin, Phone, EnvelopeSimple, List, X } from '@phosphor-icons/react'
 
 const supabase = createClient()
 
@@ -127,13 +128,13 @@ export default function HomePage() {
                   <>
                     <Link
                       href="/admin"
-                      className="text-slate-700 hover:text-[#0e4891] transition-colors font-bold"
+                      className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md"
                     >
                       Admin Console
                     </Link>
                     <button
                       onClick={handleLogoutClick}
-                      className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-2 rounded-lg text-xs font-bold transition-all shadow-sm"
+                      className="text-rose-600 hover:text-rose-700 px-2 py-2 rounded-lg text-sm font-bold transition-all"
                     >
                       Keluar
                     </button>
@@ -142,22 +143,23 @@ export default function HomePage() {
                   <>
                     <Link
                       href="/permohonan-saya"
-                      className="text-slate-600 hover:text-[#0e4891] transition-colors"
+                      className="text-slate-600 hover:text-[#0e4891] transition-colors font-bold"
                     >
                       Riwayat Permohonan
                     </Link>
-                    <button
-                      onClick={handleLogoutClick}
-                      className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-                    >
-                      Keluar
-                    </button>
                     <Link
                       href="/permohonan-saya/ajukan"
                       className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md"
                     >
                       Ajukan Permohonan
                     </Link>
+                    <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                    <button
+                      onClick={handleLogoutClick}
+                      className="text-rose-600 hover:text-rose-700 px-2 py-1.5 rounded-lg text-sm font-bold transition-all"
+                    >
+                      Keluar
+                    </button>
                   </>
                 )}
               </>
@@ -181,23 +183,10 @@ export default function HomePage() {
 
           {/* MOBILE MENU BUTTON */}
           <button
-            className="md:hidden flex items-center justify-center p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            className="md:hidden flex items-center justify-center p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {isMobileMenuOpen ? (
-                <>
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </>
-              ) : (
-                <>
-                  <line x1="3" y1="12" x2="21" y2="12"></line>
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <line x1="3" y1="18" x2="21" y2="18"></line>
-                </>
-              )}
-            </svg>
+            {isMobileMenuOpen ? <X weight="bold" size={24} /> : <List weight="bold" size={24} />}
           </button>
         </div>
 
@@ -224,20 +213,20 @@ export default function HomePage() {
                 ) : (
                   <>
                     <Link
-                      href="/permohonan-saya"
-                      className="text-slate-600 hover:text-[#0e4891] transition-colors font-bold py-2 border-b border-slate-100"
-                    >
-                      Riwayat Permohonan
-                    </Link>
-                    <Link
                       href="/permohonan-saya/ajukan"
                       className="w-full text-center bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-4 py-3 rounded-xl transition-all shadow-sm"
                     >
                       Ajukan Permohonan
                     </Link>
+                    <Link
+                      href="/permohonan-saya"
+                      className="text-slate-600 hover:text-[#0e4891] transition-colors font-bold py-2 border-b border-slate-100 text-center"
+                    >
+                      Riwayat Permohonan
+                    </Link>
                     <button
                       onClick={handleLogoutClick}
-                      className="w-full text-center bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-4 py-3 rounded-xl text-sm font-bold transition-all mt-2"
+                      className="w-full text-center text-rose-600 hover:bg-rose-50 px-4 py-3 rounded-xl text-sm font-bold transition-all mt-1"
                     >
                       Keluar
                     </button>
@@ -335,7 +324,7 @@ export default function HomePage() {
 
         {loading ? (
           <div className="text-center py-16 text-slate-500 font-medium bg-white rounded-2xl border border-slate-200">
-            <div className="inline-block animate-spin text-2xl mb-2">⏳</div>
+            <div className="inline-block animate-spin text-2xl mb-2"><SpinnerGap weight="bold" /></div>
             <div>Memuat data informasi publik...</div>
           </div>
         ) : (
@@ -456,15 +445,15 @@ export default function HomePage() {
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400 font-medium">
               <li className="flex items-start gap-2">
-                <span className="text-amber-400">📍</span>
+                <MapPin weight="fill" size={16} className="text-amber-400 shrink-0" />
                 <span>Jl. Ir. H. Juanda No. 10, Palu, Sulawesi Tengah</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-amber-400">📞</span>
+                <Phone weight="fill" size={16} className="text-amber-400 shrink-0" />
                 <span>(0451) 422111 / WA Layanan PPID</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-amber-400">✉️</span>
+                <EnvelopeSimple weight="fill" size={16} className="text-amber-400 shrink-0" />
                 <span>ppid.cikasda@sultengprov.go.id</span>
               </li>
             </ul>

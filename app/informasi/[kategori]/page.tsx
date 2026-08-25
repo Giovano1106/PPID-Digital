@@ -1,6 +1,7 @@
 import { createClient } from '@/app/lib/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { ArrowLeft } from '@phosphor-icons/react/dist/ssr'
 
 // Utility untuk mengubah string menjadi title case yang rapi
 function formatTitle(str: string) {
@@ -65,7 +66,7 @@ export default async function KategoriInformasiPage({
               href="/"
               className="text-sm font-bold text-slate-600 hover:text-[#0e4891] transition-colors flex items-center gap-2"
             >
-              <span>←</span> Kembali ke Beranda
+              <ArrowLeft weight="bold" size={14} /> Kembali ke Beranda
             </Link>
           </nav>
         </div>
@@ -73,8 +74,8 @@ export default async function KategoriInformasiPage({
 
       <main className="flex-grow max-w-7xl mx-auto w-full px-6 py-16 flex flex-col h-full">
         <div className="mb-12 border-b border-slate-200 pb-8">
-          <Link href="/#kategori-informasi" className="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-[#0e4891] transition-colors mb-6 inline-block">
-            ← Kategori Dokumen
+          <Link href="/#kategori-informasi" className="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-[#0e4891] transition-colors mb-6 inline-flex items-center gap-1.5">
+            <ArrowLeft weight="bold" size={14} /> Kategori Dokumen
           </Link>
           <h1 className="font-black text-4xl md:text-5xl text-slate-900 tracking-tight leading-tight">
             {kontenData?.judul || formatTitle(kategoriKey)}

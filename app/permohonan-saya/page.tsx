@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
+import { ArrowLeft, FileText, Timer, ChatTeardropText } from '@phosphor-icons/react/dist/ssr'
 
 export default async function PermohonanSayaPage() {
   const supabase = await createClient()
@@ -52,7 +53,7 @@ export default async function PermohonanSayaPage() {
         {/* Top bar with back to home link */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="text-xs font-bold text-[#0e4891] hover:underline flex items-center gap-1.5">
-            ← Kembali ke Beranda PPID
+            <ArrowLeft weight="bold" size={14} /> Kembali ke Beranda PPID
           </Link>
           <span className="text-xs text-slate-500 font-medium">Akun: <span className="text-slate-900 font-bold">{user.email}</span></span>
         </div>
@@ -75,8 +76,8 @@ export default async function PermohonanSayaPage() {
         <div className="mt-8 space-y-6">
           {!listPermohonan || listPermohonan.length === 0 ? (
             <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center">
-              <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0e4891] flex items-center justify-center font-bold text-lg mx-auto mb-3">
-                📄
+              <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0e4891] flex items-center justify-center mx-auto mb-3">
+                <FileText weight="fill" size={24} />
               </div>
               <p className="text-sm font-bold text-slate-800">Belum Ada Permohonan</p>
               <p className="text-xs text-slate-500 font-medium mt-1 mb-6">Anda belum pernah mengajukan permohonan informasi publik.</p>
@@ -93,11 +94,12 @@ export default async function PermohonanSayaPage() {
               const sisaHari = calculateDaysRemaining(activeDeadline)
 
               return (
-                <div
+                <Link
+                  href={`/permohonan-saya/${item.id}`}
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                  className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-[#0e4891]/30 transition-all cursor-pointer group"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4 group-hover:border-slate-200 transition-colors">
                     <div>
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span
@@ -127,8 +129,8 @@ export default async function PermohonanSayaPage() {
                     {item.status !== 'dijawab' && item.status !== 'ditolak' && (
                       <div className="text-right">
                         {item.diperpanjang && (
-                          <span className="block text-[11px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md mb-1.5">
-                            ⏱️ Diperpanjang +7 Hari
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md mb-1.5 flex items-center justify-end gap-1">
+                            <Timer weight="fill" size={14} /> Diperpanjang +7 Hari
                           </span>
                         )}
                         {sisaHari !== null && (
@@ -150,34 +152,33 @@ export default async function PermohonanSayaPage() {
 
                   {/* DESKRIPSI PERMOHONAN */}
                   <div className="mt-4 text-xs md:text-sm">
-                    <p className="font-bold text-slate-900">Rincian Kebutuhan Informasi:</p>
-                    <p className="text-slate-700 mt-1.5 whitespace-pre-line leading-relaxed font-medium">
+                    <p className="font-bold text-slate-900 group-hover:text-[#0e4891] transition-colors">Rincian Kebutuhan Informasi:</p>
+                    <p className="text-slate-600 mt-1.5 whitespace-pre-line leading-relaxed font-medium line-clamp-2">
                       {item.deskripsi}
                     </p>
-                    <p className="text-xs text-slate-500 mt-3 italic font-medium">
-                      Bentuk Salinan / Cara Memperoleh: <span className="font-bold text-slate-800 not-italic">{item.cara_memperoleh}</span>
-                    </p>
-                  </div>
-
-                  {/* JAWABAN ADMIN (Bila sudah dijawab) */}
-                  {item.jawaban_admin && (
-                    <div className="mt-5 rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs md:text-sm">
-                      <div className="flex items-center gap-2 text-[#0e4891] font-bold mb-1">
-                        <span>💬</span> Jawaban Resmi Admin PPID:
+                    
+                    {/* PREVIEW JAWABAN (JIKA ADA) */}
+                    {item.jawaban_admin && (
+                      <div className="mt-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100/50">
+                        <p className="font-bold text-[#0e4891] mb-1 flex items-center gap-1.5">
+                          <ChatTeardropText weight="fill" size={14} /> Balasan Admin:
+                        </p>
+                        <p className="text-slate-700 font-medium line-clamp-2 leading-relaxed">
+                          {item.jawaban_admin}
+                        </p>
                       </div>
-                      <p className="text-slate-800 mt-1.5 whitespace-pre-line leading-relaxed font-medium">
-                        {item.jawaban_admin}
-                      </p>
-                    </div>
-                  )}
+                    )}
 
-                  {/* ALASAN PERPANJANGAN (Bila ada) */}
-                  {item.diperpanjang && item.alasan_perpanjangan && (
-                    <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900">
-                      <strong className="font-bold">Catatan Perpanjangan SLA:</strong> {item.alasan_perpanjangan}
+                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+                      <p className="text-xs text-slate-500 italic font-medium">
+                        Salinan: <span className="font-bold text-slate-700 not-italic">{item.cara_memperoleh}</span>
+                      </p>
+                      <span className="text-xs font-bold bg-[#0e4891] text-white px-3 py-1.5 rounded-lg flex items-center gap-1 group-hover:bg-[#0a366f] transition-colors">
+                        Lihat Detail <span>→</span>
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                </Link>
               )
             })
           )}

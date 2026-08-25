@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { SignOut } from '@phosphor-icons/react'
 import { createClient } from '@/app/lib/supabase/client'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
@@ -32,7 +33,7 @@ export default function AdminLogoutButton() {
         onClick={() => setShowModal(true)}
         className="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-all shadow-2xs cursor-pointer"
       >
-        <span>🚪</span> Keluar Akun
+        <SignOut weight="bold" size={16} /> Keluar Akun
       </button>
 
       <ConfirmModal

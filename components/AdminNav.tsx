@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ClipboardText, FolderOpen } from '@phosphor-icons/react'
 
 export default function AdminNav() {
   const pathname = usePathname()
@@ -9,12 +10,12 @@ export default function AdminNav() {
   const navItems = [
     {
       href: '/admin',
-      label: '📋 Kelola Permohonan',
+      label: 'Kelola Permohonan',
       exact: true,
     },
     {
       href: '/admin/konten',
-      label: '📂 Kelola CMS & Dokumen',
+      label: 'Kelola CMS & Dokumen',
       exact: false,
     },
   ]
@@ -36,7 +37,8 @@ export default function AdminNav() {
                 : 'text-slate-700 hover:bg-slate-100 hover:text-[#0e4891]'
             }`}
           >
-            {item.label}
+            {item.href === '/admin' ? <ClipboardText weight="fill" size={18} /> : <FolderOpen weight="fill" size={18} />}
+            <span>{item.label}</span>
           </Link>
         )
       })}

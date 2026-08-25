@@ -1,10 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/app/lib/supabase/client'
 import Modal from '@/components/Modal'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
+import { FolderOpen, PencilSimple, Trash, Plus, Lightbulb, ArrowsClockwise } from '@phosphor-icons/react'
+
+import {
+  getAdminKonten,
+  updateKontenKategori,
+  addDokumen,
+  updateDokumen,
+  deleteDokumen
+} from '@/app/actions/admin'
 
 type KontenLanding = {
   id: number
@@ -21,7 +29,6 @@ type DokumenPublik = {
 }
 
 export default function AdminKontenPage() {
-  const supabase = createClient()
   const [listKonten, setListKonten] = useState<KontenLanding[]>([])
   const [listDokumen, setListDokumen] = useState<DokumenPublik[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,13 +51,14 @@ export default function AdminKontenPage() {
 
   const fetchData = async () => {
     setLoading(true)
-    const [kontenRes, dokumenRes] = await Promise.all([
-      supabase.from('konten_landing').select('id, section_key, judul, isi_teks').order('id', { ascending: true }),
-      supabase.from('dokumen_publik').select('*').order('created_at', { ascending: true })
-    ])
+    const result = await getAdminKonten()
 
-    if (!kontenRes.error && kontenRes.data) setListKonten(kontenRes.data)
-    if (!dokumenRes.error && dokumenRes.data) setListDokumen(dokumenRes.data)
+    if (result.success && result.data) {
+      setListKonten(result.data.konten as KontenLanding[])
+      setListDokumen(result.data.dokumen as DokumenPublik[])
+    } else {
+      showToast('Gagal memuat data: ' + result.error, 'error')
+    }
     
     setLoading(false)
   }
@@ -66,20 +74,14 @@ export default function AdminKontenPage() {
     )
   }
 
-  // Simpan perubahan kategori ke Supabase
+  // Simpan perubahan kategori menggunakan Server Actions
   const handleSaveKategori = async (item: KontenLanding) => {
     setSavingId(`kat-${item.id}`)
 
-    const { error } = await supabase
-      .from('konten_landing')
-      .update({
-        judul: item.judul,
-        isi_teks: item.isi_teks,
-      })
-      .eq('id', item.id)
+    const result = await updateKontenKategori(item.id, item.judul, item.isi_teks)
 
-    if (error) {
-      showToast(`Gagal menyimpan kategori: ${error.message}`, 'error')
+    if (!result.success) {
+      showToast(`Gagal menyimpan kategori: ${result.error}`, 'error')
     } else {
       showToast(`Judul & deskripsi kategori "${item.section_key}" berhasil diperbarui!`)
     }
@@ -94,25 +96,17 @@ export default function AdminKontenPage() {
     setActiveModal('addDoc')
   }
 
-  // Submit Tambah Dokumen
+  // Submit Tambah Dokumen menggunakan Server Actions
   const handleAddDokumenSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!targetKategoriKey || !docNama.trim() || !docUrl.trim()) return
 
     setSavingId('add-doc')
-    const { data: userData } = await supabase.auth.getUser()
 
-    const { error } = await supabase
-      .from('dokumen_publik')
-      .insert({
-        kategori_key: targetKategoriKey,
-        nama_dokumen: docNama.trim(),
-        file_url: docUrl.trim(),
-        uploaded_by: userData?.user?.id
-      })
+    const result = await addDokumen(targetKategoriKey, docNama.trim(), docUrl.trim())
 
-    if (error) {
-      showToast(`Gagal menambah dokumen: ${error.message}`, 'error')
+    if (!result.success) {
+      showToast(`Gagal menambah dokumen: ${result.error}`, 'error')
     } else {
       showToast('Dokumen PDF berhasil ditambahkan!')
       setActiveModal(null)
@@ -129,23 +123,17 @@ export default function AdminKontenPage() {
     setActiveModal('editDoc')
   }
 
-  // Submit Edit Dokumen
+  // Submit Edit Dokumen menggunakan Server Actions
   const handleEditDokumenSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedDoc || !docNama.trim() || !docUrl.trim()) return
 
     setSavingId(`edit-doc-${selectedDoc.id}`)
 
-    const { error } = await supabase
-      .from('dokumen_publik')
-      .update({
-        nama_dokumen: docNama.trim(),
-        file_url: docUrl.trim(),
-      })
-      .eq('id', selectedDoc.id)
+    const result = await updateDokumen(selectedDoc.id, docNama.trim(), docUrl.trim())
 
-    if (error) {
-      showToast(`Gagal memperbarui dokumen: ${error.message}`, 'error')
+    if (!result.success) {
+      showToast(`Gagal memperbarui dokumen: ${result.error}`, 'error')
     } else {
       showToast('Dokumen berhasil diperbarui!')
       setActiveModal(null)
@@ -159,19 +147,17 @@ export default function AdminKontenPage() {
     setDeleteDocItem(doc)
   }
 
-  // Submit Hapus Dokumen
+  // Submit Hapus Dokumen menggunakan Server Actions
   const handleDeleteDokumenSubmit = async () => {
     if (!deleteDocItem) return
 
     setSavingId(`del-doc-${deleteDocItem.id}`)
-    const { error } = await supabase
-      .from('dokumen_publik')
-      .delete()
-      .eq('id', deleteDocItem.id)
+    
+    const result = await deleteDokumen(deleteDocItem.id)
 
     setDeleteDocItem(null)
-    if (error) {
-      showToast(`Gagal menghapus dokumen: ${error.message}`, 'error')
+    if (!result.success) {
+      showToast(`Gagal menghapus dokumen: ${result.error}`, 'error')
     } else {
       showToast('Dokumen telah berhasil dihapus dari CMS.', 'info')
       fetchData()
@@ -200,9 +186,9 @@ export default function AdminKontenPage() {
         </div>
         <button
           onClick={fetchData}
-          className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2 self-start md:self-auto"
+          className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2 self-start md:self-auto cursor-pointer"
         >
-          🔄 Refresh Data
+          <ArrowsClockwise weight="bold" size={16} /> Refresh Data
         </button>
       </div>
 
@@ -238,8 +224,9 @@ export default function AdminKontenPage() {
               >
                 {/* Header Kategori */}
                 <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-900">
-                    📂 Kategori: {kategori.section_key.replace('_', ' ')}
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <FolderOpen weight="fill" size={16} className="text-[#0e4891]" /> 
+                    Kategori: {kategori.section_key.replace('_', ' ')}
                   </span>
                   <span className="text-xs font-bold text-slate-500">
                     {docs.length} File Terunggah
@@ -272,7 +259,7 @@ export default function AdminKontenPage() {
                     <button
                       disabled={savingId === `kat-${kategori.id}`}
                       onClick={() => handleSaveKategori(kategori)}
-                      className="rounded-xl bg-[#0e4891] hover:bg-[#0a366f] px-4 py-2.5 text-xs font-bold text-white transition-all disabled:opacity-50 shadow-sm"
+                      className="rounded-xl bg-[#0e4891] hover:bg-[#0a366f] px-4 py-2.5 text-xs font-bold text-white transition-all disabled:opacity-50 shadow-sm cursor-pointer"
                     >
                       {savingId === `kat-${kategori.id}` ? 'Menyimpan...' : 'Simpan Deskripsi'}
                     </button>
@@ -284,9 +271,9 @@ export default function AdminKontenPage() {
                       <h3 className="font-bold text-sm text-slate-900">Daftar File PDF Google Drive</h3>
                       <button
                         onClick={() => openAddDocModal(kategori.section_key)}
-                        className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold py-2 px-3.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                        className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold py-2 px-3.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
                       >
-                        <span>+</span> Tambah Dokumen
+                        <Plus weight="bold" size={14} /> Tambah Dokumen
                       </button>
                     </div>
 
@@ -296,7 +283,7 @@ export default function AdminKontenPage() {
                     ) : (
                       <ul className="space-y-3">
                         {docs.map(doc => (
-                          <li key={doc.id.toString()} className="flex items-start justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                          <li key={doc.id.toString()} className="flex items-start justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                             <div className="overflow-hidden flex-1">
                               <p className="text-xs font-bold text-slate-900 truncate" title={doc.nama_dokumen}>{doc.nama_dokumen}</p>
                               <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-[11px] text-[#0e4891] hover:underline truncate block mt-1 font-mono">
@@ -306,17 +293,17 @@ export default function AdminKontenPage() {
                             <div className="flex shrink-0 gap-1.5">
                               <button
                                 onClick={() => openEditDocModal(doc)}
-                                className="text-slate-600 hover:text-[#0e4891] hover:bg-slate-100 p-2 rounded-lg transition-colors border border-slate-200"
+                                className="text-slate-600 hover:text-[#0e4891] hover:bg-slate-100 p-2 rounded-lg transition-colors border border-slate-200 cursor-pointer"
                                 title="Edit dokumen"
                               >
-                                ✏️
+                                <PencilSimple weight="bold" size={16} />
                               </button>
                               <button
                                 onClick={() => openDeleteDocModal(doc)}
-                                className="text-slate-600 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors border border-slate-200"
+                                className="text-slate-600 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors border border-slate-200 cursor-pointer"
                                 title="Hapus dokumen"
                               >
-                                🗑️
+                                <Trash weight="bold" size={16} />
                               </button>
                             </div>
                           </li>
@@ -360,22 +347,23 @@ export default function AdminKontenPage() {
               placeholder="https://drive.google.com/file/d/..."
               className="w-full text-xs border border-slate-300 rounded-xl bg-white p-3 text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 outline-none transition-all"
             />
-            <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
-              💡 Pastikan akses link Google Drive sudah disetel ke <strong>"Siapa saja yang memiliki link (Viewer)"</strong>.
+            <p className="text-[11px] text-slate-500 mt-2 leading-normal flex items-start gap-1">
+              <Lightbulb weight="fill" size={14} className="text-yellow-500 shrink-0 mt-0.5" />
+              <span>Pastikan akses link Google Drive sudah disetel ke <strong>"Siapa saja yang memiliki link (Viewer)"</strong>.</span>
             </p>
           </div>
           <div className="flex gap-3 justify-end pt-3">
             <button
               type="button"
               onClick={() => setActiveModal(null)}
-              className="text-xs font-bold px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="text-xs font-bold px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={savingId === 'add-doc'}
-              className="text-xs px-5 py-2 bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold rounded-xl shadow-sm disabled:opacity-50 transition-all"
+              className="text-xs px-5 py-2 bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold rounded-xl shadow-sm disabled:opacity-50 transition-all cursor-pointer"
             >
               {savingId === 'add-doc' ? 'Menyimpan...' : 'Simpan Dokumen'}
             </button>
@@ -414,14 +402,14 @@ export default function AdminKontenPage() {
             <button
               type="button"
               onClick={() => setActiveModal(null)}
-              className="text-xs font-bold px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="text-xs font-bold px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={savingId?.startsWith('edit-doc')}
-              className="text-xs px-5 py-2 bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold rounded-xl shadow-sm disabled:opacity-50 transition-all"
+              className="text-xs px-5 py-2 bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold rounded-xl shadow-sm disabled:opacity-50 transition-all cursor-pointer"
             >
               Simpan Perubahan
             </button>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { X } from '@phosphor-icons/react'
 
 interface ModalProps {
   isOpen: boolean
@@ -37,9 +38,9 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
           <h3 className="font-extrabold text-sm tracking-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-xs transition-colors"
+            className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
           >
-            ✕
+            <X weight="bold" size={14} />
           </button>
         </div>
 

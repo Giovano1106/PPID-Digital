@@ -1,6 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { FileText, MicrosoftExcelLogo, Printer, X, Calendar, SpinnerGap } from '@phosphor-icons/react'
+import { getAllPermohonanForReport } from '@/app/actions/admin'
 
 type Profile = {
   nama: string
@@ -28,19 +31,34 @@ type Permohonan = {
 interface LaporanModalProps {
   isOpen: boolean
   onClose: () => void
-  data: Permohonan[]
-  filterStatus: string
-  searchQuery: string
 }
 
 export default function LaporanModal({
   isOpen,
   onClose,
-  data,
-  filterStatus,
-  searchQuery,
 }: LaporanModalProps) {
-  if (!isOpen) return null
+  const [data, setData] = useState<Permohonan[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true)
+      getAllPermohonanForReport().then((res) => {
+        if (res.success) {
+          setData(res.data)
+        }
+        setLoading(false)
+      })
+    }
+  }, [isOpen])
+
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!isOpen || !mounted) return null
 
   const todayDateStr = new Date().toLocaleDateString('id-ID', {
     day: 'numeric',
@@ -54,13 +72,6 @@ export default function LaporanModal({
   const diprosesCount = data.filter((p) => p.status === 'diproses').length
   const dijawabCount = data.filter((p) => p.status === 'dijawab').length
   const ditolakCount = data.filter((p) => p.status === 'ditolak').length
-
-  const getFilterLabel = () => {
-    if (searchQuery.trim()) return `Filter: Status (${filterStatus.toUpperCase()}) | Cari: "${searchQuery}"`
-    if (filterStatus === 'menunggu') return 'Filter: Menunggu Tindakan (Diajukan & Diproses)'
-    if (filterStatus === 'selesai') return 'Filter: Selesai (Dijawab & Ditolak)'
-    return 'Filter: Semua Permohonan'
-  }
 
   // Handle Print via Window
   const handlePrint = () => {
@@ -121,7 +132,7 @@ export default function LaporanModal({
       <body>
         <div class="title">LAPORAN REKAPITULASI PERMOHONAN INFORMASI PUBLIK</div>
         <div class="subtitle">PPID DIGITAL — DINAS CIPTA KARYA DAN SUMBER DAYA AIR PROV. SULTENG</div>
-        <div class="meta">Tanggal Cetak: ${todayDateStr} | ${getFilterLabel()}</div>
+        <div class="meta">Tanggal Cetak: ${todayDateStr}</div>
 
         <table class="stat-table">
           <tr>
@@ -166,37 +177,42 @@ export default function LaporanModal({
     document.body.removeChild(link)
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in print:p-0 print:bg-white print:static">
+  return createPortal(
+    <div className="print-only-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in print:p-0 print:bg-transparent print:static">
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden print:max-w-none print:max-h-none print:shadow-none print:border-none print:rounded-none">
         
-        {/* MODAL HEADER (DISAMBUNGKAN SAAT PRINT) */}
+        {/* MODAL HEADER (HIDDEN ON PRINT) */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 print:hidden shrink-0">
-          <div>
-            <h2 className="font-extrabold text-base text-slate-900">📄 Pratinjau Laporan Permohonan</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
+              <FileText weight="fill" size={20} className="text-[#0e4891]" />
+              Pratinjau Laporan Permohonan
+            </h2>
             <p className="text-xs text-slate-500 font-medium">
-              Siap dicetak ke PDF atau diunduh ke format Excel (.xls)
+              Data Seluruh Riwayat Permohonan PPID
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownloadExcel}
-              className="px-3.5 py-2 rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              disabled={loading}
+              className="px-3.5 py-2 rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-50"
             >
-              <span>📊</span> Download Excel (.xls)
+              <MicrosoftExcelLogo weight="fill" size={16} /> Download Excel (.xls)
             </button>
             <button
               onClick={handlePrint}
-              className="px-3.5 py-2 rounded-xl bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              disabled={loading}
+              className="px-3.5 py-2 rounded-xl bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-50"
             >
-              <span>🖨️</span> Cetak / Simpan PDF
+              <Printer weight="fill" size={16} /> Cetak / Simpan PDF
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-200 transition-colors ml-2"
+              className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-200 transition-colors ml-2 cursor-pointer flex items-center justify-center"
             >
-              ✕
+              <X weight="bold" size={16} />
             </button>
           </div>
         </div>
@@ -204,122 +220,163 @@ export default function LaporanModal({
         {/* PRINTABLE REPORT AREA */}
         <div className="p-6 md:p-8 overflow-y-auto space-y-6 print:p-0 print:overflow-visible font-plus-jakarta">
           
-          {/* JUDUL LAPORAN */}
-          <div className="border-b border-slate-200 pb-4 text-center md:text-left">
-            <h1 className="font-black text-xl md:text-2xl text-slate-900 uppercase tracking-tight">
-              Laporan Rekapitulasi Permohonan Informasi Publik
-            </h1>
-            <p className="text-xs font-bold text-[#0e4891] mt-0.5">
-              PPID Digital — Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah
-            </p>
-            <div className="flex flex-wrap items-center justify-between gap-2 mt-3 text-[11px] text-slate-500 font-medium pt-2 border-t border-slate-100">
-              <span>📅 <strong>Tanggal Cetak:</strong> {todayDateStr}</span>
-              <span>📌 <strong>Status Filter:</strong> {getFilterLabel()}</span>
-            </div>
-          </div>
+          {loading ? (
+             <div className="flex flex-col items-center justify-center py-24 text-slate-400 print:hidden">
+               <SpinnerGap weight="bold" size={48} className="animate-spin text-[#0e4891] mb-4" />
+               <p className="font-bold">Mengambil seluruh data permohonan...</p>
+             </div>
+          ) : (
+            <>
+              {/* STYLE UNTUK PRINT */}
+              <style dangerouslySetInnerHTML={{__html: `
+                @media print {
+                  @page {
+                    size: A4 landscape;
+                    margin: 1.5cm;
+                  }
+                  body {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                  }
+                  body > *:not(.print-only-modal) {
+                    display: none !important;
+                  }
+                  .print-only-modal {
+                    display: block !important;
+                    position: relative !important;
+                    width: 100% !important;
+                    height: auto !important;
+                  }
+                  .print-table th, .print-table td {
+                    font-size: 10px !important;
+                    padding: 4px 6px !important;
+                  }
+                  .print-break-inside-avoid {
+                    break-inside: avoid;
+                  }
+                }
+              `}} />
 
-          {/* RINGKASAN STATISTIK */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Total Data</span>
-              <span className="text-lg font-black text-slate-900 mt-0.5 block">{totalCount}</span>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0e4891] block">Perlu Diproses</span>
-              <span className="text-lg font-black text-[#0e4891] mt-0.5 block">{diajukanCount}</span>
-            </div>
-            <div className="bg-slate-100 p-3 rounded-xl border border-slate-300 text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 block">Sedang Diproses</span>
-              <span className="text-lg font-black text-slate-800 mt-0.5 block">{diprosesCount}</span>
-            </div>
-            <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Dijawab</span>
-              <span className="text-lg font-black text-emerald-700 mt-0.5 block">{dijawabCount}</span>
-            </div>
-            <div className="bg-rose-50 p-3 rounded-xl border border-rose-200 text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800 block">Ditolak</span>
-              <span className="text-lg font-black text-rose-700 mt-0.5 block">{ditolakCount}</span>
-            </div>
-          </div>
+              {/* JUDUL LAPORAN */}
+              <div className="border-b border-slate-200 pb-4 text-center">
+                <h1 className="font-black text-xl text-slate-900 uppercase tracking-tight">
+                  Laporan Rekapitulasi Permohonan Informasi Publik
+                </h1>
+                <p className="text-xs font-bold text-[#0e4891] mt-0.5">
+                  PPID Digital — Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah
+                </p>
+                <div className="flex items-center justify-center gap-2 mt-3 text-[11px] text-slate-500 font-medium pt-2 border-t border-slate-100">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar weight="fill" size={14} className="text-slate-400" />
+                    <strong>Tanggal Cetak:</strong> {todayDateStr}
+                  </span>
+                </div>
+              </div>
 
-          {/* TABEL DATA PERMOHONAN */}
-          <div className="overflow-x-auto border border-slate-200 rounded-xl print:overflow-visible">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-[#0e4891] text-white font-bold uppercase text-[10px] tracking-wider">
-                  <th className="p-3 border-r border-[#0a366f] w-10 text-center">No</th>
-                  <th className="p-3 border-r border-[#0a366f] w-24">Tanggal</th>
-                  <th className="p-3 border-r border-[#0a366f] w-36">Pemohon & NIK</th>
-                  <th className="p-3 border-r border-[#0a366f] w-32">Kontak</th>
-                  <th className="p-3 border-r border-[#0a366f] w-32">Jenis Informasi</th>
-                  <th className="p-3 border-r border-[#0a366f]">Deskripsi Kebutuhan</th>
-                  <th className="p-3 border-r border-[#0a366f] w-24 text-center">Status</th>
-                  <th className="p-3 w-28 text-center">SLA Deadline</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 font-medium">
-                {data.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="p-6 text-center text-slate-500 italic">
-                      Tidak ada data permohonan untuk ditampilkan.
-                    </td>
-                  </tr>
-                ) : (
-                  data.map((item, idx) => (
-                    <tr key={item.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
-                      <td className="p-3 text-center border-r border-slate-200 font-bold text-slate-700">{idx + 1}</td>
-                      <td className="p-3 border-r border-slate-200 text-slate-700 whitespace-nowrap">
-                        {new Date(item.created_at).toLocaleDateString('id-ID')}
-                      </td>
-                      <td className="p-3 border-r border-slate-200">
-                        <strong className="text-slate-900 block">{item.profiles?.nama || 'Pemohon'}</strong>
-                        <span className="text-[10px] font-mono text-slate-500">NIK: {item.profiles?.nik || '-'}</span>
-                      </td>
-                      <td className="p-3 border-r border-slate-200 text-slate-600 text-[11px] leading-tight">
-                        <div className="truncate" title={item.profiles?.email || '-'}>{item.profiles?.email || '-'}</div>
-                        <div className="text-slate-500">{item.profiles?.telepon || '-'}</div>
-                      </td>
-                      <td className="p-3 border-r border-slate-200 text-slate-800 font-semibold">{item.jenis_informasi}</td>
-                      <td className="p-3 border-r border-slate-200 text-slate-700 leading-relaxed max-w-xs whitespace-pre-line">
-                        {item.deskripsi}
-                      </td>
-                      <td className="p-3 border-r border-slate-200 text-center">
-                        <span
-                          className={`inline-block px-2 py-0.5 text-[10px] font-black uppercase rounded border ${
-                            item.status === 'dijawab'
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                              : item.status === 'ditolak'
-                              ? 'bg-rose-50 text-rose-800 border-rose-200'
-                              : item.status === 'diproses'
-                              ? 'bg-amber-50 text-amber-800 border-amber-200'
-                              : 'bg-blue-50 text-[#0e4891] border-blue-200'
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center text-slate-700 font-mono text-[11px]">
-                        {item.deadline_akhir || item.deadline_awal || '-'}
-                      </td>
+              {/* RINGKASAN STATISTIK */}
+              <div className="grid grid-cols-5 gap-3 print:grid-cols-5">
+                <div className="bg-slate-50 p-2 rounded border border-slate-200 text-center">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block">Total Data</span>
+                  <span className="text-base font-black text-slate-900 mt-0.5 block">{totalCount}</span>
+                </div>
+                <div className="bg-blue-50 p-2 rounded border border-blue-200 text-center">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-[#0e4891] block">Perlu Diproses</span>
+                  <span className="text-base font-black text-[#0e4891] mt-0.5 block">{diajukanCount}</span>
+                </div>
+                <div className="bg-slate-100 p-2 rounded border border-slate-300 text-center">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-700 block">Sedang Diproses</span>
+                  <span className="text-base font-black text-slate-800 mt-0.5 block">{diprosesCount}</span>
+                </div>
+                <div className="bg-emerald-50 p-2 rounded border border-emerald-200 text-center">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-800 block">Dijawab</span>
+                  <span className="text-base font-black text-emerald-700 mt-0.5 block">{dijawabCount}</span>
+                </div>
+                <div className="bg-rose-50 p-2 rounded border border-rose-200 text-center">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-rose-800 block">Ditolak</span>
+                  <span className="text-base font-black text-rose-700 mt-0.5 block">{ditolakCount}</span>
+                </div>
+              </div>
+
+              {/* TABEL DATA PERMOHONAN */}
+              <div className="border border-slate-300 rounded-none print:border-slate-800">
+                <table className="w-full text-left print-table border-collapse">
+                  <thead>
+                    <tr className="bg-[#0e4891] text-white font-bold uppercase tracking-wider print:bg-slate-100 print:text-black print:border-b-2 print:border-black">
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800 text-center w-8">No</th>
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800 w-16">Tanggal</th>
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800 w-32">Pemohon & NIK</th>
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800 w-28">Kontak</th>
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800 w-28">Jenis Informasi</th>
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800">Deskripsi</th>
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800 w-16 text-center">Status</th>
+                      <th className="p-2 border border-[#0a366f] print:border-slate-800 w-20 text-center">Deadline</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 text-slate-800 font-medium">
+                    {data.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="p-6 text-center text-slate-500 italic">
+                          Tidak ada data permohonan.
+                        </td>
+                      </tr>
+                    ) : (
+                      data.map((item, idx) => (
+                        <tr key={item.id} className={`print-break-inside-avoid ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                          <td className="p-2 text-center border border-slate-300 print:border-slate-800 font-bold">{idx + 1}</td>
+                          <td className="p-2 border border-slate-300 print:border-slate-800 whitespace-nowrap">
+                            {new Date(item.created_at).toLocaleDateString('id-ID')}
+                          </td>
+                          <td className="p-2 border border-slate-300 print:border-slate-800">
+                            <strong className="block">{item.profiles?.nama || 'Pemohon'}</strong>
+                            <span className="text-[9px] font-mono text-slate-500 print:text-black">NIK: {item.profiles?.nik || '-'}</span>
+                          </td>
+                          <td className="p-2 border border-slate-300 print:border-slate-800 leading-tight">
+                            <div className="truncate" title={item.profiles?.email || '-'}>{item.profiles?.email || '-'}</div>
+                            <div>{item.profiles?.telepon || '-'}</div>
+                          </td>
+                          <td className="p-2 border border-slate-300 print:border-slate-800 font-semibold">{item.jenis_informasi}</td>
+                          <td className="p-2 border border-slate-300 print:border-slate-800 leading-relaxed max-w-xs whitespace-pre-line">
+                            {item.deskripsi}
+                          </td>
+                          <td className="p-2 border border-slate-300 print:border-slate-800 text-center">
+                            <span
+                              className={`inline-block px-1.5 py-0.5 uppercase rounded ${
+                                item.status === 'dijawab'
+                                  ? 'bg-emerald-50 text-emerald-800 print:bg-transparent print:text-black'
+                                  : item.status === 'ditolak'
+                                  ? 'bg-rose-50 text-rose-800 print:bg-transparent print:text-black'
+                                  : item.status === 'diproses'
+                                  ? 'bg-amber-50 text-amber-800 print:bg-transparent print:text-black'
+                                  : 'bg-blue-50 text-[#0e4891] print:bg-transparent print:text-black'
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="p-2 border border-slate-300 print:border-slate-800 text-center font-mono">
+                            {item.deadline_akhir || item.deadline_awal || '-'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* FOOTER MODAL (DISAMBUNGKAN SAAT PRINT) */}
+        {/* FOOTER MODAL (HIDDEN ON PRINT) */}
         <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end print:hidden shrink-0">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors"
+            className="px-5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
           >
             Tutup Pratinjau
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
