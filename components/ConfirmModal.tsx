@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Warning, Question, X } from '@phosphor-icons/react'
 
 interface ConfirmModalProps {
@@ -26,6 +27,12 @@ export default function ConfirmModal({
   variant = 'primary',
   loading = false,
 }: ConfirmModalProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !loading) onClose()
@@ -40,9 +47,9 @@ export default function ConfirmModal({
     }
   }, [isOpen, onClose, loading])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in"
       onClick={() => {
@@ -81,7 +88,7 @@ export default function ConfirmModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {cancelText}
             </button>
@@ -89,7 +96,7 @@ export default function ConfirmModal({
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-all disabled:opacity-50 ${
+              className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-all cursor-pointer disabled:opacity-50 ${
                 variant === 'danger'
                   ? 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-500/20'
                   : 'bg-[#0e4891] hover:bg-[#0a366f] focus:ring-[#0e4891]/20'
@@ -100,6 +107,7 @@ export default function ConfirmModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
