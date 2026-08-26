@@ -1,90 +1,22 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { User } from '@supabase/supabase-js'
-import { createClient } from '@/app/lib/supabase/client'
+import { createClient } from '@/app/lib/supabase/server'
 import KategoriCard from '@/components/KategoriCard'
-import ConfirmModal from '@/components/ConfirmModal'
-import Toast, { ToastType } from '@/components/Toast'
-import { SpinnerGap, MapPin, Phone, EnvelopeSimple, List, X } from '@phosphor-icons/react'
+import LandingNav from '@/components/LandingNav'
+import { MapPin, Phone, EnvelopeSimple } from '@phosphor-icons/react/dist/ssr'
 
-const supabase = createClient()
+// Revalidate page so it works with on-demand revalidation or periodic if needed
+export const revalidate = 3600 // We still can set a baseline, but on-demand takes precedence. Actually let's just let it be default.
 
-type KontenLanding = {
-  id: number
-  section_key: string
-  judul: string
-  isi_teks: string
-}
+export default async function HomePage() {
+  const supabase = await createClient()
 
-type DokumenPublik = {
-  id: number | string
-  kategori_key: string
-  nama_dokumen: string
-  file_url: string
-}
+  const [kontenRes, dokumenRes] = await Promise.all([
+    supabase.from('konten_landing').select('*').order('id', { ascending: true }),
+    supabase.from('dokumen_publik').select('*').order('created_at', { ascending: true })
+  ])
 
-export default function HomePage() {
-  const [listKonten, setListKonten] = useState<KontenLanding[]>([])
-  const [listDokumen, setListDokumen] = useState<DokumenPublik[]>([])
-  const [user, setUser] = useState<User | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  // State Modal Konfirmasi & Toast
-  const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [loggingOut, setLoggingOut] = useState(false)
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      setUser(currentUser)
-
-      if (currentUser) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', currentUser.id)
-          .single()
-
-        if (profile?.role === 'admin') {
-          setIsAdmin(true)
-        }
-      }
-
-      const [kontenRes, dokumenRes] = await Promise.all([
-        supabase.from('konten_landing').select('*').order('id', { ascending: true }),
-        supabase.from('dokumen_publik').select('*').order('created_at', { ascending: true })
-      ])
-
-      if (kontenRes.data) setListKonten(kontenRes.data)
-      if (dokumenRes.data) setListDokumen(dokumenRes.data)
-      setLoading(false)
-    }
-
-    fetchData()
-  }, [])
-
-  const handleLogoutClick = () => {
-    setShowLogoutModal(true)
-  }
-
-  const confirmLogout = async () => {
-    setLoggingOut(true)
-    await supabase.auth.signOut()
-    setUser(null)
-    setIsAdmin(false)
-    setShowLogoutModal(false)
-    setLoggingOut(false)
-    setToast({ message: 'Anda berhasil keluar dari akun.', type: 'info' })
-    setTimeout(() => {
-      window.location.reload()
-    }, 1200)
-  }
+  const listKonten = kontenRes.data || []
+  const listDokumen = dokumenRes.data || []
 
   const getKontenBySection = (key: string) => {
     return listKonten.find((k) => k.section_key === key)
@@ -105,157 +37,12 @@ export default function HomePage() {
     { key: 'dokumen_program_kegiatan', label: 'Dokumen Program dan Kegiatan Tahun 2022-2024', badge: 'Laporan' },
   ]
 
+  // We need to know if user is logged in for the Hero section button ("Ajukan Permohonan" vs "Daftar")
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-plus-jakarta antialiased selection:bg-amber-400 selection:text-slate-900">
-      {/* HEADER / NAVIGATION */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-lg bg-[#0e4891] flex items-center justify-center text-amber-400 font-black text-xl shadow-sm">
-              P
-            </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-base tracking-tight text-slate-900 leading-none">
-                PPID DIGITAL
-              </span>
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">
-                Dinas CIKASDA Prov. Sulteng
-              </span>
-            </div>
-          </div>
-
-          {/* DESKTOP NAV */}
-          <nav className="hidden md:flex items-center gap-5 text-sm font-semibold">
-            {user ? (
-              <>
-                {isAdmin ? (
-                  <>
-                    <Link
-                      href="/admin"
-                      className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md"
-                    >
-                      Admin Console
-                    </Link>
-                    <button
-                      onClick={handleLogoutClick}
-                      className="text-rose-600 hover:text-rose-700 px-2 py-2 rounded-lg text-sm font-bold transition-all"
-                    >
-                      Keluar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/permohonan-saya"
-                      className="text-slate-600 hover:text-[#0e4891] transition-colors font-bold"
-                    >
-                      Riwayat Permohonan
-                    </Link>
-                    <Link
-                      href="/permohonan-saya/ajukan"
-                      className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md"
-                    >
-                      Ajukan Permohonan
-                    </Link>
-                    <div className="w-px h-6 bg-slate-200 mx-1"></div>
-                    <button
-                      onClick={handleLogoutClick}
-                      className="text-rose-600 hover:text-rose-700 px-2 py-1.5 rounded-lg text-sm font-bold transition-all"
-                    >
-                      Keluar
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-slate-600 hover:text-[#0e4891] transition-colors"
-                >
-                  Masuk
-                </Link>
-                <Link
-                  href="/daftar"
-                  className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md"
-                >
-                  Ajukan Permohonan
-                </Link>
-              </>
-            )}
-          </nav>
-
-          {/* MOBILE MENU BUTTON */}
-          <button
-            className="md:hidden flex items-center justify-center p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X weight="bold" size={24} /> : <List weight="bold" size={24} />}
-          </button>
-        </div>
-
-        {/* MOBILE MENU DROPDOWN */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-200 shadow-xl py-4 px-6 flex flex-col gap-4 animate-fade-in">
-            {user ? (
-              <>
-                {isAdmin ? (
-                  <>
-                    <Link
-                      href="/admin"
-                      className="text-slate-700 hover:text-[#0e4891] transition-colors font-bold py-2 border-b border-slate-100"
-                    >
-                      Admin Console
-                    </Link>
-                    <button
-                      onClick={handleLogoutClick}
-                      className="w-full text-center bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-4 py-3 rounded-xl text-sm font-bold transition-all shadow-sm"
-                    >
-                      Keluar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/permohonan-saya/ajukan"
-                      className="w-full text-center bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-4 py-3 rounded-xl transition-all shadow-sm"
-                    >
-                      Ajukan Permohonan
-                    </Link>
-                    <Link
-                      href="/permohonan-saya"
-                      className="text-slate-600 hover:text-[#0e4891] transition-colors font-bold py-2 border-b border-slate-100 text-center"
-                    >
-                      Riwayat Permohonan
-                    </Link>
-                    <button
-                      onClick={handleLogoutClick}
-                      className="w-full text-center text-rose-600 hover:bg-rose-50 px-4 py-3 rounded-xl text-sm font-bold transition-all mt-1"
-                    >
-                      Keluar
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-slate-600 hover:text-[#0e4891] transition-colors font-bold py-2 border-b border-slate-100 text-center"
-                >
-                  Masuk Akun
-                </Link>
-                <Link
-                  href="/daftar"
-                  className="w-full text-center bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-4 py-3 rounded-xl transition-all shadow-sm"
-                >
-                  Ajukan Permohonan Baru
-                </Link>
-              </>
-            )}
-          </div>
-        )}
-      </header>
+      <LandingNav />
 
       {/* HERO SECTION */}
       <section className="py-24 px-6 bg-white border-b border-slate-200">
@@ -278,158 +65,76 @@ export default function HomePage() {
               href={user ? '/permohonan-saya/ajukan' : '/daftar'}
               className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-7 py-3.5 rounded-xl transition-colors shadow-sm text-base"
             >
-              Ajukan Permohonan Sekarang
+              Ajukan Permohonan Informasi
             </Link>
-            <a
-              href="#kategori-informasi"
-              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-7 py-3.5 rounded-xl transition-colors text-base border border-slate-200"
+            <Link
+              href="#kategori"
+              className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-7 py-3.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-base"
             >
-              Lihat Kategori Informasi
-            </a>
+              Lihat Daftar Informasi
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* RINGKASAN STATISTIK */}
-      <section className="bg-[#0e4891] text-white py-12 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div>
-            <div className="text-3xl md:text-4xl font-black text-amber-400">100%</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-blue-100 mt-1">Transparansi Publik</div>
+      {/* TENTANG PPID SECTION */}
+      <section className="py-20 px-6 border-b border-slate-200 bg-slate-50">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-12 items-start">
+          <div className="md:w-1/3">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
+              {getKontenBySection('tentang_ppid')?.judul || 'Tentang PPID CIKASDA'}
+            </h2>
+            <div className="w-12 h-1.5 bg-amber-400 rounded-full mb-6"></div>
           </div>
-          <div>
-            <div className="text-3xl md:text-4xl font-black text-white">10 Hari</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-blue-100 mt-1">Maksimal SLA Respon</div>
-          </div>
-          <div>
-            <div className="text-3xl md:text-4xl font-black text-amber-400">8 Kategori</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-blue-100 mt-1">Jenis Informasi</div>
-          </div>
-          <div>
-            <div className="text-3xl md:text-4xl font-black text-white">Gratis</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-blue-100 mt-1">Tanpa Biaya Layanan</div>
+          <div className="md:w-2/3">
+            <div className="prose prose-slate prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium prose-strong:text-slate-900 max-w-none text-lg">
+              <p>
+                {getKontenBySection('tentang_ppid')?.isi_teks || 
+                  'Pejabat Pengelola Informasi dan Dokumentasi (PPID) pada Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah berfungsi sebagai layanan informasi publik dalam rangka mewujudkan penyelenggaraan negara yang baik, yaitu transparan, efektif dan efisien, akuntabel serta dapat dipertanggungjawabkan.'}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* KATEGORI INFORMASI (4 SEBARIS COMPONENT GRID LAYOUT) */}
-      <section id="kategori-informasi" className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-black uppercase tracking-wider text-[#0e4891] bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Klasifikasi Dokumen
-          </span>
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mt-3 mb-3">
-            Kategori Informasi Publik
-          </h2>
-          <p className="text-slate-600 text-base font-medium">
-            Pilih salah satu dari 8 kategori informasi publik untuk mengakses dokumen resmi dan laporan publik.
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-16 text-slate-500 font-medium bg-white rounded-2xl border border-slate-200">
-            <div className="inline-block animate-spin text-2xl mb-2"><SpinnerGap weight="bold" /></div>
-            <div>Memuat data informasi publik...</div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {KATEGORI_KEYS.map((cat) => {
-              const konten = getKontenBySection(cat.key)
-              const count = getDokumenCountByKategori(cat.key)
-
-              return (
-                <KategoriCard
-                  key={cat.key}
-                  title={konten?.judul || cat.label}
-                  description={konten?.isi_teks || 'Dokumen resmi yang dikelola oleh PPID CIKASDA Sulteng.'}
-                  badge={cat.badge}
-                  count={count}
-                  href={`/informasi/${cat.key}`}
-                />
-              )
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* TATA CARA PERMOHONAN */}
-      <section className="py-24 px-6 bg-white border-t border-slate-200">
+      {/* KATEGORI INFORMASI SECTION */}
+      <section id="kategori" className="py-24 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-black uppercase tracking-wider text-[#0e4891] bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-              Panduan Pemohon
-            </span>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mt-3 mb-3">
-              Tahapan Alur Pengajuan Informasi
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
+              {getKontenBySection('kategori_informasi')?.judul || 'Kategori Informasi Publik'}
             </h2>
-            <p className="text-slate-600 text-sm md:text-base font-medium">
-              4 langkah praktis mengajukan dan memantau permohonan informasi publik secara daring.
+            <p className="text-slate-600 font-medium text-lg">
+              {getKontenBySection('kategori_informasi')?.isi_teks || 'Telusuri berbagai kategori dokumen dan informasi publik yang tersedia secara terbuka untuk masyarakat.'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
-              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
-                01
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
-                Registrasi / Login
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Buat akun pengguna baru dengan NIK KTP terverifikasi atau masuk ke akun yang sudah terdaftar.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
-              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
-                02
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
-                Isi Form Permohonan
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Pilih kategori informasi, tulis rincian kebutuhan dokumen dan tujuan penggunaan secara rinci.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
-              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
-                03
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
-                Verifikasi Petugas
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Tim PPID akan mengkaji permohonan sesuai standar operasional SLA 10 hari kerja.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-[#0e4891]/40 hover:shadow-md transition-all duration-300 group">
-              <div className="w-11 h-11 bg-[#0e4891] text-amber-400 font-black text-lg rounded-xl flex items-center justify-center mb-5 shadow-xs group-hover:scale-105 transition-transform">
-                04
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
-                Terima Jawaban Resmi
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Dapatkan jawaban resmi beserta salinan berkas digital langsung melalui dashboard permohonan.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {KATEGORI_KEYS.map((kategori) => (
+              <KategoriCard
+                key={kategori.key}
+                href={`/informasi/${kategori.key}`}
+                title={kategori.label}
+                description="Klik untuk melihat daftar dokumen publik pada kategori ini."
+                count={getDokumenCountByKategori(kategori.key)}
+                badge={kategori.badge}
+              />
+            ))}
           </div>
         </div>
       </section>
 
-      {/* FOOTER MULTI-COLUMN */}
-      <footer className="bg-slate-900 text-white pt-16 pb-12 px-6 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 pb-12 border-b border-slate-800">
-          {/* Kolom 1: Brand Info */}
+      {/* FOOTER */}
+      <footer className="bg-slate-900 text-slate-300 py-16 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+          {/* Brand */}
           <div>
-            <div className="flex items-center gap-3.5 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#0e4891] text-amber-400 flex items-center justify-center font-black text-xl shadow-inner">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-[#0e4891] flex items-center justify-center text-amber-400 font-black text-xl shadow-sm">
                 P
               </div>
               <div className="flex flex-col">
-                <span className="font-black text-base tracking-tight text-white leading-none">
+                <span className="font-extrabold text-base tracking-tight text-white leading-none">
                   PPID DIGITAL
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
@@ -437,85 +142,66 @@ export default function HomePage() {
                 </span>
               </div>
             </div>
-            <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Portal Pejabat Pengelola Informasi dan Dokumentasi (PPID) resmi Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah.
+            <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">
+              Portal Layanan Informasi Publik Digital resmi dari Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah. Membangun transparansi melalui akses informasi yang mudah dan cepat.
             </p>
           </div>
 
-          {/* Kolom 2: Kontak & Alamat */}
+          {/* Kontak */}
           <div>
-            <h4 className="font-extrabold text-sm text-white uppercase tracking-wider mb-4 border-l-2 border-amber-400 pl-2.5">
-              Kontak & Alamat
-            </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400 font-medium">
-              <li className="flex items-start gap-2">
-                <MapPin weight="fill" size={16} className="text-amber-400 shrink-0" />
-                <span>Jl. Ir. H. Juanda No. 10, Palu, Sulawesi Tengah</span>
+            <h3 className="text-white font-bold text-lg mb-6">Hubungi Kami</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <MapPin className="text-amber-400 mt-1 shrink-0" size={18} weight="fill" />
+                <span className="text-sm font-medium leading-relaxed">
+                  Jl. Mohammad Yamin No.11, Tatura Utara, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111
+                </span>
               </li>
-              <li className="flex items-center gap-2">
-                <Phone weight="fill" size={16} className="text-amber-400 shrink-0" />
-                <span>(0451) 422111 / WA Layanan PPID</span>
+              <li className="flex items-center gap-3">
+                <Phone className="text-amber-400 shrink-0" size={18} weight="fill" />
+                <span className="text-sm font-medium">0812-4217-0628</span>
               </li>
-              <li className="flex items-center gap-2">
-                <EnvelopeSimple weight="fill" size={16} className="text-amber-400 shrink-0" />
-                <span>ppid.cikasda@sultengprov.go.id</span>
+              <li className="flex items-center gap-3">
+                <EnvelopeSimple className="text-amber-400 shrink-0" size={18} weight="fill" />
+                <span className="text-sm font-medium">cikasda.sulteng@gmail.com</span>
               </li>
             </ul>
           </div>
 
-          {/* Kolom 3: Jam Layanan */}
+          {/* Tautan Cepat */}
           <div>
-            <h4 className="font-extrabold text-sm text-white uppercase tracking-wider mb-4 border-l-2 border-amber-400 pl-2.5">
-              Jam Operasional Layanan
-            </h4>
-            <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 text-xs text-slate-300 space-y-2">
-              <div className="flex justify-between">
-                <span className="font-semibold text-slate-400">Senin - Kamis:</span>
-                <span className="font-bold text-white">08:00 - 16:00 WITA</span>
-              </div>
-              <div className="flex justify-between border-t border-slate-700/40 pt-2">
-                <span className="font-semibold text-slate-400">Jumat:</span>
-                <span className="font-bold text-white">08:00 - 16:30 WITA</span>
-              </div>
-              <div className="flex justify-between border-t border-slate-700/40 pt-2 text-amber-400 font-semibold">
-                <span>Sabtu - Minggu:</span>
-                <span>Tutup (Hari Libur)</span>
-              </div>
-            </div>
+            <h3 className="text-white font-bold text-lg mb-6">Tautan Cepat</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link href="#kategori" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                  Daftar Informasi Publik
+                </Link>
+              </li>
+              <li>
+                <Link href="/daftar" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                  Buat Akun Pemohon
+                </Link>
+              </li>
+              <li>
+                <Link href="/login" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                  Masuk Sistem
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-medium">
-          <div>
-            © {new Date().getFullYear()} PPID Dinas CIKASDA Provinsi Sulawesi Tengah. Hak Cipta Dilindungi Undang-Undang.
-          </div>
-          <div className="flex items-center gap-4 text-slate-400">
-            <span>UU No. 14 Tahun 2008 tentang Keterbukaan Informasi Publik</span>
+        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm font-medium text-slate-500">
+            &copy; {new Date().getFullYear()} PPID Dinas CIKASDA Prov. Sulteng. Hak Cipta Dilindungi.
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold bg-slate-800 px-3 py-1 rounded-full text-slate-400">
+              Versi 1.0.0
+            </span>
           </div>
         </div>
       </footer>
-
-      {/* CONFIRM LOGOUT MODAL */}
-      <ConfirmModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={confirmLogout}
-        title="Konfirmasi Keluar"
-        message="Apakah Anda yakin ingin keluar dari akun PPID Digital?"
-        confirmText="Keluar Akun"
-        cancelText="Batal"
-        variant="danger"
-        loading={loggingOut}
-      />
-
-      {/* TOAST NOTIFICATION */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   )
 }

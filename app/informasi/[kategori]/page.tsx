@@ -1,4 +1,4 @@
-import { createClient } from '@/app/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from '@phosphor-icons/react/dist/ssr'
@@ -10,6 +10,21 @@ function formatTitle(str: string) {
 
 // Komponen Client untuk merender PDF Viewer atau List
 import DokumenViewer from './DokumenViewer'
+
+export const dynamicParams = false // Karena kita tahu persis ada 8 kategori, kategori lain akan 404
+
+export function generateStaticParams() {
+  return [
+    { kategori: 'daftar_informasi_publik' },
+    { kategori: 'surat_keputusan' },
+    { kategori: 'visi_misi' },
+    { kategori: 'sop_spm' },
+    { kategori: 'pelayanan' },
+    { kategori: 'penghargaan' },
+    { kategori: 'permohonan_informasi' },
+    { kategori: 'dokumen_program_kegiatan' },
+  ]
+}
 
 export default async function KategoriInformasiPage({
   params,
@@ -34,7 +49,11 @@ export default async function KategoriInformasiPage({
     notFound()
   }
 
-  const supabase = await createClient()
+  // Gunakan standard client agar Next.js tidak membaca cookies() dan menggagalkan SSG
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   // Ambil meta kategori
   const { data: kontenData } = await supabase

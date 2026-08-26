@@ -194,6 +194,8 @@ export async function updateKontenKategori(id: number, judul: string, isi_teks: 
 
     if (error) throw error
     revalidatePath('/admin/konten')
+    revalidatePath('/', 'layout') // Revalidate homepage and all its contents
+    revalidatePath('/informasi/[kategori]', 'page') // Revalidate dynamic category pages
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)
@@ -218,6 +220,8 @@ export async function addDokumen(kategori_key: string, nama_dokumen: string, fil
 
     if (error) throw error
     revalidatePath('/admin/konten')
+    revalidatePath('/', 'layout')
+    revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)
@@ -239,6 +243,8 @@ export async function updateDokumen(id: number | bigint, nama_dokumen: string, f
 
     if (error) throw error
     revalidatePath('/admin/konten')
+    revalidatePath('/', 'layout')
+    revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)
@@ -260,6 +266,8 @@ export async function deleteDokumen(id: number | bigint) {
 
     if (error) throw error
     revalidatePath('/admin/konten')
+    revalidatePath('/', 'layout')
+    revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)

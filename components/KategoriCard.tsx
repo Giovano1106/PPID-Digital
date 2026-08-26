@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight } from '@phosphor-icons/react'
+import { ArrowRight } from '@phosphor-icons/react/dist/ssr'
 
 interface KategoriCardProps {
   title: string
