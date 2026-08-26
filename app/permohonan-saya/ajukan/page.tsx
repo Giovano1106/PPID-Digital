@@ -13,7 +13,7 @@ export default function FormPermohonanPage() {
   const supabase = createClient()
 
   const [form, setForm] = useState({
-    jenis_informasi: 'Informasi Berkala',
+    jenis_informasi: 'Daftar Informasi Publik',
     deskripsi: '',
     cara_memperoleh: 'Melihat / Membaca / Mendengarkan',
   })
@@ -140,10 +140,14 @@ export default function FormPermohonanPage() {
                 onChange={handleChange}
                 className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-semibold text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all cursor-pointer"
               >
-                <option value="Informasi Berkala">Informasi Berkala</option>
-                <option value="Informasi Serta Merta">Informasi Serta Merta</option>
-                <option value="Informasi Setiap Saat">Informasi Setiap Saat</option>
-                <option value="Informasi Dikecualikan">Informasi Dikecualikan</option>
+                <option value="Daftar Informasi Publik">Daftar Informasi Publik</option>
+                <option value="Surat Keputusan">Surat Keputusan</option>
+                <option value="Visi dan Misi PPID">Visi dan Misi PPID</option>
+                <option value="SOP dan SPM PPID">SOP dan SPM PPID</option>
+                <option value="Pelayanan">Pelayanan</option>
+                <option value="Penghargaan">Penghargaan</option>
+                <option value="Permohonan Informasi">Permohonan Informasi</option>
+                <option value="Dokumen Program dan Kegiatan Tahun 2022-2024">Dokumen Program dan Kegiatan Tahun 2022-2024</option>
               </select>
             </div>
 

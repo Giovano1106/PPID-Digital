@@ -95,10 +95,14 @@ export default function HomePage() {
   }
 
   const KATEGORI_KEYS = [
-    { key: 'berkala', label: 'Informasi Berkala', badge: 'Rutin' },
-    { key: 'serta_merta', label: 'Informasi Serta Merta', badge: 'Darurat' },
-    { key: 'setiap_saat', label: 'Informasi Setiap Saat', badge: 'On-Demand' },
-    { key: 'dikecualikan', label: 'Informasi Dikecualikan', badge: 'Terbatas' },
+    { key: 'daftar_informasi_publik', label: 'Daftar Informasi Publik', badge: 'Informasi' },
+    { key: 'surat_keputusan', label: 'Surat Keputusan', badge: 'Dokumen' },
+    { key: 'visi_misi', label: 'Visi dan Misi PPID', badge: 'Profil' },
+    { key: 'sop_spm', label: 'SOP dan SPM PPID', badge: 'Standar' },
+    { key: 'pelayanan', label: 'Pelayanan', badge: 'Layanan' },
+    { key: 'penghargaan', label: 'Penghargaan', badge: 'Apresiasi' },
+    { key: 'permohonan_informasi', label: 'Permohonan Informasi', badge: 'Layanan' },
+    { key: 'dokumen_program_kegiatan', label: 'Dokumen Program dan Kegiatan Tahun 2022-2024', badge: 'Laporan' },
   ]
 
   return (
@@ -298,7 +302,7 @@ export default function HomePage() {
             <div className="text-xs font-bold uppercase tracking-wider text-blue-100 mt-1">Maksimal SLA Respon</div>
           </div>
           <div>
-            <div className="text-3xl md:text-4xl font-black text-amber-400">4 Kategori</div>
+            <div className="text-3xl md:text-4xl font-black text-amber-400">8 Kategori</div>
             <div className="text-xs font-bold uppercase tracking-wider text-blue-100 mt-1">Jenis Informasi</div>
           </div>
           <div>
@@ -318,7 +322,7 @@ export default function HomePage() {
             Kategori Informasi Publik
           </h2>
           <p className="text-slate-600 text-base font-medium">
-            Pilih salah satu dari 4 kategori informasi publik untuk mengakses dokumen resmi dan laporan publik.
+            Pilih salah satu dari 8 kategori informasi publik untuk mengakses dokumen resmi dan laporan publik.
           </p>
         </div>
 

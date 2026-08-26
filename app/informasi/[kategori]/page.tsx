@@ -19,7 +19,16 @@ export default async function KategoriInformasiPage({
   const resolvedParams = await params
   const kategoriKey = resolvedParams.kategori
   
-  const validCategories = ['berkala', 'serta_merta', 'setiap_saat', 'dikecualikan']
+  const validCategories = [
+    'daftar_informasi_publik',
+    'surat_keputusan',
+    'visi_misi',
+    'sop_spm',
+    'pelayanan',
+    'penghargaan',
+    'permohonan_informasi',
+    'dokumen_program_kegiatan'
+  ]
   
   if (!validCategories.includes(kategoriKey)) {
     notFound()

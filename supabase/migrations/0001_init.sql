@@ -88,10 +88,14 @@ create table if not exists public.konten_landing (
 -- Seed awal konten landing jika belum ada
 insert into public.konten_landing (section_key, judul, isi_teks)
 values 
-  ('berkala', 'Informasi Berkala', 'Informasi yang diperbarui dan diumumkan secara rutin berkala oleh PPID CIKASDA.'),
-  ('serta_merta', 'Informasi Serta Merta', 'Informasi penting yang menyangkut hajat hidup orang banyak dan ketertiban umum.'),
-  ('setiap_saat', 'Informasi Setiap Saat', 'Informasi publik yang wajib disediakan dan dapat diakses kapan saja oleh pemohon.'),
-  ('dikecualikan', 'Informasi Dikecualikan', 'Daftar informasi yang bersifat rahasia sesuai ketentuan regulasi dan undang-undang.')
+  ('daftar_informasi_publik', 'Daftar Informasi Publik', 'Dokumen yang memuat keseluruhan daftar informasi publik yang dikelola dan disediakan secara transparan oleh Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah.'),
+  ('surat_keputusan', 'Surat Keputusan', 'Kumpulan ketetapan dan kebijakan resmi yang diterbitkan dalam bentuk Surat Keputusan (SK) di lingkungan institusi.'),
+  ('visi_misi', 'Visi dan Misi PPID', 'Penjabaran tujuan, arah kebijakan, serta komitmen pelayanan informasi publik untuk mewujudkan tata kelola pemerintahan yang baik dan transparan.'),
+  ('sop_spm', 'SOP dan SPM PPID', 'Standar Operasional Prosedur dan Standar Pelayanan Minimal yang menjadi pedoman utama dalam menjaga mutu layanan informasi publik.'),
+  ('pelayanan', 'Pelayanan', 'Informasi lengkap mengenai jenis layanan, prosedur pengajuan, dan panduan kemudahan akses pelayanan bagi masyarakat.'),
+  ('penghargaan', 'Penghargaan', 'Dokumentasi prestasi, apresiasi, dan capaian kinerja yang berhasil diraih oleh institusi dalam pelaksanaan dan peningkatan kualitas pelayanan.'),
+  ('permohonan_informasi', 'Permohonan Informasi', 'Fasilitas, tata cara, dan panduan lengkap bagi masyarakat untuk mengajukan permohonan informasi publik secara resmi dan terstruktur.'),
+  ('dokumen_program_kegiatan', 'Dokumen Program dan Kegiatan Tahun 2022-2024', 'Arsip menyeluruh terkait rencana kerja, pelaksanaan, dan laporan pertanggungjawaban program kegiatan selama periode tahun 2022 hingga 2024.')
 on conflict (section_key) do nothing;
 
 -- =========================================================
