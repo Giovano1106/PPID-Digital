@@ -45,31 +45,40 @@ export default async function HomePage() {
       <LandingNav />
 
       {/* HERO SECTION */}
-      <section className="py-24 px-6 bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 mb-8">
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+      <section className="relative py-32 px-6 border-b border-slate-200 overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
+        ></div>
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 z-0 bg-[#0e4891]/90 md:bg-transparent md:bg-gradient-to-r md:from-[#0e4891] md:from-10% md:via-[#0e4891]/80 md:via-40% md:to-transparent md:to-60%"></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-start">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-bold text-white mb-8">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span>
             Layanan Portal Resmi Informasi Publik Digital
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] max-w-4xl mb-6">
-            Akses Layanan Informasi Publik <span className="text-[#0e4891]">CIKASDA</span> Sulawesi Tengah
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15] max-w-3xl mb-6">
+            Akses Layanan Informasi Publik <span className="text-amber-400">CIKASDA</span> Sulawesi Tengah
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-2xl mb-10">
+          <p className="text-lg md:text-xl text-blue-100 font-medium leading-relaxed max-w-2xl mb-10">
             Wujud komitmen transparansi, akuntabilitas, dan pelayanan informasi terbuka bagi seluruh masyarakat Sulawesi Tengah.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Link
               href={user ? '/permohonan-saya/ajukan' : '/daftar'}
-              className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-7 py-3.5 rounded-xl transition-colors shadow-sm text-base"
+              className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold px-7 py-3.5 rounded-xl transition-colors shadow-sm text-base"
             >
               Ajukan Permohonan Informasi
             </Link>
             <Link
               href="#kategori"
-              className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-7 py-3.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-base"
+              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-bold px-7 py-3.5 rounded-xl border border-white/20 transition-colors shadow-sm text-base"
             >
               Lihat Daftar Informasi
             </Link>
