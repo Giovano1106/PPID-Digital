@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/app/lib/supabase/client'
 import { ArrowLeft, Warning, CheckCircle } from '@phosphor-icons/react'
 import Toast, { ToastType } from '@/components/Toast'
@@ -119,8 +120,9 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Header CIKASDA */}
         <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
-          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3">
-            P
+          <div className="flex items-center gap-2 mb-3">
+            <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
+            <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
           </div>
           <h1 className="text-xl font-extrabold tracking-wide uppercase">Pendaftaran Pemohon PPID</h1>
           <p className="text-xs text-blue-100 mt-1 font-medium leading-relaxed">

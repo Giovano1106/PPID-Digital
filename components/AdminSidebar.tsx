@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { List, X, ArrowLeft } from '@phosphor-icons/react'
 import AdminNav from '@/components/AdminNav'
 import AdminLogoutButton from '@/components/AdminLogoutButton'
@@ -18,8 +19,9 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
       {/* MOBILE TOP BAR WITH HAMBURGER */}
       <div className="md:hidden bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40 shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-[#0e4891] flex items-center justify-center font-bold text-white text-base shadow-sm">
-            P
+          <div className="flex items-center gap-1.5">
+            <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={36} height={36} className="w-8 h-8 object-contain" />
+            <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={36} height={36} className="w-8 h-8 object-contain" />
           </div>
           <div>
             <span className="font-extrabold text-sm tracking-tight text-slate-900 block leading-tight">
@@ -56,8 +58,9 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
       >
         <div>
           <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-100">
-            <div className="h-10 w-10 rounded-xl bg-[#0e4891] flex items-center justify-center font-bold text-white text-lg shadow-sm">
-              P
+            <div className="flex items-center gap-1.5">
+              <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={40} height={40} className="w-9 h-9 object-contain" />
+              <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={40} height={40} className="w-9 h-9 object-contain" />
             </div>
             <div className="overflow-hidden">
               <span className="font-extrabold text-sm tracking-tight text-slate-900 block leading-tight truncate">

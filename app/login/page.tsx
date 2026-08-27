@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Warning } from '@phosphor-icons/react'
+import Image from 'next/image'
 import { createClient } from '@/app/lib/supabase/client'
 
 export default function LoginPage() {
@@ -87,8 +88,9 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Header CIKASDA */}
         <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
-          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl mb-3">
-            P
+          <div className="flex items-center gap-2 mb-3">
+            <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
+            <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
           </div>
           <h1 className="text-xl font-extrabold tracking-wide uppercase">PPID DIGITAL</h1>
           <p className="text-xs text-blue-100 mt-1 font-medium leading-relaxed">
@@ -137,6 +139,14 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
               />
+              <div className="flex justify-end mt-1.5">
+                <Link
+                  href="/lupa-sandi"
+                  className="text-xs font-bold text-[#0e4891] hover:underline"
+                >
+                  Lupa kata sandi?
+                </Link>
+              </div>
             </div>
 
             <button

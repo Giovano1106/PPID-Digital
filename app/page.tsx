@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/server'
 import KategoriCard from '@/components/KategoriCard'
 import LandingNav from '@/components/LandingNav'
+import Image from 'next/image'
 import { MapPin, Phone, EnvelopeSimple } from '@phosphor-icons/react/dist/ssr'
 
 // Revalidate page so it works with on-demand revalidation or periodic if needed
@@ -139,8 +140,9 @@ export default async function HomePage() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-[#0e4891] flex items-center justify-center text-amber-400 font-black text-xl shadow-sm">
-                P
+              <div className="flex items-center gap-1.5">
+                <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={40} height={40} className="w-10 h-10 object-contain" />
+                <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={40} height={40} className="w-10 h-10 object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="font-extrabold text-base tracking-tight text-white leading-none">
