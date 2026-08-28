@@ -16,6 +16,28 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo-sulteng.webp",
   },
+  openGraph: {
+    title: "PPID Digital — Dinas Cipta Karya & Sumber Daya Air",
+    description: "Portal Layanan Informasi Publik Digital Resmi Provinsi Sulawesi Tengah.",
+    url: "https://ppid.sultengprov.go.id", // Placeholder URL
+    siteName: "PPID CIKASDA",
+    images: [
+      {
+        url: "/logo-cikasda.webp",
+        width: 800,
+        height: 600,
+        alt: "Logo CIKASDA Sulteng",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PPID Digital — Dinas Cipta Karya & Sumber Daya Air",
+    description: "Portal Layanan Informasi Publik Digital Resmi Provinsi Sulawesi Tengah.",
+    images: ["/logo-cikasda.webp"],
+  },
 };
 
 export default function RootLayout({
