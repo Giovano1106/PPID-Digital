@@ -3,7 +3,11 @@ import { createClient } from '@/app/lib/supabase/server'
 import KategoriCard from '@/components/KategoriCard'
 import LandingNav from '@/components/LandingNav'
 import Image from 'next/image'
-import { MapPin, Phone, EnvelopeSimple } from '@phosphor-icons/react/dist/ssr'
+import {
+  MapPin,
+  Phone,
+  EnvelopeSimple
+} from '@phosphor-icons/react/dist/ssr'
 
 // Revalidate page so it works with on-demand revalidation or periodic if needed
 export const revalidate = 3600 // We still can set a baseline, but on-demand takes precedence. Actually let's just let it be default.
@@ -48,11 +52,11 @@ export default async function HomePage() {
       {/* HERO SECTION */}
       <section className="relative py-32 px-6 border-b border-slate-200 overflow-hidden">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
         ></div>
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 z-0 bg-[#0e4891]/90 md:bg-transparent md:bg-gradient-to-r md:from-[#0e4891] md:from-10% md:via-[#0e4891]/80 md:via-40% md:to-transparent md:to-60%"></div>
 
@@ -99,7 +103,7 @@ export default async function HomePage() {
           <div className="md:w-2/3">
             <div className="prose prose-slate prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium prose-strong:text-slate-900 max-w-none text-lg">
               <p>
-                {getKontenBySection('tentang_ppid')?.isi_teks || 
+                {getKontenBySection('tentang_ppid')?.isi_teks ||
                   'Pejabat Pengelola Informasi dan Dokumentasi (PPID) pada Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah berfungsi sebagai layanan informasi publik dalam rangka mewujudkan penyelenggaraan negara yang baik, yaitu transparan, efektif dan efisien, akuntabel serta dapat dipertanggungjawabkan.'}
               </p>
             </div>
