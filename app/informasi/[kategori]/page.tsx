@@ -269,37 +269,1104 @@ export default async function KategoriInformasiPage({
           )}
         </div>
 
-        {/* Template Tabel Data Akses Layanan untuk daftar_informasi_publik */}
-        {kategoriKey === 'daftar_informasi_publik' && (
-          <div className="mb-12">
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400">
-                <h3 className="font-black text-lg text-slate-900 tracking-wide">DATA AKSES LAYANAN INFORMASI PUBLIK</h3>
+        {/* Tabel Data Akses Layanan untuk daftar_informasi_publik */}
+        {kategoriKey === 'daftar_informasi_publik' && (() => {
+          const DATA_AKSES_LAYANAN = [
+            {
+              nama: 'Website Resmi Berdomain (go.id atau sultengprov.go.id)',
+              links: {
+                '2022': 'https://cikasda.sultengprov.go.id',
+                '2023': 'https://cikasda.sultengprov.go.id',
+                '2024': 'https://cikasda.sultengprov.go.id',
+                '2025': 'https://cikasda.sultengprov.go.id',
+                '2026': 'https://cikasda.sultengprov.go.id',
+              },
+            },
+            {
+              nama: 'Aplikasi yang Berbasis Android/IOS/LINUX dan Dapat Diakses Secara Umum',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Media Sosial Resmi (Youtube) Identik dengan Nama Badan Publik',
+              links: {
+                '2022': 'https://youtube.com',
+                '2023': 'https://youtube.com',
+                '2024': 'https://youtube.com',
+                '2025': 'https://youtube.com',
+                '2026': 'https://youtube.com',
+              },
+            },
+            {
+              nama: 'Media Sosial Resmi (Facebook) Identik dengan Nama Badan Publik',
+              links: {
+                '2022': 'https://facebook.com',
+                '2023': 'https://facebook.com',
+                '2024': 'https://facebook.com',
+                '2025': 'https://facebook.com',
+                '2026': 'https://facebook.com',
+              },
+            },
+            {
+              nama: 'Media Sosial Resmi (Instagram) Identik dengan Nama Badan Publik',
+              links: {
+                '2022': 'https://instagram.com',
+                '2023': 'https://instagram.com',
+                '2024': 'https://instagram.com',
+                '2025': 'https://instagram.com',
+                '2026': 'https://instagram.com',
+              },
+            },
+            {
+              nama: 'Website Resmi Memuat Menu Khusus Untuk Layanan Informasi Publik / Daftar Informasi Publik',
+              links: {
+                '2022': '/informasi/daftar_informasi_publik',
+                '2023': '/informasi/daftar_informasi_publik',
+                '2024': '/informasi/daftar_informasi_publik',
+                '2025': '/informasi/daftar_informasi_publik',
+                '2026': '/informasi/daftar_informasi_publik',
+              },
+            },
+          ]
+
+          const TAHUN_LIST = ['2022', '2023', '2024', '2025', '2026']
+
+          const DOKUMEN_KEPEGAWAIAN = [
+            {
+              nama: 'Daftar Urut Kepangkatan ASN (DUK)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Profil Pejabat Struktural (Foto, Data Profil Pribadi, Riwayat Kepangkatan, Riwayat Pendidikan dan Riwayat Jabatan)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Statistik ASN (Minimal Memuat Data Statistik Berdasarkan Pendidikan, Golongan Ruang, Jenis Kelamin)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Laporan Harta Kekayaan LHKASN/LHKPN Khusus Pejabat Struktural (Eselon 2) yang Telah Diverifikasi oleh KPK RI',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Laporan Harta Kekayaan LHKASN/LHKPN Khusus Pejabat Struktural (Eselon 3) yang Telah Diverifikasi oleh KPK RI',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Laporan Harta Kekayaan LHKASN/LHKPN Khusus Pejabat Struktural (Eselon 4) yang Telah Diverifikasi oleh KPK RI',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const DOKUMEN_KEUANGAN_ASET = [
+            {
+              nama: 'Rencana Kerja Anggaran (RKA)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Dokumen Pelaksanaan Anggaran (DPA)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Laporan Realisasi Anggaran (LRA)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Catatan Atas Laporan Keuangan (CALK)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Anggaran Kas',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Daftar Aset',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Kebijakan Umum Anggaran (KUA) Prioritas Pagu Anggaran Sementara (PPAS)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Dokumen Rencana Umum Pengadaan (RUP)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Dokumen-Dokumen Elektronik Berkaitan dengan Progam dan Kegiatan',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const DOKUMEN_PERENCANAAN = [
+            {
+              nama: 'Indikator Kinerja Utama (IKU)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'RENSTRA (Rencana Strategis)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'RENJA (Rencana Kerja Awal)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'LAKIP (Laporan Kinerja Instansi Pemerintah)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'LPPD (Laporan Pertanggungjawaban Pemerintah Daerah)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Perjanjian Kinerja (Internal OPD)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const DOKUMEN_KETATAUSAHAAN = [
+            {
+              nama: 'Agenda Pimpinan OPD / Buku Tamu (Januari - Desember)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Surat menyurat pimpinan OPD atau pejabat Kementerian/Lembaga/Badan dalam rangka pelaksaan tugas, fungsi, dan wewenangnya Tahun 2024 - 2026',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const DOKUMEN_KETERBUKAAN_INFORMASI = [
+            {
+              nama: 'Daftar Informasi Publik (DIP)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Daftar Informasi Dikecualikan dari PPID Utama (SK) atau Surat Usul Informasi Dikecualikan oleh PPID Pelaksana',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'SK Pimpinan Badan Publik Tentang Struktur PPID Pelaksana',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'SK Tim Petugas Informasi',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'SK Tim Petugas Aduan Masyarakat',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'SK Tim Petugas Kehumasan',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Standar Pelayanan (SP)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const DOKUMEN_KINERJA_BADAN_PUBLIK = [
+            {
+              nama: 'Survey Kepuasan Masyarakat (SKM)',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Permohonan Informasi Online',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const PENGELOLAAN_ADUAN_WEB = [
+            {
+              nama: 'Memiliki aplikasi WEB sendiri dalam mengelola aplikasi aduan masyarkat',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Mengelola aplikasi aduan masyarakat melalui aplikasi Lapor!',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'WEB Resmi OPD memliki link untuk terhubung ke aplikasi Lapor!',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const TIM_LAYANAN_ADUAN = [
+            {
+              nama: 'Fotokopi SK Tim Pengelolaan Layanan Aduan',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Fotokopi Tanda Terima (SPM) Honorarium/SPPD Tim Pengelola Layanan Aduan',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          const PUBLIKASI_LAYANAN_ADUAN = [
+            {
+              nama: 'Dokumentasi kegiatan layanan aduan masyarakat melalui publikasi FLAYER di media sosial',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Dokumentasi kegiatan layanan aduan masyarakat melalui pemasangan BANNER di ruang publik',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Foto kegiatan sosialisasi tentang aduan masyarakat',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+            {
+              nama: 'Foto kopi SPM pelaksanaan kegiatan sosialisasi tentang aduan masyarakat',
+              links: {
+                '2022': '#',
+                '2023': '#',
+                '2024': '#',
+                '2025': '#',
+                '2026': '#',
+              },
+            },
+          ]
+
+          return (
+            <div className="space-y-12 mb-12">
+              {/* TABEL 1: DATA AKSES LAYANAN INFORMASI PUBLIK */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide">DATA AKSES LAYANAN INFORMASI PUBLIK</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {DATA_AKSES_LAYANAN.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Buka ${row.nama} (${th})`}
+                                    >
+                                      Klik
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Link ${row.nama} (${th})`}
+                                    >
+                                      Klik
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[800px]">
-                  <thead>
-                    <tr className="bg-[#0e4891] text-white">
-                      <th className="py-4 px-6 font-bold text-sm w-1/3">Data</th>
-                      <th className="py-4 px-4 font-bold text-sm text-center">2022</th>
-                      <th className="py-4 px-4 font-bold text-sm text-center">2023</th>
-                      <th className="py-4 px-4 font-bold text-sm text-center">2024</th>
-                      <th className="py-4 px-4 font-bold text-sm text-center">2025</th>
-                      <th className="py-4 px-4 font-bold text-sm text-center">2026</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    <tr>
-                      <td colSpan={6} className="py-10 text-center">
-                        <p className="text-sm font-medium text-slate-500 italic">Belum ada data yang tersedia saat ini.</p>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+
+              {/* TABEL 2: DOKUMEN TENTANG KEPEGAWAIAN */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">DOKUMEN TENTANG KEPEGAWAIAN</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {DOKUMEN_KEPEGAWAIAN.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 3: DOKUMEN TENTANG KEUANGAN DAN ASET */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">DOKUMEN TENTANG KEUANGAN DAN ASET</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {DOKUMEN_KEUANGAN_ASET.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 4: DOKUMEN TENTANG PERENCANAAN */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">DOKUMEN TENTANG PERENCANAAN</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {DOKUMEN_PERENCANAAN.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 5: DOKUMEN TENTANG KETATAUSAHAAN */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">DOKUMEN TENTANG KETATAUSAHAAN</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {DOKUMEN_KETATAUSAHAAN.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 6: DOKUMEN TENTANG KETERBUKAAN INFORMASI PUBLIK */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">DOKUMEN TENTANG KETERBUKAAN INFORMASI PUBLIK</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {DOKUMEN_KETERBUKAAN_INFORMASI.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 7: DOKUMEN TENTANG KINERJA BADAN PUBLIK */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">DOKUMEN TENTANG KINERJA BADAN PUBLIK</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {DOKUMEN_KINERJA_BADAN_PUBLIK.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 8: PENGELOLAAN ADUAN MASYARAKAT MELALUI APLIKASI BERBASIS WEB */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">PENGELOLAAN ADUAN MASYARAKAT MELALUI APLIKASI BERBASIS WEB</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {PENGELOLAAN_ADUAN_WEB.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 9: TIM KEGIATAN PENGELOLAAN LAYANAN ADUAN */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">TIM KEGIATAN PENGELOLAAN LAYANAN ADUAN</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {TIM_LAYANAN_ADUAN.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* TABEL 10: KEGIATAN PUBLIKASI LAYANAN ADUAN MASYARAKAT (LAPOR!) MELALUI KEGIATAN OPD */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between">
+                  <h3 className="font-black text-lg text-slate-900 tracking-wide uppercase">KEGIATAN PUBLIKASI LAYANAN ADUAN MASYARAKAT (LAPOR!) MELALUI KEGIATAN OPD</h3>
+                  <span className="text-xs font-bold text-slate-500 font-mono hidden sm:inline-block">Tahun 2022 - 2026</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="bg-[#0e4891] text-white">
+                        <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
+                        {TAHUN_LIST.map((th) => (
+                          <th key={th} className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]">
+                            {th}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {PUBLIKASI_LAYANAN_ADUAN.map((row, idx) => {
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
+                              {row.nama}
+                            </td>
+                            {TAHUN_LIST.map((th) => {
+                              const targetUrl = (row.links as Record<string, string>)[th] || '#'
+                              const isExternal = targetUrl.startsWith('http')
+                              return (
+                                <td key={th} className="py-4 px-4 text-center">
+                                  {targetUrl && targetUrl !== '#' ? (
+                                    <a
+                                      href={targetUrl}
+                                      target={isExternal ? '_blank' : '_self'}
+                                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
+                                      title={`Unduh ${row.nama} (${th})`}
+                                    >
+                                      Unduh
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Dokumen Lampiran Lainnya untuk daftar_informasi_publik */}
         {kategoriKey === 'daftar_informasi_publik' && dokumenList && dokumenList.length > 0 && (
