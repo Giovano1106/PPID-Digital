@@ -226,10 +226,10 @@ export default function AdminKontenPage() {
                 <div className="bg-slate-100 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                     <FolderOpen weight="fill" size={16} className="text-[#0e4891]" /> 
-                    Kategori: {kategori.section_key.replace('_', ' ')}
+                    Kategori: {kategori.section_key.replaceAll('_', ' ')}
                   </span>
                   <span className="text-xs font-bold text-slate-500">
-                    {docs.length} File Terunggah
+                    {kategori.section_key === 'visi_misi' ? 'Profil Statis' : `${docs.length} File Terunggah`}
                   </span>
                 </div>
 
@@ -265,24 +265,35 @@ export default function AdminKontenPage() {
                     </button>
                   </div>
 
-                  {/* KANAN: Daftar Dokumen */}
-                  <div className="space-y-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                      <h3 className="font-bold text-sm text-slate-900">Daftar File PDF Google Drive</h3>
-                      <button
-                        onClick={() => openAddDocModal(kategori.section_key)}
-                        className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold py-2 px-3.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Plus weight="bold" size={14} /> Tambah Dokumen
-                      </button>
+                  {/* KANAN: Daftar Dokumen atau Informasi Khusus */}
+                  {kategori.section_key === 'visi_misi' ? (
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col justify-center items-center text-center">
+                      <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3">
+                        <Lightbulb size={24} weight="fill" />
+                      </div>
+                      <h4 className="font-bold text-slate-900 text-sm mb-1">Konten Profil Visual Khusus</h4>
+                      <p className="text-xs text-slate-600 max-w-sm leading-relaxed font-medium">
+                        Kategori ini disajikan dalam format kartu visual interaktif Visi & Misi di portal publik, sehingga tidak memerlukan unggahan file PDF.
+                      </p>
                     </div>
+                  ) : (
+                    <div className="space-y-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <h3 className="font-bold text-sm text-slate-900">Daftar File PDF Google Drive</h3>
+                        <button
+                          onClick={() => openAddDocModal(kategori.section_key)}
+                          className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold py-2 px-3.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus weight="bold" size={14} /> Tambah Dokumen
+                        </button>
+                      </div>
 
-                    {/* List Dokumen */}
-                    {docs.length === 0 ? (
-                      <div className="text-xs text-slate-500 italic py-6 text-center">Belum ada dokumen PDF diunggah untuk kategori ini.</div>
-                    ) : (
-                      <ul className="space-y-3">
-                        {docs.map(doc => (
+                      {/* List Dokumen */}
+                      {docs.length === 0 ? (
+                        <div className="text-xs text-slate-500 italic py-6 text-center">Belum ada dokumen PDF diunggah untuk kategori ini.</div>
+                      ) : (
+                        <ul className="space-y-3">
+                          {docs.map(doc => (
                           <li key={doc.id.toString()} className="flex items-start justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                             <div className="overflow-hidden flex-1">
                               <p className="text-xs font-bold text-slate-900 truncate" title={doc.nama_dokumen}>{doc.nama_dokumen}</p>
@@ -311,6 +322,7 @@ export default function AdminKontenPage() {
                       </ul>
                     )}
                   </div>
+                  )}
 
                 </div>
               </div>
@@ -323,7 +335,12 @@ export default function AdminKontenPage() {
       <Modal
         isOpen={activeModal === 'addDoc'}
         onClose={() => setActiveModal(null)}
-        title="➕ Tambah Dokumen PDF Baru"
+        title={
+          <span className="flex items-center gap-2">
+            <Plus size={16} weight="bold" className="text-amber-400" />
+            Tambah Dokumen PDF Baru
+          </span>
+        }
       >
         <form onSubmit={handleAddDokumenSubmit} className="space-y-4">
           <div>
@@ -375,7 +392,12 @@ export default function AdminKontenPage() {
       <Modal
         isOpen={activeModal === 'editDoc'}
         onClose={() => setActiveModal(null)}
-        title="✏️ Edit Dokumen PDF"
+        title={
+          <span className="flex items-center gap-2">
+            <PencilSimple size={16} weight="bold" className="text-amber-400" />
+            Edit Dokumen PDF
+          </span>
+        }
       >
         <form onSubmit={handleEditDokumenSubmit} className="space-y-4">
           <div>

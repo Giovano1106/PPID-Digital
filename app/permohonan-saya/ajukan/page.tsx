@@ -13,7 +13,7 @@ export default function FormPermohonanPage() {
   const supabase = createClient()
 
   const [form, setForm] = useState({
-    jenis_informasi: 'Daftar Informasi Publik',
+    jenis_informasi: 'Dokumen Program dan Kegiatan',
     deskripsi: '',
     cara_memperoleh: 'Melihat / Membaca / Mendengarkan',
   })
@@ -140,14 +140,14 @@ export default function FormPermohonanPage() {
                 onChange={handleChange}
                 className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-semibold text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all cursor-pointer"
               >
-                <option value="Daftar Informasi Publik">Daftar Informasi Publik</option>
-                <option value="Surat Keputusan">Surat Keputusan</option>
-                <option value="Visi dan Misi PPID">Visi dan Misi PPID</option>
-                <option value="SOP dan SPM PPID">SOP dan SPM PPID</option>
-                <option value="Pelayanan">Pelayanan</option>
-                <option value="Penghargaan">Penghargaan</option>
-                <option value="Permohonan Informasi">Permohonan Informasi</option>
-                <option value="Dokumen Program dan Kegiatan Tahun 2022-2024">Dokumen Program dan Kegiatan Tahun 2022-2024</option>
+                <option value="Dokumen Program dan Kegiatan">Dokumen Program dan Kegiatan</option>
+                <option value="Surat Keputusan (SK) & Kebijakan">Surat Keputusan (SK) & Kebijakan</option>
+                <option value="SOP dan Standar Pelayanan Minimal">SOP dan Standar Pelayanan Minimal</option>
+                <option value="Informasi Berkala (Laporan Kinerja & Keuangan)">Informasi Berkala (Laporan Kinerja & Keuangan)</option>
+                <option value="Informasi Serta Merta">Informasi Serta Merta</option>
+                <option value="Informasi Setiap Saat">Informasi Setiap Saat</option>
+                <option value="Data Teknis Sumber Daya Air & Cipta Karya">Data Teknis Sumber Daya Air & Cipta Karya</option>
+                <option value="Informasi Publik Lainnya">Informasi Publik Lainnya</option>
               </select>
             </div>
 

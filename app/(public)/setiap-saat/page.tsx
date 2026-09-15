@@ -1,5 +1,6 @@
- import Link from 'next/link'
+import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/server'
+import { ArrowLeft } from '@phosphor-icons/react/dist/ssr'
 
 export default async function SetiapSaatPage() {
   const supabase = await createClient()
@@ -17,9 +18,9 @@ export default async function SetiapSaatPage() {
         <div className="mx-auto max-w-5xl px-6 py-5">
           <Link
             href="/"
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-[#0e4891] hover:underline inline-flex items-center gap-1.5 font-bold"
           >
-            ← Kembali ke Beranda
+            <ArrowLeft weight="bold" size={14} /> Kembali ke Beranda
           </Link>
         </div>
       </header>

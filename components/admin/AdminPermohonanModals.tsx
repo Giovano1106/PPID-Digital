@@ -2,6 +2,7 @@ import Modal from '@/components/Modal'
 import ConfirmModal from '@/components/ConfirmModal'
 import LaporanModal from '@/components/LaporanModal'
 import { FormEvent } from 'react'
+import { ChatTeardropText, XCircle, Clock } from '@phosphor-icons/react'
 
 // You might want to define this type in a shared types file later, but we'll include it here for now
 type Permohonan = any
@@ -52,7 +53,12 @@ export default function AdminPermohonanModals({
       <Modal
         isOpen={activeModal === 'jawab'}
         onClose={() => setActiveModal(null)}
-        title="💬 Jawab Permohonan Informasi"
+        title={
+          <span className="flex items-center gap-2">
+            <ChatTeardropText size={18} weight="bold" className="text-amber-400" />
+            Jawab Permohonan Informasi
+          </span>
+        }
       >
         <form onSubmit={submitJawab} className="space-y-4">
           <div>
@@ -91,7 +97,12 @@ export default function AdminPermohonanModals({
       <Modal
         isOpen={activeModal === 'tolak'}
         onClose={() => setActiveModal(null)}
-        title="❌ Tolak Permohonan Informasi"
+        title={
+          <span className="flex items-center gap-2">
+            <XCircle size={18} weight="bold" className="text-rose-400" />
+            Tolak Permohonan Informasi
+          </span>
+        }
       >
         <form onSubmit={submitTolak} className="space-y-4">
           <div>
@@ -130,7 +141,12 @@ export default function AdminPermohonanModals({
       <Modal
         isOpen={activeModal === 'perpanjang'}
         onClose={() => setActiveModal(null)}
-        title="⏱️ Perpanjang SLA (+7 Hari Kerja)"
+        title={
+          <span className="flex items-center gap-2">
+            <Clock size={18} weight="bold" className="text-amber-400" />
+            Perpanjang SLA (+7 Hari Kerja)
+          </span>
+        }
       >
         <form onSubmit={submitPerpanjang} className="space-y-4">
           <div>

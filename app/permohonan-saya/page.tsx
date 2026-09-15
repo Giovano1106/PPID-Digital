@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
-import { ArrowLeft, FileText, Timer, ChatTeardropText } from '@phosphor-icons/react/dist/ssr'
+import { ArrowLeft, FileText, Timer, ChatTeardropText, ArrowRight } from '@phosphor-icons/react/dist/ssr'
 
 export default async function PermohonanSayaPage() {
   const supabase = await createClient()
@@ -174,7 +174,7 @@ export default async function PermohonanSayaPage() {
                         Salinan: <span className="font-bold text-slate-700 not-italic">{item.cara_memperoleh}</span>
                       </p>
                       <span className="text-xs font-bold bg-[#0e4891] text-white px-3 py-1.5 rounded-lg flex items-center gap-1 group-hover:bg-[#0a366f] transition-colors">
-                        Lihat Detail <span>→</span>
+                        Lihat Detail <ArrowRight weight="bold" size={12} className="group-hover:translate-x-0.5 transition-transform" />
                       </span>
                     </div>
                   </div>

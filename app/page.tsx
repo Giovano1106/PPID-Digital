@@ -32,14 +32,78 @@ export default async function HomePage() {
   }
 
   const KATEGORI_KEYS = [
-    { key: 'daftar_informasi_publik', label: 'Daftar Informasi Publik', badge: 'Informasi' },
-    { key: 'surat_keputusan', label: 'Surat Keputusan', badge: 'Dokumen' },
-    { key: 'visi_misi', label: 'Visi dan Misi PPID', badge: 'Profil' },
-    { key: 'sop_spm', label: 'SOP dan SPM PPID', badge: 'Standar' },
-    { key: 'pelayanan', label: 'Pelayanan', badge: 'Layanan' },
-    { key: 'penghargaan', label: 'Penghargaan', badge: 'Apresiasi' },
-    { key: 'permohonan_informasi', label: 'Permohonan Informasi', badge: 'Layanan' },
-    { key: 'dokumen_program_kegiatan', label: 'Dokumen Program dan Kegiatan Tahun 2022-2024', badge: 'Laporan' },
+    {
+      key: 'daftar_informasi_publik',
+      label: 'Daftar Informasi Publik',
+      badge: 'Informasi',
+      description: 'Pintasan klasifikasi informasi (Berkala, Serta Merta, Setiap Saat, Dikecualikan) serta data akses layanan.',
+      buttonText: 'Lihat Informasi',
+      showCount: false,
+      href: '/informasi/daftar_informasi_publik',
+    },
+    {
+      key: 'surat_keputusan',
+      label: 'Surat Keputusan',
+      badge: 'Dokumen',
+      description: 'Kumpulan ketetapan dan kebijakan resmi yang diterbitkan dalam bentuk Surat Keputusan (SK).',
+      buttonText: 'Lihat Dokumen',
+      showCount: true,
+      href: '/informasi/surat_keputusan',
+    },
+    {
+      key: 'visi_misi',
+      label: 'Visi dan Misi PPID',
+      badge: 'Profil',
+      description: 'Penjabaran tujuan, arah kebijakan, serta komitmen transparansi pelayanan informasi publik.',
+      buttonText: 'Lihat Profil',
+      showCount: false,
+      href: '/informasi/visi_misi',
+    },
+    {
+      key: 'sop_spm',
+      label: 'SOP dan SPM PPID',
+      badge: 'Standar',
+      description: 'Standar Operasional Prosedur dan Standar Pelayanan Minimal pedoman mutu layanan informasi.',
+      buttonText: 'Lihat Dokumen',
+      showCount: true,
+      href: '/informasi/sop_spm',
+    },
+    {
+      key: 'pelayanan',
+      label: 'Pelayanan',
+      badge: 'Layanan',
+      description: 'Informasi lengkap jenis layanan, prosedur, waktu operasional, dan maklumat pelayanan.',
+      buttonText: 'Lihat Layanan',
+      showCount: false,
+      href: '/informasi/pelayanan',
+    },
+    {
+      key: 'penghargaan',
+      label: 'Penghargaan',
+      badge: 'Apresiasi',
+      description: 'Dokumentasi prestasi, apresiasi, dan capaian kinerja peningkatan mutu keterbukaan informasi.',
+      buttonText: 'Lihat Penghargaan',
+      showCount: true,
+      href: '/informasi/penghargaan',
+    },
+    {
+      key: 'permohonan_informasi',
+      label: 'Permohonan Informasi',
+      badge: 'Layanan',
+      description: 'Panduan tata cara, alur resmi pengajuan, dan formulir permohonan informasi publik secara daring.',
+      buttonText: 'Ajukan Permohonan',
+      showCount: false,
+      href: '/informasi/permohonan_informasi',
+    },
+    {
+      key: 'dokumen_program_kegiatan',
+      label: 'Dokumen Program dan Kegiatan Tahun 2022-2024',
+      badge: 'Laporan',
+      description: 'Arsip rencana kerja, pelaksanaan, dan laporan pertanggungjawaban program kegiatan instansi.',
+      buttonText: 'Lihat Dokumen',
+      showCount: true,
+      href: '/informasi/dokumen_program_kegiatan',
+    },
   ]
 
   // We need to know if user is logged in for the Hero section button ("Ajukan Permohonan" vs "Daftar")
@@ -124,16 +188,21 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {KATEGORI_KEYS.map((kategori) => (
-              <KategoriCard
-                key={kategori.key}
-                href={`/informasi/${kategori.key}`}
-                title={kategori.label}
-                description="Klik untuk melihat daftar dokumen publik pada kategori ini."
-                count={getDokumenCountByKategori(kategori.key)}
-                badge={kategori.badge}
-              />
-            ))}
+            {KATEGORI_KEYS.map((kategori) => {
+              const konten = getKontenBySection(kategori.key)
+              return (
+                <KategoriCard
+                  key={kategori.key}
+                  href={kategori.href}
+                  title={konten?.judul || kategori.label}
+                  description={konten?.isi_teks || kategori.description}
+                  count={getDokumenCountByKategori(kategori.key)}
+                  badge={kategori.badge}
+                  showCount={kategori.showCount}
+                  buttonText={kategori.buttonText}
+                />
+              )
+            })}
           </div>
         </div>
       </section>

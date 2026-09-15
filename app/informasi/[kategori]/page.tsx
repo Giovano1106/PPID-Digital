@@ -2,7 +2,15 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Target, Flag, CheckCircle, Clock, Lightning, Calendar, LockKey } from '@phosphor-icons/react/dist/ssr'
+import {
+  ArrowLeft,
+  Target,
+  Flag,
+  CheckCircle,
+  Clock,
+  Handshake,
+  ArrowRight
+} from '@phosphor-icons/react/dist/ssr'
 
 // Utility untuk mengubah string menjadi title case yang rapi
 function formatTitle(str: string) {
@@ -105,15 +113,16 @@ export default async function KategoriInformasiPage({
       <main className="flex-grow max-w-7xl mx-auto w-full px-6 py-16 flex flex-col h-full">
         <div className="mb-12 border-b border-slate-200 pb-8">
           <Link href="/#kategori" className="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-[#0e4891] transition-colors mb-6 inline-flex items-center gap-1.5">
-            <ArrowLeft weight="bold" size={14} /> Kategori Dokumen
+            <ArrowLeft weight="bold" size={14} /> Kategori Informasi
           </Link>
           <h1 className="font-black text-4xl md:text-5xl text-slate-900 tracking-tight leading-tight">
             {kontenData?.judul || formatTitle(kategoriKey)}
           </h1>
           <p className="text-sm md:text-base text-slate-600 mt-4 max-w-3xl leading-relaxed font-medium">
-            {kontenData?.isi_teks || 'Daftar dokumen publik yang tersedia untuk kategori ini.'}
+            {kontenData?.isi_teks || 'Informasi dan dokumen publik resmi yang dikelola oleh PPID Dinas CIKASDA Provinsi Sulawesi Tengah.'}
           </p>
 
+          {/* 1. VISI DAN MISI */}
           {kategoriKey === 'visi_misi' && (
             <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Visi */}
@@ -172,6 +181,8 @@ export default async function KategoriInformasiPage({
               </div>
             </div>
           )}
+
+          {/* 2. DAFTAR INFORMASI PUBLIK (Pintasan Kategori) */}
           {kategoriKey === 'daftar_informasi_publik' && (
             <div className="mt-10 bg-slate-50/50 rounded-2xl p-6 border border-slate-200">
               <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Pintasan Kategori Spesifik</h2>
@@ -198,9 +209,133 @@ export default async function KategoriInformasiPage({
               </div>
             </div>
           )}
+
+          {/* 3. PERMOHONAN INFORMASI (Alur 4 Langkah & CTA) */}
+          {kategoriKey === 'permohonan_informasi' && (
+            <div className="mt-10 space-y-8">
+              <div className="bg-gradient-to-br from-[#0e4891] to-[#0a366f] rounded-3xl p-8 text-white shadow-md relative overflow-hidden">
+                <div className="relative z-10 max-w-2xl">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-amber-400 text-xs font-bold uppercase tracking-wider mb-4 border border-white/10">
+                    Layanan Terbuka untuk Umum
+                  </span>
+                  <h2 className="text-2xl md:text-3xl font-black mb-3">Tata Cara & Alur Permohonan Informasi</h2>
+                  <p className="text-blue-100 text-sm md:text-base leading-relaxed mb-6 font-medium">
+                    Masyarakat berhak memperoleh informasi publik sesuai UU No. 14 Tahun 2008. Anda dapat mengajukan permohonan informasi secara daring dengan alur cepat, transparan, dan terstruktur.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Link
+                      href="/permohonan-saya/ajukan"
+                      className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold px-6 py-3 rounded-xl transition-all shadow text-sm inline-flex items-center gap-2"
+                    >
+                      Ajukan Permohonan Sekarang <ArrowRight weight="bold" size={16} />
+                    </Link>
+                    <Link
+                      href="/permohonan-saya"
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3 rounded-xl transition-all border border-white/20 text-sm"
+                    >
+                      Pantau Status Permohonan
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4 Langkah Alur */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#0e4891] flex items-center justify-center font-black text-lg mb-4">
+                    01
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Registrasi / Masuk</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    Pemohon mendaftarkan akun menggunakan NIK KTP dan nomor telepon yang aktif untuk verifikasi identitas resmi.
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg mb-4">
+                    02
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Isi Formulir Online</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    Tentukan rincian informasi publik yang dibutuhkan, tujuan peruntukan, serta unggah dokumen identitas pemohon.
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg mb-4">
+                    03
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Verifikasi Petugas</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    Petugas PPID memeriksa kelayakan dan memproses ketersediaan dokumen maksimal 10 hari kerja sesuai regulasi.
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-lg mb-4">
+                    04
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Pemberian Informasi</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    Pemberitahuan tertulis dan salinan dokumen informasi diserahkan kepada pemohon melalui portal atau secara fisik.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4. PELAYANAN (Maklumat & Jam Layanan) */}
+          {kategoriKey === 'pelayanan' && (
+            <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="w-14 h-14 bg-blue-50 text-[#0e4891] rounded-2xl flex items-center justify-center mb-6">
+                    <Handshake size={32} weight="fill" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 mb-4">Maklumat Pelayanan PPID</h3>
+                  <blockquote className="border-l-4 border-amber-400 pl-4 py-1 italic text-slate-700 text-base leading-relaxed mb-6 font-medium">
+                    “Dengan ini kami menyatakan sanggup menyelenggarakan pelayanan informasi publik sesuai standar pelayanan yang telah ditetapkan dan apabila tidak menepati janji, kami siap menerima sanksi sesuai ketentuan peraturan perundang-undangan.”
+                  </blockquote>
+                </div>
+                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                  Dinas CIKASDA Provinsi Sulawesi Tengah
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 text-white shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="w-14 h-14 bg-white/10 text-amber-400 rounded-2xl flex items-center justify-center mb-6 border border-white/10">
+                    <Clock size={32} weight="fill" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-6">Waktu Operasional Pelayanan</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-2.5 border-b border-white/10">
+                      <span className="text-slate-300 font-semibold text-sm">Senin – Kamis</span>
+                      <span className="text-amber-400 font-bold font-mono text-sm">08.00 – 16.00 WITA</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2.5 border-b border-white/10">
+                      <span className="text-slate-300 font-semibold text-sm">Jumat</span>
+                      <span className="text-amber-400 font-bold font-mono text-sm">08.00 – 16.30 WITA</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2.5 border-b border-white/10">
+                      <span className="text-slate-300 font-semibold text-sm">Waktu Istirahat (Senin-Kamis)</span>
+                      <span className="text-slate-400 font-mono text-sm">12.00 – 13.00 WITA</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2.5">
+                      <span className="text-slate-300 font-semibold text-sm">Waktu Istirahat (Jumat)</span>
+                      <span className="text-slate-400 font-mono text-sm">11.30 – 13.00 WITA</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400 mt-6 italic">
+                  *Pelayanan daring melalui portal web tetap dapat diakses 24 jam setiap hari.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Template Tabel Data Akses Layanan (Tanpa data dummy) */}
+        {/* Template Tabel Data Akses Layanan untuk daftar_informasi_publik */}
         {kategoriKey === 'daftar_informasi_publik' && (
           <div className="mb-12">
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -220,7 +355,6 @@ export default async function KategoriInformasiPage({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
-                    {/* Data kosong */}
                     <tr>
                       <td colSpan={6} className="py-10 text-center">
                         <p className="text-sm font-medium text-slate-500 italic">Belum ada data yang tersedia saat ini.</p>
@@ -233,19 +367,32 @@ export default async function KategoriInformasiPage({
           </div>
         )}
 
-        {/* Bagian Dokumen Lainnya (opsional jika masih ada PDF) */}
+        {/* Dokumen Lampiran Lainnya untuk daftar_informasi_publik */}
         {kategoriKey === 'daftar_informasi_publik' && dokumenList && dokumenList.length > 0 && (
           <div className="mb-6 mt-8">
-            <h2 className="text-xl font-bold text-slate-900">Dokumen Lampiran Lainnya</h2>
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Dokumen Lampiran Lainnya</h2>
+            <DokumenViewer dokumenList={dokumenList} />
           </div>
         )}
 
-        {/* Client Component untuk interaktivitas PDF */}
-        {(!dokumenList || dokumenList.length > 0) && kategoriKey !== 'daftar_informasi_publik' && (
-          <DokumenViewer dokumenList={dokumenList || []} />
-        )}
-        {dokumenList && dokumenList.length > 0 && kategoriKey === 'daftar_informasi_publik' && (
-          <DokumenViewer dokumenList={dokumenList} />
+        {/* Render DokumenViewer untuk kategori dokumen nyata (bukan visi_misi dan bukan daftar_informasi_publik) */}
+        {kategoriKey !== 'visi_misi' && kategoriKey !== 'daftar_informasi_publik' && (
+          <>
+            {dokumenList && dokumenList.length > 0 ? (
+              <div className="mt-4">
+                {(kategoriKey === 'permohonan_informasi' || kategoriKey === 'pelayanan') && (
+                  <div className="mb-6">
+                    <h2 className="text-xl font-bold text-slate-900">Dokumen Lampiran & Regulasi Terkait</h2>
+                  </div>
+                )}
+                <DokumenViewer dokumenList={dokumenList} />
+              </div>
+            ) : (
+              kategoriKey !== 'permohonan_informasi' && kategoriKey !== 'pelayanan' && (
+                <DokumenViewer dokumenList={[]} />
+              )
+            )}
+          </>
         )}
         
       </main>

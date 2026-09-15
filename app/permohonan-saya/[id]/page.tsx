@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
-import { ArrowLeft, Timer, ChatTeardropText, Info, FileText } from '@phosphor-icons/react/dist/ssr'
+import { ArrowLeft, Timer, ChatTeardropText, Info, FileText, ArrowUpRight } from '@phosphor-icons/react/dist/ssr'
 
 export default async function PermohonanDetailPage({
   params,
@@ -210,9 +210,9 @@ export default async function PermohonanDetailPage({
                               href={url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-[10px] font-bold bg-[#0e4891] hover:bg-[#0a366f] text-white px-3 py-1.5 rounded transition-colors"
+                              className="text-[10px] font-bold bg-[#0e4891] hover:bg-[#0a366f] text-white px-3 py-1.5 rounded transition-colors inline-flex items-center gap-1"
                             >
-                              Buka di Tab Baru ↗
+                              Buka di Tab Baru <ArrowUpRight weight="bold" size={12} />
                             </a>
                           </div>
                           <div className="flex-grow relative">

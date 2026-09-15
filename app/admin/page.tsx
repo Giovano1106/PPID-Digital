@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { CaretLeft, CaretRight } from '@phosphor-icons/react'
 import Toast, { ToastType } from '@/components/Toast'
 import SkeletonCard from '@/components/SkeletonCard'
 import AdminHeader from '@/components/admin/AdminHeader'
@@ -362,16 +363,16 @@ export default function AdminDashboardPage() {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-all shadow-sm cursor-pointer"
+              className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
             >
-              ← Sebelumnya
+              <CaretLeft weight="bold" size={14} /> Sebelumnya
             </button>
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-all shadow-sm cursor-pointer"
+              className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
             >
-              Selanjutnya →
+              Selanjutnya <CaretRight weight="bold" size={14} />
             </button>
           </div>
         </div>
