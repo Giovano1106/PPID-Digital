@@ -19,6 +19,7 @@ function formatTitle(str: string) {
 
 // Komponen Client untuk merender PDF Viewer atau List
 import DokumenViewer from './DokumenViewer'
+import AlurPermohonanDiagram from '@/components/AlurPermohonanDiagram'
 
 export const dynamicParams = false // Karena kita tahu persis ada 8 kategori, kategori lain akan 404
 
@@ -210,77 +211,10 @@ export default async function KategoriInformasiPage({
             </div>
           )}
 
-          {/* 3. PERMOHONAN INFORMASI (Alur 4 Langkah & CTA) */}
+          {/* 3. PERMOHONAN INFORMASI (Bagan Alur Lengkap & Ketentuan Hukum) */}
           {kategoriKey === 'permohonan_informasi' && (
-            <div className="mt-10 space-y-8">
-              <div className="bg-gradient-to-br from-[#0e4891] to-[#0a366f] rounded-3xl p-8 text-white shadow-md relative overflow-hidden">
-                <div className="relative z-10 max-w-2xl">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-amber-400 text-xs font-bold uppercase tracking-wider mb-4 border border-white/10">
-                    Layanan Terbuka untuk Umum
-                  </span>
-                  <h2 className="text-2xl md:text-3xl font-black mb-3">Tata Cara & Alur Permohonan Informasi</h2>
-                  <p className="text-blue-100 text-sm md:text-base leading-relaxed mb-6 font-medium">
-                    Masyarakat berhak memperoleh informasi publik sesuai UU No. 14 Tahun 2008. Anda dapat mengajukan permohonan informasi secara daring dengan alur cepat, transparan, dan terstruktur.
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    <Link
-                      href="/permohonan-saya/ajukan"
-                      className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold px-6 py-3 rounded-xl transition-all shadow text-sm inline-flex items-center gap-2"
-                    >
-                      Ajukan Permohonan Sekarang <ArrowRight weight="bold" size={16} />
-                    </Link>
-                    <Link
-                      href="/permohonan-saya"
-                      className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3 rounded-xl transition-all border border-white/20 text-sm"
-                    >
-                      Pantau Status Permohonan
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* 4 Langkah Alur */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#0e4891] flex items-center justify-center font-black text-lg mb-4">
-                    01
-                  </div>
-                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Registrasi / Masuk</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                    Pemohon mendaftarkan akun menggunakan NIK KTP dan nomor telepon yang aktif untuk verifikasi identitas resmi.
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg mb-4">
-                    02
-                  </div>
-                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Isi Formulir Online</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                    Tentukan rincian informasi publik yang dibutuhkan, tujuan peruntukan, serta unggah dokumen identitas pemohon.
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg mb-4">
-                    03
-                  </div>
-                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Verifikasi Petugas</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                    Petugas PPID memeriksa kelayakan dan memproses ketersediaan dokumen maksimal 10 hari kerja sesuai regulasi.
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-lg mb-4">
-                    04
-                  </div>
-                  <h3 className="font-extrabold text-slate-900 text-base mb-2">Pemberian Informasi</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                    Pemberitahuan tertulis dan salinan dokumen informasi diserahkan kepada pemohon melalui portal atau secara fisik.
-                  </p>
-                </div>
-              </div>
+            <div className="mt-10">
+              <AlurPermohonanDiagram mode="full" />
             </div>
           )}
 

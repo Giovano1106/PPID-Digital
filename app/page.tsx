@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/server'
 import KategoriCard from '@/components/KategoriCard'
 import LandingNav from '@/components/LandingNav'
+import AlurPermohonanDiagram from '@/components/AlurPermohonanDiagram'
 import Image from 'next/image'
 import {
   MapPin,
@@ -172,6 +173,24 @@ export default async function HomePage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ALUR LAYANAN SECTION */}
+      <section id="alur-permohonan" className="py-20 px-6 border-b border-slate-200 bg-slate-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-bold text-[#0e4891] uppercase tracking-wider bg-blue-100/60 px-3.5 py-1.5 rounded-full inline-block mb-3">
+              Transparansi & Akuntabilitas
+            </span>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">
+              Alur Pengajuan Permohonan Informasi
+            </h2>
+            <p className="text-slate-600 font-medium text-base">
+              Prosedur sederhana, transparan, dan terstruktur untuk memperoleh informasi publik resmi sesuai amanat UU No. 14 Tahun 2008.
+            </p>
+          </div>
+          <AlurPermohonanDiagram mode="compact" />
         </div>
       </section>
 
