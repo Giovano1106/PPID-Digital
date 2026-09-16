@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import Modal from '@/components/Modal'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
-import { FolderOpen, PencilSimple, Trash, Plus, Lightbulb, ArrowsClockwise } from '@phosphor-icons/react'
+import { FolderOpen, PencilSimple, Trash, Plus, Lightbulb, ArrowsClockwise, Table, ArrowRight } from '@phosphor-icons/react'
 
 import {
   getAdminKonten,
@@ -278,6 +279,27 @@ export default function AdminKontenPage() {
                     </div>
                   ) : (
                     <div className="space-y-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                      {kategori.section_key === 'daftar_informasi_publik' && (
+                        <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                              <Table size={16} weight="bold" className="text-[#0e4891]" />
+                              Tabel Matriks Informasi Publik (10 Tabel Tematik)
+                            </h4>
+                            <p className="text-[11px] text-slate-600 mt-0.5">
+                              Kategori ini memiliki sistem CMS matriks tabel tahunan tersendiri untuk mengelola tautan per tahun (2022 s.d. 2026).
+                            </p>
+                          </div>
+                          <Link
+                            href="/admin/daftar-informasi"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold transition-all shrink-0 shadow-2xs"
+                          >
+                            <span>Buka CMS Matriks</span>
+                            <ArrowRight size={13} weight="bold" />
+                          </Link>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                         <h3 className="font-bold text-sm text-slate-900">Daftar File PDF Google Drive</h3>
                         <button
