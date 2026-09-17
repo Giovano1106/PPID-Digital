@@ -111,7 +111,7 @@ export default async function HomePage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-plus-jakarta antialiased selection:bg-amber-400 selection:text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-plus-jakarta antialiased selection:bg-[#0e4891] selection:text-white">
       <LandingNav />
 
       {/* HERO SECTION */}
@@ -254,17 +254,17 @@ export default async function HomePage() {
             <h3 className="text-white font-bold text-lg mb-6">Hubungi Kami</h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <MapPin className="text-amber-400 mt-1 shrink-0" size={18} weight="fill" />
+                <MapPin className="text-blue-400 mt-1 shrink-0" size={18} weight="fill" />
                 <span className="text-sm font-medium leading-relaxed">
                   Jl. Mohammad Yamin No.11, Tatura Utara, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="text-amber-400 shrink-0" size={18} weight="fill" />
+                <Phone className="text-blue-400 shrink-0" size={18} weight="fill" />
                 <span className="text-sm font-medium">0812-4217-0628</span>
               </li>
               <li className="flex items-center gap-3">
-                <EnvelopeSimple className="text-amber-400 shrink-0" size={18} weight="fill" />
+                <EnvelopeSimple className="text-blue-400 shrink-0" size={18} weight="fill" />
                 <span className="text-sm font-medium">cikasda.sulteng@gmail.com</span>
               </li>
             </ul>

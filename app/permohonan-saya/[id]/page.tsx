@@ -40,25 +40,51 @@ export default async function PermohonanDetailPage({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'dijawab':
-        return 'bg-emerald-50 text-emerald-800 border-emerald-200'
-      case 'ditolak':
-        return 'bg-rose-50 text-rose-800 border-rose-200'
-      case 'diproses':
-        return 'bg-amber-50 text-amber-800 border-amber-200'
-      default:
+      case 'diajukan':
         return 'bg-blue-50 text-[#0e4891] border-blue-200'
+      case 'diproses':
+        return 'bg-slate-100 text-slate-800 border-slate-300'
+      case 'dijawab':
+        return 'bg-[#0e4891] text-white border-[#0e4891]'
+      case 'ditolak':
+        return 'bg-rose-50 text-rose-700 border-rose-200'
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200'
     }
   }
 
+  // Fungsi menghitung sisa hari kerja (Senin s.d. Jumat) dari hari ini ke tanggal tenggat
   const calculateDaysRemaining = (deadlineStr: string | null) => {
     if (!deadlineStr) return null
-    const deadline = new Date(deadlineStr)
+
+    const parts = deadlineStr.split('T')[0].split('-').map(Number)
+    if (parts.length !== 3) return null
+
+    const deadline = new Date(parts[0], parts[1] - 1, parts[2])
+    deadline.setHours(0, 0, 0, 0)
+
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    deadline.setHours(0, 0, 0, 0)
-    const diffTime = deadline.getTime() - today.getTime()
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (deadline.getTime() < today.getTime()) {
+      let overdueCount = 0
+      const cur = new Date(deadline)
+      while (cur.getTime() < today.getTime()) {
+        cur.setDate(cur.getDate() + 1)
+        const day = cur.getDay()
+        if (day !== 0 && day !== 6) overdueCount--
+      }
+      return overdueCount
+    }
+
+    let workingDays = 0
+    const cur = new Date(today)
+    while (cur.getTime() < deadline.getTime()) {
+      cur.setDate(cur.getDate() + 1)
+      const day = cur.getDay()
+      if (day !== 0 && day !== 6) workingDays++
+    }
+    return workingDays
   }
 
   const activeDeadline = permohonan.deadline_akhir || permohonan.deadline_awal
@@ -86,7 +112,7 @@ export default async function PermohonanDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 font-plus-jakarta py-12 selection:bg-amber-400 selection:text-slate-900">
+    <main className="min-h-screen bg-slate-50 font-plus-jakarta py-12 selection:bg-[#0e4891] selection:text-white">
       <div className="mx-auto max-w-4xl px-6">
         
         {/* Navigasi Atas */}
@@ -146,7 +172,11 @@ export default async function PermohonanDetailPage({
                         sisaHari <= 2 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-blue-50 text-[#0e4891] border-blue-200'
                       }`}
                     >
-                      {sisaHari < 0 ? 'Lewat Masa SLA' : `Sisa ±${sisaHari} Hari`}
+                      {sisaHari < 0
+                        ? `Lewat Masa SLA (${Math.abs(sisaHari)} Hari Kerja)`
+                        : sisaHari === 0
+                        ? 'Batas SLA: Hari Ini'
+                        : `Sisa ${sisaHari} Hari Kerja`}
                     </span>
                   </div>
                 </>
@@ -154,10 +184,10 @@ export default async function PermohonanDetailPage({
             </div>
             
             {permohonan.diperpanjang && (
-              <div className="mt-3 flex items-start gap-2 bg-amber-50 text-amber-900 p-3 rounded-lg border border-amber-200 text-xs">
-                <Timer weight="fill" size={16} className="shrink-0 mt-0.5" />
+              <div className="mt-3 flex items-start gap-2 bg-slate-100 text-slate-800 p-3 rounded-lg border border-slate-200 text-xs">
+                <Timer weight="fill" size={16} className="shrink-0 mt-0.5 text-slate-600" />
                 <div>
-                  <strong className="font-bold block mb-0.5">SLA Diperpanjang +7 Hari</strong>
+                  <strong className="font-bold block mb-0.5 text-slate-900">SLA Diperpanjang +7 Hari</strong>
                   {permohonan.alasan_perpanjangan}
                 </div>
               </div>
@@ -198,7 +228,7 @@ export default async function PermohonanDetailPage({
                 {driveUrls.length > 0 && (
                   <div className="space-y-4">
                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                      <FileText weight="fill" size={16} className="text-amber-500" /> Pratinjau Dokumen Terlampir
+                      <FileText weight="fill" size={16} className="text-[#0e4891]" /> Pratinjau Dokumen Terlampir
                     </h4>
                     
                     <div className="grid gap-6">

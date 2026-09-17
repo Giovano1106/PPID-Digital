@@ -82,7 +82,22 @@ export default function AdminPermohonanTable({
                   {item.status}
                 </span>
                 <span className="text-xs text-slate-500 font-medium">
-                  Deadline SLA: <span className="text-slate-900 font-bold">{item.deadline_akhir || item.deadline_awal || '-'}</span>
+                  Deadline SLA:{' '}
+                  <span className="text-slate-900 font-bold">
+                    {(() => {
+                      const target = item.deadline_akhir || item.deadline_awal
+                      if (!target) return '-'
+                      const parts = target.split('T')[0].split('-').map(Number)
+                      if (parts.length === 3) {
+                        return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      }
+                      return target
+                    })()}
+                  </span>
                 </span>
               </div>
             </div>

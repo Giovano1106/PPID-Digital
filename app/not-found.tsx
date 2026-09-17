@@ -8,11 +8,11 @@ export default function NotFound() {
   const router = useRouter()
 
   return (
-    <main className="min-h-screen bg-slate-50 font-plus-jakarta flex items-center justify-center p-6 selection:bg-amber-400 selection:text-slate-900">
+    <main className="min-h-screen bg-slate-50 font-plus-jakarta flex items-center justify-center p-6 selection:bg-[#0e4891] selection:text-white">
       <div className="max-w-md w-full text-center">
         <div className="mb-8 flex justify-center">
-          <div className="bg-amber-100 p-4 rounded-full">
-            <WarningCircle weight="fill" size={64} className="text-amber-500" />
+          <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center border border-blue-100">
+            <WarningCircle weight="bold" size={44} className="text-[#0e4891]" />
           </div>
         </div>
         

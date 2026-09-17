@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/app/lib/supabase/client'
-import { ArrowLeft, Warning, Info } from '@phosphor-icons/react'
+import { ArrowLeft, Warning, Info, FileText } from '@phosphor-icons/react'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
 
@@ -108,8 +108,8 @@ export default function FormPermohonanPage() {
 
         {/* Header Form CIKASDA */}
         <div className="bg-[#0e4891] text-white rounded-2xl p-6 md:p-8 shadow-sm mb-6 relative overflow-hidden flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 font-black text-2xl shrink-0">
-            P
+          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
+            <FileText size={26} weight="bold" />
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-black tracking-tight uppercase">

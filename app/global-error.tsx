@@ -2,7 +2,6 @@
  
 import { useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { WarningCircle, ArrowCounterClockwise, House } from '@phosphor-icons/react'
  
 export default function GlobalError({

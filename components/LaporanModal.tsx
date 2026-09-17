@@ -340,15 +340,15 @@ export default function LaporanModal({
                           </td>
                           <td className="p-2 border border-slate-300 print:border-slate-800 text-center">
                             <span
-                              className={`inline-block px-1.5 py-0.5 uppercase rounded ${
-                                item.status === 'dijawab'
-                                  ? 'bg-emerald-50 text-emerald-800 print:bg-transparent print:text-black'
-                                  : item.status === 'ditolak'
-                                  ? 'bg-rose-50 text-rose-800 print:bg-transparent print:text-black'
-                                  : item.status === 'diproses'
-                                  ? 'bg-amber-50 text-amber-800 print:bg-transparent print:text-black'
-                                  : 'bg-blue-50 text-[#0e4891] print:bg-transparent print:text-black'
-                              }`}
+                                className={`inline-block px-1.5 py-0.5 uppercase rounded ${
+                                  item.status === 'dijawab'
+                                    ? 'bg-[#0e4891] text-white print:bg-transparent print:text-black'
+                                    : item.status === 'ditolak'
+                                    ? 'bg-rose-50 text-rose-700 print:bg-transparent print:text-black'
+                                    : item.status === 'diproses'
+                                    ? 'bg-slate-100 text-slate-800 print:bg-transparent print:text-black'
+                                    : 'bg-blue-50 text-[#0e4891] print:bg-transparent print:text-black'
+                                }`}
                             >
                               {item.status}
                             </span>

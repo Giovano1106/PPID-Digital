@@ -90,7 +90,7 @@ export default async function KategoriInformasiPage({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex flex-col selection:bg-amber-400 selection:text-slate-900">
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex flex-col selection:bg-[#0e4891] selection:text-white">
       
       {/* Navbar Minimalis */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">

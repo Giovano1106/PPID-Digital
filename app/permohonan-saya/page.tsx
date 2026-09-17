@@ -24,31 +24,56 @@ export default async function PermohonanSayaPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'dijawab':
-        return 'bg-emerald-50 text-emerald-800 border-emerald-200'
-      case 'ditolak':
-        return 'bg-rose-50 text-rose-800 border-rose-200'
-      case 'diproses':
-        return 'bg-amber-50 text-amber-800 border-amber-200'
-      default:
+      case 'diajukan':
         return 'bg-blue-50 text-[#0e4891] border-blue-200'
+      case 'diproses':
+        return 'bg-slate-100 text-slate-800 border-slate-300'
+      case 'dijawab':
+        return 'bg-[#0e4891] text-white border-[#0e4891]'
+      case 'ditolak':
+        return 'bg-rose-50 text-rose-700 border-rose-200'
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200'
     }
   }
 
-  // Fungsi menghitung sisa hari kerja dari hari ini ke deadline
+  // Fungsi menghitung sisa hari kerja (Senin s.d. Jumat) dari hari ini ke tanggal tenggat
   const calculateDaysRemaining = (deadlineStr: string | null) => {
     if (!deadlineStr) return null
-    const deadline = new Date(deadlineStr)
+
+    // Parsing tanggal tanpa pergeseran zona waktu (mendukung YYYY-MM-DD atau ISO string)
+    const parts = deadlineStr.split('T')[0].split('-').map(Number)
+    if (parts.length !== 3) return null
+
+    const deadline = new Date(parts[0], parts[1] - 1, parts[2])
+    deadline.setHours(0, 0, 0, 0)
+
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    deadline.setHours(0, 0, 0, 0)
-    const diffTime = deadline.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+
+    if (deadline.getTime() < today.getTime()) {
+      let overdueCount = 0
+      const cur = new Date(deadline)
+      while (cur.getTime() < today.getTime()) {
+        cur.setDate(cur.getDate() + 1)
+        const day = cur.getDay()
+        if (day !== 0 && day !== 6) overdueCount--
+      }
+      return overdueCount
+    }
+
+    let workingDays = 0
+    const cur = new Date(today)
+    while (cur.getTime() < deadline.getTime()) {
+      cur.setDate(cur.getDate() + 1)
+      const day = cur.getDay()
+      if (day !== 0 && day !== 6) workingDays++
+    }
+    return workingDays
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 font-plus-jakarta py-12 selection:bg-amber-400 selection:text-slate-900">
+    <main className="min-h-screen bg-slate-50 font-plus-jakarta py-12 selection:bg-[#0e4891] selection:text-white">
       <div className="mx-auto max-w-5xl px-6">
         {/* Top bar with back to home link */}
         <div className="flex items-center justify-between mb-8">
@@ -127,10 +152,10 @@ export default async function PermohonanSayaPage() {
 
                     {/* BADGE SLA / SISA WAKTU */}
                     {item.status !== 'dijawab' && item.status !== 'ditolak' && (
-                      <div className="text-right">
+                      <div className="flex flex-col items-end gap-1.5">
                         {item.diperpanjang && (
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md mb-1.5 flex items-center justify-end gap-1">
-                            <Timer weight="fill" size={14} /> Diperpanjang +7 Hari
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md flex items-center gap-1">
+                            <Timer weight="bold" size={14} className="text-slate-600" /> Diperpanjang +7 Hari
                           </span>
                         )}
                         {sisaHari !== null && (
@@ -142,8 +167,10 @@ export default async function PermohonanSayaPage() {
                             }`}
                           >
                             {sisaHari < 0
-                              ? 'Lewat Masa SLA'
-                              : `SLA: Sisa ±${sisaHari} Hari Kerja`}
+                              ? `Lewat Masa SLA (${Math.abs(sisaHari)} Hari Kerja)`
+                              : sisaHari === 0
+                              ? 'SLA: Batas Hari Ini'
+                              : `SLA: Sisa ${sisaHari} Hari Kerja`}
                           </span>
                         )}
                       </div>

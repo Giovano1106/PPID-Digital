@@ -174,7 +174,15 @@ export default function AdminDashboardPage() {
 
     setUpdatingId(selectedItem.id)
 
-    const baseDate = new Date(selectedItem.deadline_awal || selectedItem.created_at)
+    let baseDate: Date
+    if (selectedItem.deadline_awal) {
+      const parts = selectedItem.deadline_awal.split('T')[0].split('-').map(Number)
+      baseDate = new Date(parts[0], parts[1] - 1, parts[2])
+    } else {
+      baseDate = new Date(selectedItem.created_at)
+    }
+    baseDate.setHours(0, 0, 0, 0)
+
     let count = 0
     const newDeadline = new Date(baseDate)
     while (count < 7) {
@@ -182,7 +190,10 @@ export default function AdminDashboardPage() {
       const day = newDeadline.getDay()
       if (day !== 0 && day !== 6) count++
     }
-    const deadlineAkhirStr = newDeadline.toISOString().split('T')[0]
+    const yyyy = newDeadline.getFullYear()
+    const mm = String(newDeadline.getMonth() + 1).padStart(2, '0')
+    const dd = String(newDeadline.getDate()).padStart(2, '0')
+    const deadlineAkhirStr = `${yyyy}-${mm}-${dd}`
 
     const result = await setPermohonanPerpanjang(
       selectedItem.id,
