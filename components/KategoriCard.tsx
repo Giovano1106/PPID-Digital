@@ -28,7 +28,7 @@ export default function KategoriCard({
             {badge}
           </span>
           {showCount && (
-            <span className="text-xs font-bold text-slate-500 font-mono">
+            <span className="text-xs font-semibold text-slate-500">
               {count} Dokumen
             </span>
           )}

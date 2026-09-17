@@ -126,16 +126,16 @@ export default function DaftarInformasiPublikView({
             className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow"
           >
             {/* Table Header */}
-            <div className="p-5 border-b border-slate-200 bg-slate-50 border-l-4 border-l-amber-400 flex items-center justify-between flex-wrap gap-2">
+            <div className="p-5 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-lg bg-[#0e4891] text-white flex items-center justify-center font-extrabold text-xs font-mono">
+                <span className="w-7 h-7 rounded-lg bg-[#0e4891] text-white flex items-center justify-center font-bold text-xs">
                   {String(tIdx + 1).padStart(2, '0')}
                 </span>
                 <h3 className="font-black text-base md:text-lg text-slate-900 tracking-wide uppercase">
                   {table.judul}
                 </h3>
               </div>
-              <span className="text-xs font-bold text-slate-500 font-mono bg-white px-3 py-1 rounded-full border border-slate-200">
+              <span className="text-xs font-semibold text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-200">
                 {table.deskripsi || 'Tahun 2022 - 2026'}
               </span>
             </div>

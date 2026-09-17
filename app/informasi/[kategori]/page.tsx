@@ -137,57 +137,63 @@ export default async function KategoriInformasiPage({
           {kategoriKey === 'visi_misi' && (
             <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Visi */}
-              <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                <div className="absolute -right-8 -top-8 text-amber-100/50 group-hover:text-amber-200/50 transition-colors duration-500">
-                  <Target size={200} weight="fill" />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-16 h-16 bg-amber-400 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
-                    <Target size={36} weight="fill" className="text-slate-900" />
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 bg-blue-50 text-[#0e4891] rounded-xl flex items-center justify-center mb-6 border border-blue-100">
+                    <Target size={26} weight="bold" />
                   </div>
-                  <h3 className="text-3xl font-black text-slate-900 mb-6">Visi PPID</h3>
-                  <p className="text-xl text-slate-700 font-medium leading-relaxed italic">
-                    “Mewujudkan pengelolaan dan pelayanan informasi publik Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah.”
-                  </p>
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 mb-3 inline-block">
+                    Arah & Cita-Cita Layanan
+                  </span>
+                  <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Visi PPID</h3>
+                  <blockquote className="border-l-4 border-[#0e4891] pl-4 py-1 italic text-slate-700 text-base leading-relaxed font-medium">
+                    “Mewujudkan pengelolaan dan pelayanan informasi publik Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah yang transparan, akuntabel, dan terpercaya.”
+                  </blockquote>
+                </div>
+                <div className="mt-8 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-500">
+                  PPID Dinas CIKASDA Provinsi Sulawesi Tengah
                 </div>
               </div>
 
               {/* Misi */}
-              <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="absolute -right-8 -top-8 text-slate-800/50 group-hover:text-slate-800 transition-colors duration-500">
-                  <Flag size={200} weight="fill" />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8 border border-white/10">
-                    <Flag size={36} weight="fill" className="text-amber-400" />
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 bg-blue-50 text-[#0e4891] rounded-xl flex items-center justify-center mb-6 border border-blue-100">
+                    <Flag size={26} weight="bold" />
                   </div>
-                  <h3 className="text-3xl font-black text-white mb-8">Misi PPID</h3>
-                  <ul className="space-y-6">
-                    <li className="flex items-start gap-4">
-                      <div className="mt-1 bg-amber-400/20 p-1 rounded-full shrink-0">
-                        <CheckCircle size={24} weight="fill" className="text-amber-400" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 mb-3 inline-block">
+                    Agenda Strategis
+                  </span>
+                  <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Misi PPID</h3>
+                  <ul className="space-y-4">
+                    <li className="flex items-start gap-3">
+                      <div className="mt-0.5 w-6 h-6 rounded-lg bg-blue-50 text-[#0e4891] flex items-center justify-center shrink-0 border border-blue-100">
+                        <CheckCircle size={15} weight="bold" />
                       </div>
-                      <span className="text-slate-300 font-medium leading-relaxed text-lg">
-                        Menyediakan informasi publik sesuai peraturan perundang-undangan.
+                      <span className="text-slate-700 font-medium text-sm leading-relaxed">
+                        Menyediakan informasi publik sesuai peraturan perundang-undangan secara akurat dan tepat waktu.
                       </span>
                     </li>
-                    <li className="flex items-start gap-4">
-                      <div className="mt-1 bg-amber-400/20 p-1 rounded-full shrink-0">
-                        <CheckCircle size={24} weight="fill" className="text-amber-400" />
+                    <li className="flex items-start gap-3">
+                      <div className="mt-0.5 w-6 h-6 rounded-lg bg-blue-50 text-[#0e4891] flex items-center justify-center shrink-0 border border-blue-100">
+                        <CheckCircle size={15} weight="bold" />
                       </div>
-                      <span className="text-slate-300 font-medium leading-relaxed text-lg">
-                        Menyediakan sumber daya manusia dan sarana pengelolaan dan pelayanan informasi yang baik.
+                      <span className="text-slate-700 font-medium text-sm leading-relaxed">
+                        Menyediakan sumber daya manusia dan sarana pengelolaan dan pelayanan informasi yang prima.
                       </span>
                     </li>
-                    <li className="flex items-start gap-4">
-                      <div className="mt-1 bg-amber-400/20 p-1 rounded-full shrink-0">
-                        <CheckCircle size={24} weight="fill" className="text-amber-400" />
+                    <li className="flex items-start gap-3">
+                      <div className="mt-0.5 w-6 h-6 rounded-lg bg-blue-50 text-[#0e4891] flex items-center justify-center shrink-0 border border-blue-100">
+                        <CheckCircle size={15} weight="bold" />
                       </div>
-                      <span className="text-slate-300 font-medium leading-relaxed text-lg">
-                        Melayani pemohon informasi secara cepat, transparan dan bertanggungjawab.
+                      <span className="text-slate-700 font-medium text-sm leading-relaxed">
+                        Melayani pemohon informasi secara cepat, transparan, dan bertanggung jawab.
                       </span>
                     </li>
                   </ul>
+                </div>
+                <div className="mt-8 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-500">
+                  Amanat UU No. 14 Tahun 2008
                 </div>
               </div>
             </div>
@@ -195,27 +201,27 @@ export default async function KategoriInformasiPage({
 
           {/* 2. DAFTAR INFORMASI PUBLIK (Pintasan Kategori) */}
           {kategoriKey === 'daftar_informasi_publik' && (
-            <div className="mt-10 bg-slate-50/50 rounded-2xl p-6 border border-slate-200">
-              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Pintasan Kategori Spesifik</h2>
+            <div className="mt-10 bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs">
+              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Pintasan Kategori Berdasarkan Sifat Informasi</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Link href="/setiap-saat" className="bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-200 p-4 rounded-xl transition-all shadow-sm hover:shadow group">
-                  <h3 className="font-bold text-slate-800 group-hover:text-[#0e4891] mb-1.5 transition-colors">Setiap Saat</h3>
-                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 font-medium">Informasi yang siap tersedia setiap saat untuk diberikan kepada pemohon.</p>
+                <Link href="/setiap-saat" className="bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-[#0e4891]/40 p-4 rounded-xl transition-all shadow-2xs group">
+                  <h3 className="font-bold text-slate-900 group-hover:text-[#0e4891] mb-1.5 transition-colors text-sm">Setiap Saat</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 font-normal">Informasi yang siap tersedia setiap saat untuk diberikan kepada pemohon.</p>
                 </Link>
                 
-                <Link href="/serta-merta" className="bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-200 p-4 rounded-xl transition-all shadow-sm hover:shadow group">
-                  <h3 className="font-bold text-slate-800 group-hover:text-amber-600 mb-1.5 transition-colors">Serta Merta</h3>
-                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 font-medium">Informasi penting yang dapat mengancam hajat hidup orang banyak.</p>
+                <Link href="/serta-merta" className="bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-[#0e4891]/40 p-4 rounded-xl transition-all shadow-2xs group">
+                  <h3 className="font-bold text-slate-900 group-hover:text-[#0e4891] mb-1.5 transition-colors text-sm">Serta Merta</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 font-normal">Informasi penting yang dapat mengancam hajat hidup orang banyak.</p>
                 </Link>
                 
-                <Link href="/berkala" className="bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-200 p-4 rounded-xl transition-all shadow-sm hover:shadow group">
-                  <h3 className="font-bold text-slate-800 group-hover:text-emerald-600 mb-1.5 transition-colors">Berkala</h3>
-                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 font-medium">Informasi publik yang wajib diperbaharui dan disediakan secara rutin.</p>
+                <Link href="/berkala" className="bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-[#0e4891]/40 p-4 rounded-xl transition-all shadow-2xs group">
+                  <h3 className="font-bold text-slate-900 group-hover:text-[#0e4891] mb-1.5 transition-colors text-sm">Berkala</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 font-normal">Informasi publik yang wajib diperbaharui dan disediakan secara rutin.</p>
                 </Link>
                 
-                <Link href="/dikecualikan" className="bg-white hover:bg-rose-50/50 border border-slate-200 hover:border-rose-200 p-4 rounded-xl transition-all shadow-sm hover:shadow group">
-                  <h3 className="font-bold text-slate-800 group-hover:text-rose-600 mb-1.5 transition-colors">Dikecualikan</h3>
-                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 font-medium">Informasi yang bersifat rahasia dan tidak dapat diakses publik (UU KIP).</p>
+                <Link href="/dikecualikan" className="bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-[#0e4891]/40 p-4 rounded-xl transition-all shadow-2xs group">
+                  <h3 className="font-bold text-slate-900 group-hover:text-[#0e4891] mb-1.5 transition-colors text-sm">Dikecualikan</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 font-normal">Informasi yang bersifat rahasia dan tidak dapat diakses publik (UU KIP).</p>
                 </Link>
               </div>
             </div>
@@ -231,49 +237,55 @@ export default async function KategoriInformasiPage({
           {/* 4. PELAYANAN (Maklumat & Jam Layanan) */}
           {kategoriKey === 'pelayanan' && (
             <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-2xs flex flex-col justify-between">
                 <div>
-                  <div className="w-14 h-14 bg-blue-50 text-[#0e4891] rounded-2xl flex items-center justify-center mb-6">
-                    <Handshake size={32} weight="fill" />
+                  <div className="w-12 h-12 bg-blue-50 text-[#0e4891] rounded-xl flex items-center justify-center mb-6 border border-blue-100">
+                    <Handshake size={26} weight="bold" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-4">Maklumat Pelayanan PPID</h3>
-                  <blockquote className="border-l-4 border-amber-400 pl-4 py-1 italic text-slate-700 text-base leading-relaxed mb-6 font-medium">
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 mb-3 inline-block">
+                    Komitmen Layanan Publik
+                  </span>
+                  <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Maklumat Pelayanan PPID</h3>
+                  <blockquote className="border-l-4 border-[#0e4891] pl-4 py-1 italic text-slate-700 text-base leading-relaxed mb-6 font-medium">
                     “Dengan ini kami menyatakan sanggup menyelenggarakan pelayanan informasi publik sesuai standar pelayanan yang telah ditetapkan dan apabila tidak menepati janji, kami siap menerima sanksi sesuai ketentuan peraturan perundang-undangan.”
                   </blockquote>
                 </div>
-                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                <div className="pt-4 border-t border-slate-100 text-xs text-slate-500 font-semibold">
                   Dinas CIKASDA Provinsi Sulawesi Tengah
                 </div>
               </div>
 
-              <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 text-white shadow-sm flex flex-col justify-between">
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-2xs flex flex-col justify-between">
                 <div>
-                  <div className="w-14 h-14 bg-white/10 text-amber-400 rounded-2xl flex items-center justify-center mb-6 border border-white/10">
-                    <Clock size={32} weight="fill" />
+                  <div className="w-12 h-12 bg-blue-50 text-[#0e4891] rounded-xl flex items-center justify-center mb-6 border border-blue-100">
+                    <Clock size={26} weight="bold" />
                   </div>
-                  <h3 className="text-2xl font-black text-white mb-6">Waktu Operasional Pelayanan</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-2.5 border-b border-white/10">
-                      <span className="text-slate-300 font-semibold text-sm">Senin – Kamis</span>
-                      <span className="text-amber-400 font-bold font-mono text-sm">08.00 – 16.00 WITA</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 mb-3 inline-block">
+                    Jam Operasional Kantor
+                  </span>
+                  <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Waktu Pelayanan PPID</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                      <span className="text-slate-700 font-semibold text-sm">Senin – Kamis</span>
+                      <span className="text-slate-900 font-bold font-mono text-sm bg-slate-100 px-2.5 py-0.5 rounded">08.00 – 16.00 WITA</span>
                     </div>
-                    <div className="flex justify-between items-center py-2.5 border-b border-white/10">
-                      <span className="text-slate-300 font-semibold text-sm">Jumat</span>
-                      <span className="text-amber-400 font-bold font-mono text-sm">08.00 – 16.30 WITA</span>
+                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                      <span className="text-slate-700 font-semibold text-sm">Jumat</span>
+                      <span className="text-slate-900 font-bold font-mono text-sm bg-slate-100 px-2.5 py-0.5 rounded">08.00 – 16.30 WITA</span>
                     </div>
-                    <div className="flex justify-between items-center py-2.5 border-b border-white/10">
-                      <span className="text-slate-300 font-semibold text-sm">Waktu Istirahat (Senin-Kamis)</span>
-                      <span className="text-slate-400 font-mono text-sm">12.00 – 13.00 WITA</span>
+                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                      <span className="text-slate-600 font-medium text-xs">Istirahat (Senin – Kamis)</span>
+                      <span className="text-slate-500 font-mono text-xs">12.00 – 13.00 WITA</span>
                     </div>
-                    <div className="flex justify-between items-center py-2.5">
-                      <span className="text-slate-300 font-semibold text-sm">Waktu Istirahat (Jumat)</span>
-                      <span className="text-slate-400 font-mono text-sm">11.30 – 13.00 WITA</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-slate-600 font-medium text-xs">Istirahat (Jumat)</span>
+                      <span className="text-slate-500 font-mono text-xs">11.30 – 13.00 WITA</span>
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-slate-400 mt-6 italic">
-                  *Pelayanan daring melalui portal web tetap dapat diakses 24 jam setiap hari.
-                </p>
+                <div className="pt-4 border-t border-slate-100 text-xs text-slate-500 font-medium italic">
+                  *Layanan permohonan daring via portal tetap aktif 24 jam setiap hari.
+                </div>
               </div>
             </div>
           )}

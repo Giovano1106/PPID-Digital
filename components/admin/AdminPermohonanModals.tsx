@@ -55,7 +55,7 @@ export default function AdminPermohonanModals({
         onClose={() => setActiveModal(null)}
         title={
           <span className="flex items-center gap-2">
-            <ChatTeardropText size={18} weight="bold" className="text-amber-400" />
+            <ChatTeardropText size={18} weight="bold" className="text-[#0e4891]" />
             Jawab Permohonan Informasi
           </span>
         }
@@ -99,7 +99,7 @@ export default function AdminPermohonanModals({
         onClose={() => setActiveModal(null)}
         title={
           <span className="flex items-center gap-2">
-            <XCircle size={18} weight="bold" className="text-rose-400" />
+            <XCircle size={18} weight="bold" className="text-rose-600" />
             Tolak Permohonan Informasi
           </span>
         }
@@ -143,7 +143,7 @@ export default function AdminPermohonanModals({
         onClose={() => setActiveModal(null)}
         title={
           <span className="flex items-center gap-2">
-            <Clock size={18} weight="bold" className="text-amber-400" />
+            <Clock size={18} weight="bold" className="text-[#0e4891]" />
             Perpanjang SLA (+7 Hari Kerja)
           </span>
         }

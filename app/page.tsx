@@ -126,13 +126,13 @@ export default async function HomePage() {
         <div className="absolute inset-0 z-0 bg-[#0e4891]/90 md:bg-transparent md:bg-gradient-to-r md:from-[#0e4891] md:from-10% md:via-[#0e4891]/80 md:via-40% md:to-transparent md:to-60%"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-start">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-bold text-white mb-8">
-            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span>
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xs border border-white/20 text-xs font-semibold text-white mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-300"></span>
             Layanan Portal Resmi Informasi Publik Digital
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15] max-w-3xl mb-6">
-            Akses Layanan Informasi Publik <span className="text-amber-400">CIKASDA</span> Sulawesi Tengah
+            Akses Layanan Informasi Publik <span className="text-blue-200">CIKASDA</span> Sulawesi Tengah
           </h1>
 
           <p className="text-lg md:text-xl text-blue-100 font-medium leading-relaxed max-w-2xl mb-10">
@@ -142,7 +142,7 @@ export default async function HomePage() {
           <div className="flex flex-wrap items-center gap-4">
             <Link
               href={user ? '/permohonan-saya/ajukan' : '/daftar'}
-              className="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold px-7 py-3.5 rounded-xl transition-colors shadow-sm text-base"
+              className="bg-white hover:bg-slate-100 text-[#0e4891] font-bold px-7 py-3.5 rounded-xl transition-all shadow-sm text-base"
             >
               Ajukan Permohonan Informasi
             </Link>
@@ -163,7 +163,6 @@ export default async function HomePage() {
             <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
               {getKontenBySection('tentang_ppid')?.judul || 'Tentang PPID CIKASDA'}
             </h2>
-            <div className="w-12 h-1.5 bg-amber-400 rounded-full mb-6"></div>
           </div>
           <div className="md:w-2/3">
             <div className="prose prose-slate prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium prose-strong:text-slate-900 max-w-none text-lg">
@@ -180,9 +179,9 @@ export default async function HomePage() {
       <section id="alur-permohonan" className="py-20 px-6 border-b border-slate-200 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-bold text-[#0e4891] uppercase tracking-wider bg-blue-100/60 px-3.5 py-1.5 rounded-full inline-block mb-3">
-              Transparansi & Akuntabilitas
-            </span>
+            <div className="text-xs font-bold text-[#0e4891] uppercase tracking-wider mb-2">
+              Prosedur Baku Pelayanan
+            </div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">
               Alur Pengajuan Permohonan Informasi
             </h2>

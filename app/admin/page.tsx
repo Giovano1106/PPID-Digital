@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CaretLeft, CaretRight } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, Tray, ClockCountdown, HourglassMedium, CheckCircle } from '@phosphor-icons/react'
 import Toast, { ToastType } from '@/components/Toast'
 import SkeletonCard from '@/components/SkeletonCard'
 import AdminHeader from '@/components/admin/AdminHeader'
@@ -277,54 +277,57 @@ export default function AdminDashboardPage() {
         fetchPermohonan={fetchPermohonan}
       />
 
-      {/* STATS BADGES WITH RELATIVE PROGRESS BARS */}
+      {/* STATS BADGES */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Permohonan</p>
-            <p className="text-3xl font-black text-slate-900 mt-2">{totalCount}</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Permohonan</span>
+            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+              <Tray size={16} weight="bold" />
+            </span>
           </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
-            <div className="bg-slate-900 h-full rounded-full w-full" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#0e4891]">Perlu Diproses</p>
-            <p className="text-3xl font-black text-[#0e4891] mt-2">{countDiajukan}</p>
-          </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
-            <div
-              className="bg-[#0e4891] h-full rounded-full transition-all"
-              style={{ width: `${totalCount > 0 ? (countDiajukan / totalCount) * 100 : 0}%` }}
-            />
+          <div className="mt-3">
+            <p className="text-3xl font-black text-slate-900 tracking-tight">{totalCount}</p>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">Semua berkas masuk</p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Sedang Diproses</p>
-            <p className="text-3xl font-black text-slate-900 mt-2">{countDiproses}</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0e4891]">Perlu Diproses</span>
+            <span className="w-7 h-7 rounded-lg bg-blue-50 text-[#0e4891] flex items-center justify-center">
+              <ClockCountdown size={16} weight="bold" />
+            </span>
           </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
-            <div
-              className="bg-slate-600 h-full rounded-full transition-all"
-              style={{ width: `${totalCount > 0 ? (countDiproses / totalCount) * 100 : 0}%` }}
-            />
+          <div className="mt-3">
+            <p className="text-3xl font-black text-[#0e4891] tracking-tight">{countDiajukan}</p>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">Menunggu verifikasi admin</p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Selesai / Dijawab</p>
-            <p className="text-3xl font-black text-slate-900 mt-2">{countDijawab}</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Sedang Diproses</span>
+            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <HourglassMedium size={16} weight="bold" />
+            </span>
           </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
-            <div
-              className="bg-emerald-500 h-full rounded-full transition-all"
-              style={{ width: `${totalCount > 0 ? (countDijawab / totalCount) * 100 : 0}%` }}
-            />
+          <div className="mt-3">
+            <p className="text-3xl font-black text-slate-900 tracking-tight">{countDiproses}</p>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">Kajian teknis bidang</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Selesai / Dijawab</span>
+            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <CheckCircle size={16} weight="bold" />
+            </span>
+          </div>
+          <div className="mt-3">
+            <p className="text-3xl font-black text-slate-900 tracking-tight">{countDijawab}</p>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">Tanggapan telah terbit</p>
           </div>
         </div>
       </div>

@@ -321,7 +321,7 @@ export default function AdminKontenPage() {
               <span className="text-xs font-black uppercase tracking-wider text-slate-700">
                 Kategori Informasi ({listKonten.length})
               </span>
-              <span className="text-[11px] font-bold text-slate-500 font-mono">
+              <span className="text-[11px] font-semibold text-slate-500">
                 Pilih untuk kelola
               </span>
             </div>
@@ -343,7 +343,7 @@ export default function AdminKontenPage() {
             </div>
 
             {/* List Kategori */}
-            <div className="space-y-1.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+            <div className="space-y-1.5">
               {filteredCategories.map((kat) => {
                 const isSelected = kat.section_key === activeKategori?.section_key
                 const IconComponent = getCategoryIcon(kat.section_key)
@@ -383,7 +383,7 @@ export default function AdminKontenPage() {
                           {kat.judul || formatCategoryLabel(kat.section_key)}
                         </span>
                         <span
-                          className={`text-[10px] font-mono block mt-0.5 truncate ${
+                          className={`text-[10px] block mt-0.5 truncate ${
                             isSelected ? 'text-blue-100' : 'text-slate-400'
                           }`}
                         >
@@ -412,16 +412,16 @@ export default function AdminKontenPage() {
             <div className="lg:col-span-8 space-y-8">
               
               {/* HEADER KATEGORI AKTIF */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-l-amber-400">
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#0e4891] flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#0e4891] flex items-center justify-center shrink-0 border border-blue-100">
                     {(() => {
                       const Icon = getCategoryIcon(activeKategori.section_key)
                       return <Icon size={26} weight="bold" />
                     })()}
                   </div>
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       Kategori Aktif
                     </span>
                     <h2 className="font-black text-xl text-slate-900 tracking-tight">
@@ -444,7 +444,7 @@ export default function AdminKontenPage() {
               <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
                 <h3 className="font-extrabold text-sm text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
                   <span>Teks Pengantar & Deskripsi Kategori</span>
-                  <span className="text-[11px] font-normal text-slate-500 font-mono">
+                  <span className="text-[11px] font-medium text-slate-500">
                     Tampil pada header halaman publik
                   </span>
                 </h3>
@@ -489,7 +489,7 @@ export default function AdminKontenPage() {
               {activeKategori.section_key === 'visi_misi' ? (
                 /* KHUSUS: VISI DAN MISI */
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-8 text-center">
-                  <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-blue-50 text-[#0e4891] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
                     <Target size={32} weight="fill" />
                   </div>
                   <h3 className="font-extrabold text-base text-slate-900 mb-1">
@@ -501,7 +501,7 @@ export default function AdminKontenPage() {
                   <Link
                     href="/informasi/visi_misi"
                     target="_blank"
-                    className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm"
+                    className="inline-flex items-center gap-2 bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm"
                   >
                     <span>Lihat Kartu Visi & Misi di Portal</span>
                     <ArrowSquareOut size={15} weight="bold" />
@@ -510,26 +510,33 @@ export default function AdminKontenPage() {
               ) : activeKategori.section_key === 'daftar_informasi_publik' ? (
                 /* KHUSUS: DAFTAR INFORMASI PUBLIK */
                 <div className="space-y-6">
-                  {/* Banner Pintasan CMS Matriks */}
-                  <div className="bg-gradient-to-br from-[#0e4891] to-[#0a366f] rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/15 text-amber-300 text-[10px] font-bold uppercase tracking-wider mb-2 font-mono">
-                        Sistem CMS Matriks Terpisah
-                      </span>
-                      <h3 className="text-lg font-black tracking-tight mb-1">
-                        10 Tabel Matriks Daftar Informasi Publik (2022–2026)
-                      </h3>
-                      <p className="text-blue-100 text-xs max-w-lg leading-relaxed font-medium">
-                        Tabel-tabel tematik KIP, rincian dokumen, dan tautan per tahun (2022 s.d. 2026) dikelola secara khusus melalui antarmuka CMS Matriks.
-                      </p>
+                  {/* Panel Akses CMS Matriks */}
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#0e4891] flex items-center justify-center shrink-0 border border-blue-100">
+                        <Table size={24} weight="bold" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h4 className="font-extrabold text-base text-slate-900">
+                            10 Tabel Matriks Daftar Informasi Publik (2022–2026)
+                          </h4>
+                          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                            CMS Matriks
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed font-medium max-w-xl">
+                          Tabel-tabel tematik KIP, rincian dokumen, dan tautan per tahun (2022 s.d. 2026) dikelola secara khusus melalui antarmuka CMS Matriks.
+                        </p>
+                      </div>
                     </div>
 
                     <Link
                       href="/admin/daftar-informasi"
-                      className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black px-5 py-3 rounded-xl transition-all shadow-md shrink-0 cursor-pointer"
+                      className="inline-flex items-center gap-2 bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-xs shrink-0 cursor-pointer"
                     >
-                      <Table size={18} weight="bold" />
-                      <span>Buka CMS Matriks Sekarang</span>
+                      <Table size={16} weight="bold" />
+                      <span>Buka CMS Matriks</span>
                       <ArrowRight size={14} weight="bold" />
                     </Link>
                   </div>
