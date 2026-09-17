@@ -15,6 +15,7 @@ import {
   setPermohonanTolak,
   setPermohonanPerpanjang
 } from '@/app/actions/admin'
+import { createClient } from '@/app/lib/supabase/client'
 
 type Profile = {
   nama: string
@@ -77,12 +78,43 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     fetchPermohonan()
 
-    // Auto-refresh data setiap 1 menit secara senyap (tanpa indikator loading agar tidak mengganggu)
+    const supabase = createClient()
+
+    // 1. Setup Supabase Realtime WebSocket subscription
+    const channel = supabase
+      .channel('admin-permohonan-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'permohonan',
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            showToast('Ada permohonan informasi publik baru masuk.', 'info')
+          }
+          fetchPermohonan(true)
+        }
+      )
+      .subscribe()
+
+    // 2. Auto-refresh saat admin beralih kembali ke tab ini
+    const handleFocus = () => {
+      fetchPermohonan(true)
+    }
+    window.addEventListener('focus', handleFocus)
+
+    // 3. Fallback polling pasif berkala (setiap 20 detik)
     const intervalId = setInterval(() => {
       fetchPermohonan(true)
-    }, 60000)
+    }, 20000)
 
-    return () => clearInterval(intervalId)
+    return () => {
+      supabase.removeChannel(channel)
+      window.removeEventListener('focus', handleFocus)
+      clearInterval(intervalId)
+    }
   }, [])
 
   const showToast = (message: string, type: ToastType = 'success') => {

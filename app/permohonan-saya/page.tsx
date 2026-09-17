@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
 import { ArrowLeft, FileText, Timer, ChatTeardropText, ArrowRight } from '@phosphor-icons/react/dist/ssr'
+import PermohonanRealtimeListener from '@/components/PermohonanRealtimeListener'
 
 export default async function PermohonanSayaPage() {
   const supabase = await createClient()
@@ -74,6 +75,7 @@ export default async function PermohonanSayaPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 font-plus-jakarta py-12 selection:bg-[#0e4891] selection:text-white">
+      <PermohonanRealtimeListener userId={user.id} />
       <div className="mx-auto max-w-5xl px-6">
         {/* Top bar with back to home link */}
         <div className="flex items-center justify-between mb-8">
