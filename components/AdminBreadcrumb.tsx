@@ -13,6 +13,12 @@ export default function AdminBreadcrumb() {
         { label: 'Kelola CMS & Dokumen', href: '/admin/konten', active: true },
       ]
     }
+    if (pathname === '/admin/daftar-informasi') {
+      return [
+        { label: 'Admin Console', href: '/admin' },
+        { label: 'Daftar Informasi Publik', href: '/admin/daftar-informasi', active: true },
+      ]
+    }
     return [
       { label: 'Admin Console', href: '/admin' },
       { label: 'Kelola Permohonan', href: '/admin', active: true },

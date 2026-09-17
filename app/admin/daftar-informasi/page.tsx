@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import Link from 'next/link'
 import Modal from '@/components/Modal'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
@@ -14,8 +15,11 @@ import {
   Database,
   LinkSimple,
   CheckCircle,
-  WarningCircle,
-  FolderOpen
+  CaretLeft,
+  CaretRight,
+  MagnifyingGlass,
+  ArrowRight,
+  Info
 } from '@phosphor-icons/react'
 import {
   getDaftarInformasiTables,
@@ -38,6 +42,7 @@ export default function AdminDaftarInformasiPage() {
   const [loading, setLoading] = useState(true)
   const [isFallback, setIsFallback] = useState(false)
   const [activeTableIndex, setActiveTableIndex] = useState(0)
+  const [tableSearch, setTableSearch] = useState('')
 
   // Toast & Modals
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
@@ -88,9 +93,20 @@ export default function AdminDaftarInformasiPage() {
     loadData()
   }, [])
 
+  // Filtered tables for search
+  const filteredTables = useMemo(() => {
+    if (!tableSearch.trim()) return tables
+    const q = tableSearch.toLowerCase()
+    return tables.filter(
+      (t) =>
+        t.judul.toLowerCase().includes(q) ||
+        (t.deskripsi && t.deskripsi.toLowerCase().includes(q))
+    )
+  }, [tables, tableSearch])
+
   const activeTable = tables[activeTableIndex] || null
 
-  // Handler: 1-Klik Inisialisasi Data Awal ke Supabase
+  // Handler: Sinkronisasi / Inisialisasi Data Awal ke Supabase
   const handleSeedData = async () => {
     setSeeding(true)
     const res = await seedInitialDaftarInformasi()
@@ -99,7 +115,7 @@ export default function AdminDaftarInformasiPage() {
       showToast('Seluruh 10 tabel data awal berhasil diimpor ke database Supabase!')
       loadData()
     } else {
-      showToast('Gagal inisialisasi: ' + res.error, 'error')
+      showToast(res.error || 'Gagal inisialisasi.', 'error')
     }
   }
 
@@ -263,6 +279,19 @@ export default function AdminDaftarInformasiPage() {
     }
   }
 
+  // Navigasi Prev/Next
+  const handlePrevTable = () => {
+    if (activeTableIndex > 0) {
+      setActiveTableIndex(activeTableIndex - 1)
+    }
+  }
+
+  const handleNextTable = () => {
+    if (activeTableIndex < tables.length - 1) {
+      setActiveTableIndex(activeTableIndex + 1)
+    }
+  }
+
   return (
     <div className="pb-16 font-plus-jakarta">
       {/* TOAST NOTIFICATION */}
@@ -307,262 +336,372 @@ export default function AdminDaftarInformasiPage() {
             <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-100/70 text-[#0e4891] border border-blue-200">
               CMS Matriks KIP
             </span>
+            <span className="text-[11px] font-bold text-slate-500 font-mono">
+              Periode 2022 – 2026
+            </span>
           </div>
           <h1 className="font-black text-2xl md:text-3xl text-slate-900 tracking-tight">
             Kelola Matriks Daftar Informasi Publik
           </h1>
           <p className="text-xs md:text-sm text-slate-600 font-medium mt-1">
-            Kelola tabel tematik dan perbarui tautan dokumen per tahun (2022 s.d. 2026) secara dinamis.
+            Pilih tabel tematik di sebelah kiri untuk mengelola rincian baris data dan tautan per tahun.
           </p>
         </div>
-        <div className="flex items-center gap-3 self-start md:self-auto">
+
+        <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
+          <Link
+            href="/informasi/daftar_informasi_publik"
+            target="_blank"
+            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-2xs flex items-center gap-1.5"
+          >
+            <span>Lihat di Portal</span>
+            <ArrowSquareOut size={14} weight="bold" />
+          </Link>
+
           <button
             onClick={loadData}
             disabled={loading}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-2xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Muat ulang data"
           >
-            <ArrowsClockwise weight="bold" size={16} className={loading ? 'animate-spin' : ''} />
-            Refresh Data
+            <ArrowsClockwise weight="bold" size={15} className={loading ? 'animate-spin' : ''} />
+            Refresh
           </button>
+
+          {/* Opsi Sinkronisasi Sekunder (jika data belum di DB) */}
+          {isFallback && (
+            <button
+              onClick={handleSeedData}
+              disabled={seeding}
+              className="rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold px-4 py-2.5 text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Impor 10 tabel data awal ke Supabase"
+            >
+              <Database size={15} weight="bold" />
+              <span>{seeding ? 'Mengimpor...' : 'Sinkronkan Data Awal'}</span>
+            </button>
+          )}
+
           <button
             onClick={openAddTableModal}
-            className="rounded-xl bg-[#0e4891] hover:bg-[#0a366f] px-4 py-2.5 text-xs font-bold text-white transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+            className="rounded-xl bg-[#0e4891] hover:bg-[#0a366f] px-4 py-2.5 text-xs font-bold text-white transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
-            <Plus weight="bold" size={16} />
+            <Plus weight="bold" size={15} />
             Tambah Tabel Baru
           </button>
         </div>
       </div>
 
-      {/* FALLBACK BANNER (JIKA DATABASE BELUM DIMIGRASI/DIISI) */}
-      {isFallback && (
-        <div className="mb-8 rounded-2xl bg-amber-50 border border-amber-200 p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-              <Database size={20} weight="bold" />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-sm">
-                Data Menggunakan Dataset Bawaan (10 Tabel)
-              </h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Tabel database Supabase belum diisi. Klik tombol inisialisasi di samping untuk mengimpor 10 tabel & 47 baris data bawaan rekan Anda ke database dalam 1 klik.
-              </p>
-            </div>
-          </div>
+      {/* MOBILE DROPDOWN SELECTOR (HANYA MUNCUL DI LAYAR KECIL / TABLET) */}
+      <div className="lg:hidden mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+          Pilih Tabel Tematik:
+        </label>
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleSeedData}
-            disabled={seeding}
-            className="rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold px-4 py-2.5 text-xs shadow-sm transition-all flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
+            onClick={handlePrevTable}
+            disabled={activeTableIndex === 0}
+            className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-30 cursor-pointer"
+            title="Tabel sebelumnya"
           >
-            <Database size={16} weight="bold" />
-            {seeding ? 'Mengimpor Data...' : 'Inisialisasi Data Awal (1-Klik)'}
+            <CaretLeft size={16} weight="bold" />
+          </button>
+
+          <select
+            value={activeTableIndex}
+            onChange={(e) => setActiveTableIndex(Number(e.target.value))}
+            className="flex-1 rounded-xl border border-slate-300 bg-white p-2.5 text-xs font-bold text-slate-900 focus:border-[#0e4891] focus:outline-none"
+          >
+            {tables.map((t, idx) => (
+              <option key={idx} value={idx}>
+                {String(idx + 1).padStart(2, '0')}. {t.judul} ({t.items?.length || 0} data)
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={handleNextTable}
+            disabled={activeTableIndex === tables.length - 1}
+            className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-30 cursor-pointer"
+            title="Tabel selanjutnya"
+          >
+            <CaretRight size={16} weight="bold" />
           </button>
         </div>
-      )}
+      </div>
 
-      {/* TABEL SELECTOR (TABS / PILLS) */}
       {loading ? (
-        <div className="h-14 bg-white rounded-2xl border border-slate-200 animate-pulse mb-8" />
-      ) : (
-        <div className="mb-8">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-            Pilih Tabel Tematik yang Dikelola ({tables.length} Tabel):
-          </label>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
-            {tables.map((tbl, idx) => {
-              const isActive = idx === activeTableIndex
-              return (
-                <button
-                  key={tbl.id ? tbl.id.toString() : `tab-${idx}`}
-                  onClick={() => setActiveTableIndex(idx)}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer border ${
-                    isActive
-                      ? 'bg-[#0e4891] text-white border-[#0e4891] shadow-sm'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
-                  }`}
-                >
-                  <span
-                    className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-mono ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {idx + 1}
-                  </span>
-                  <span className="max-w-[200px] truncate">{tbl.judul}</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
-                    {tbl.items?.length || 0}
-                  </span>
-                </button>
-              )
-            })}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-4 space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+            ))}
+          </div>
+          <div className="lg:col-span-8">
+            <div className="h-96 bg-white rounded-2xl border border-slate-200 animate-pulse" />
           </div>
         </div>
-      )}
+      ) : (
+        /* MASTER-DETAIL 2-COLUMN LAYOUT (ZERO HORIZONTAL SCROLL) */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* KOLOM KIRI: DAFTAR TABEL VERTIKAL (DESKTOP) */}
+          <div className="hidden lg:block lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sticky top-6">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                Daftar Tabel Tematik ({tables.length})
+              </span>
+              <span className="text-[11px] font-bold text-slate-500 font-mono">
+                Pilih tabel
+              </span>
+            </div>
 
-      {/* ACTIVE TABLE PANEL */}
-      {activeTable && (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-8">
-          {/* Active Table Header Banner */}
-          <div className="p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-amber-400">
-            <div>
-              <div className="flex items-center gap-2.5 mb-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#0e4891] text-white font-mono">
-                  Tabel {String(activeTableIndex + 1).padStart(2, '0')}
-                </span>
-                <span className="text-xs font-bold text-slate-500 font-mono">
-                  {activeTable.deskripsi || 'Tahun 2022 - 2026'}
-                </span>
-                <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100/70 text-[#0e4891] border border-blue-200">
-                  Aksi: {activeTable.action_type === 'klik' ? 'Klik Tautan' : 'Unduh File'}
-                </span>
+            {/* Pencarian Tabel */}
+            <div className="relative mb-3">
+              <MagnifyingGlass
+                size={14}
+                weight="bold"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Cari tabel..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all"
+              />
+            </div>
+
+            {/* List Tabel Tersusun Vertikal */}
+            <div className="space-y-1.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+              {filteredTables.map((tbl) => {
+                const originalIndex = tables.findIndex((t) => t.id === tbl.id || t.judul === tbl.judul)
+                const isSelected = originalIndex === activeTableIndex
+
+                return (
+                  <button
+                    key={tbl.id ? tbl.id.toString() : `tab-${originalIndex}`}
+                    onClick={() => setActiveTableIndex(originalIndex)}
+                    className={`w-full text-left p-3 rounded-xl transition-all flex items-center justify-between gap-3 border cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#0e4891] text-white border-[#0e4891] shadow-sm'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-100 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <span
+                        className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold font-mono shrink-0 ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {String(originalIndex + 1).padStart(2, '0')}
+                      </span>
+                      <div className="overflow-hidden">
+                        <span className="font-extrabold text-xs block leading-tight truncate">
+                          {tbl.judul}
+                        </span>
+                        <span
+                          className={`text-[10px] font-mono block mt-0.5 ${
+                            isSelected ? 'text-blue-100' : 'text-slate-400'
+                          }`}
+                        >
+                          Aksi: {tbl.action_type === 'klik' ? 'Klik' : 'Unduh'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {tbl.items?.length || 0} data
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Tombol Tambah Tabel di Bawah Sidebar Kiri */}
+            <div className="mt-4 pt-3 border-t border-slate-100">
+              <button
+                onClick={openAddTableModal}
+                className="w-full py-2 px-3 rounded-xl border border-dashed border-slate-300 hover:border-[#0e4891] text-slate-600 hover:text-[#0e4891] text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Plus size={14} weight="bold" />
+                Tambah Tabel Baru
+              </button>
+            </div>
+          </div>
+
+          {/* KOLOM KANAN: DETAIL TABEL AKTIF & MATRIKS DOKUMEN */}
+          {activeTable && (
+            <div className="lg:col-span-8 rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+              
+              {/* Header Tabel Aktif */}
+              <div className="p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-amber-400">
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#0e4891] text-white font-mono">
+                      Tabel {String(activeTableIndex + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-xs font-bold text-slate-500 font-mono bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
+                      {activeTable.deskripsi || 'Tahun 2022 - 2026'}
+                    </span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100/70 text-[#0e4891] border border-blue-200">
+                      Aksi: {activeTable.action_type === 'klik' ? 'Klik Tautan' : 'Unduh File'}
+                    </span>
+                  </div>
+                  <h2 className="font-black text-lg md:text-xl text-slate-900 tracking-tight uppercase">
+                    {activeTable.judul}
+                  </h2>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => openEditTableModal(activeTable)}
+                    className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    title="Edit judul atau opsi tabel"
+                  >
+                    <PencilSimple size={14} weight="bold" />
+                    Edit Tabel
+                  </button>
+                  <button
+                    onClick={() => setDeleteTableConfirm(activeTable)}
+                    className="px-3.5 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    title="Hapus tabel ini"
+                  >
+                    <Trash size={14} weight="bold" />
+                    Hapus
+                  </button>
+                </div>
               </div>
-              <h2 className="font-black text-xl text-slate-900 tracking-tight uppercase">
-                {activeTable.judul}
-              </h2>
-            </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => openEditTableModal(activeTable)}
-                className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                title="Edit judul/opsi tabel"
-              >
-                <PencilSimple size={15} weight="bold" />
-                Edit Tabel
-              </button>
-              <button
-                onClick={() => setDeleteTableConfirm(activeTable)}
-                className="px-3.5 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                title="Hapus tabel ini"
-              >
-                <Trash size={15} weight="bold" />
-                Hapus Tabel
-              </button>
-            </div>
-          </div>
+              {/* Sub-header: Rincian Dokumen & Tombol Tambah Baris */}
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900">
+                    Rincian Baris Dokumen & Tautan Tahun
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Total {activeTable.items?.length || 0} baris dokumen terdaftar pada tabel ini.
+                  </p>
+                </div>
+                <button
+                  onClick={openAddItemModal}
+                  className="bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Plus size={15} weight="bold" />
+                  Tambah Baris Data
+                </button>
+              </div>
 
-          {/* Table Data Rows Header */}
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-sm text-slate-900">
-                Rincian Baris Dokumen & Tautan Tahun
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Total {activeTable.items?.length || 0} baris dokumen terdaftar pada tabel ini.
-              </p>
-            </div>
-            <button
-              onClick={openAddItemModal}
-              className="bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus size={15} weight="bold" />
-              Tambah Baris Data
-            </button>
-          </div>
-
-          {/* Table Data Matrix */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[900px]">
-              <thead>
-                <tr className="bg-slate-100/80 text-slate-700 border-b border-slate-200">
-                  <th className="py-3.5 px-6 font-bold text-xs uppercase tracking-wider w-[40%]">
-                    Nama Data / Dokumen
-                  </th>
-                  {TAHUN_LIST.map((th) => (
-                    <th
-                      key={th}
-                      className="py-3.5 px-3 font-bold text-xs text-center font-mono w-[8%]"
-                    >
-                      {th}
-                    </th>
-                  ))}
-                  <th className="py-3.5 px-6 font-bold text-xs uppercase tracking-wider text-right w-[15%]">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {activeTable.items && activeTable.items.length > 0 ? (
-                  activeTable.items.map((row, idx) => (
-                    <tr key={row.id ? row.id.toString() : `row-${idx}`} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-4 px-6 text-xs font-semibold text-slate-800 leading-relaxed">
-                        <div className="flex items-start gap-2.5">
-                          <span className="text-slate-400 font-mono text-[11px] shrink-0 mt-0.5">
-                            {idx + 1}.
-                          </span>
-                          <span>{row.nama}</span>
-                        </div>
-                      </td>
-
-                      {/* Year Indicators */}
-                      {TAHUN_LIST.map((th) => {
-                        const linkVal = (row.links as Record<string, string>)[th]
-                        const hasLink = linkVal && linkVal !== '#'
-
-                        return (
-                          <td key={th} className="py-4 px-3 text-center">
-                            {hasLink ? (
-                              <a
-                                href={linkVal}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold hover:bg-emerald-100 transition-colors"
-                                title={`Buka link (${linkVal})`}
-                              >
-                                <LinkSimple size={12} weight="bold" />
-                                <span>Ada</span>
-                              </a>
-                            ) : (
-                              <span
-                                className="inline-block px-2 py-1 rounded bg-slate-100 text-slate-400 text-[11px] font-medium"
-                                title="Belum ada link (#)"
-                              >
-                                -
-                              </span>
-                            )}
-                          </td>
-                        )
-                      })}
-
-                      {/* Actions */}
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => openEditItemModal(row)}
-                            className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:text-[#0e4891] hover:bg-slate-50 transition-colors cursor-pointer"
-                            title="Edit baris dokumen & link"
-                          >
-                            <PencilSimple size={15} weight="bold" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteItemConfirm(row)}
-                            className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                            title="Hapus baris dokumen"
-                          >
-                            <Trash size={15} weight="bold" />
-                          </button>
-                        </div>
-                      </td>
+              {/* Matriks Tabel Interaktif */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[760px]">
+                  <thead>
+                    <tr className="bg-slate-100/80 text-slate-700 border-b border-slate-200">
+                      <th className="py-3 px-5 font-bold text-xs uppercase tracking-wider w-[40%]">
+                        Nama Data / Dokumen
+                      </th>
+                      {TAHUN_LIST.map((th) => (
+                        <th
+                          key={th}
+                          className="py-3 px-2 font-bold text-xs text-center font-mono w-[8%]"
+                        >
+                          {th}
+                        </th>
+                      ))}
+                      <th className="py-3 px-5 font-bold text-xs uppercase tracking-wider text-right w-[15%]">
+                        Aksi
+                      </th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={TAHUN_LIST.length + 2}
-                      className="py-10 text-center text-xs text-slate-500 italic"
-                    >
-                      Belum ada baris data pada tabel ini. Klik tombol "Tambah Baris Data" untuk menambahkan.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {activeTable.items && activeTable.items.length > 0 ? (
+                      activeTable.items.map((row, idx) => (
+                        <tr
+                          key={row.id ? row.id.toString() : `row-${idx}`}
+                          className="hover:bg-slate-50/70 transition-colors"
+                        >
+                          <td className="py-4 px-5 text-xs font-semibold text-slate-800 leading-relaxed">
+                            <div className="flex items-start gap-2.5">
+                              <span className="text-slate-400 font-mono text-[11px] shrink-0 mt-0.5">
+                                {idx + 1}.
+                              </span>
+                              <span>{row.nama}</span>
+                            </div>
+                          </td>
+
+                          {/* Year Indicators */}
+                          {TAHUN_LIST.map((th) => {
+                            const linkVal = (row.links as Record<string, string>)[th]
+                            const hasLink = linkVal && linkVal !== '#'
+
+                            return (
+                              <td key={th} className="py-4 px-2 text-center">
+                                {hasLink ? (
+                                  <a
+                                    href={linkVal}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold hover:bg-emerald-100 transition-colors"
+                                    title={`Buka link (${linkVal})`}
+                                  >
+                                    <LinkSimple size={11} weight="bold" />
+                                    <span>Ada</span>
+                                  </a>
+                                ) : (
+                                  <span
+                                    className="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-400 text-[10px] font-medium"
+                                    title="Belum ada link (#)"
+                                  >
+                                    -
+                                  </span>
+                                )}
+                              </td>
+                            )
+                          })}
+
+                          {/* Action Buttons */}
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => openEditItemModal(row)}
+                                className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:text-[#0e4891] hover:bg-slate-50 transition-colors cursor-pointer"
+                                title="Edit baris dokumen & link"
+                              >
+                                <PencilSimple size={14} weight="bold" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteItemConfirm(row)}
+                                className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                title="Hapus baris dokumen"
+                              >
+                                <Trash size={14} weight="bold" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={TAHUN_LIST.length + 2}
+                          className="py-12 text-center text-xs text-slate-500 italic"
+                        >
+                          Belum ada baris data pada tabel ini. Klik tombol "Tambah Baris Data" untuk menambahkan.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          )}
+
         </div>
       )}
 
