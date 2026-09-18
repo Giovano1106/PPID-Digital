@@ -2,6 +2,7 @@
 
 import { createClient } from '@/app/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { sendStatusUpdateNotification } from '@/app/actions/email'
 
 // Helper function to check admin role
 async function checkIsAdmin() {
@@ -68,6 +69,12 @@ export async function setPermohonanDiproses(id: number) {
 
     if (error) throw error
     revalidatePath('/admin')
+
+    // Kirim notifikasi email ke pemohon (asynchronous, non-blocking)
+    sendStatusUpdateNotification(id, 'diproses').catch((err) => {
+      console.error('[Email Notification Error] setPermohonanDiproses:', err)
+    })
+
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)
@@ -92,6 +99,12 @@ export async function setPermohonanJawab(id: number, jawaban: string) {
 
     if (error) throw error
     revalidatePath('/admin')
+
+    // Kirim notifikasi email ke pemohon beserta teks jawaban resmi
+    sendStatusUpdateNotification(id, 'dijawab', { jawabanAdmin: jawaban }).catch((err) => {
+      console.error('[Email Notification Error] setPermohonanJawab:', err)
+    })
+
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)
@@ -116,6 +129,12 @@ export async function setPermohonanTolak(id: number, alasan: string) {
 
     if (error) throw error
     revalidatePath('/admin')
+
+    // Kirim notifikasi email ke pemohon beserta alasan penolakan
+    sendStatusUpdateNotification(id, 'tolak', { alasan }).catch((err) => {
+      console.error('[Email Notification Error] setPermohonanTolak:', err)
+    })
+
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)
@@ -141,6 +160,12 @@ export async function setPermohonanPerpanjang(id: number, alasan: string, deadli
 
     if (error) throw error
     revalidatePath('/admin')
+
+    // Kirim notifikasi email ke pemohon dengan alasan perpanjangan & deadline baru
+    sendStatusUpdateNotification(id, 'perpanjang', { alasan, deadlineAkhir: deadline_akhir }).catch((err) => {
+      console.error('[Email Notification Error] setPermohonanPerpanjang:', err)
+    })
+
     return { success: true }
   } catch (error: any) {
     console.error('[Admin Action Error]', error)

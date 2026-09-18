@@ -7,6 +7,7 @@ import { createClient } from '@/app/lib/supabase/client'
 import { ArrowLeft, Warning, Info, FileText } from '@phosphor-icons/react'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
+import { sendNewPermohonanNotification } from '@/app/actions/email'
 
 export default function FormPermohonanPage() {
   const router = useRouter()
@@ -68,14 +69,18 @@ export default function FormPermohonanPage() {
     const deadlineAwalStr = deadline.toISOString().split('T')[0]
 
     // Simpan permohonan ke Database sesuai skema PRD
-    const { error: insertError } = await supabase.from('permohonan').insert({
-      user_id: user.id,
-      jenis_informasi: form.jenis_informasi,
-      deskripsi: form.deskripsi,
-      cara_memperoleh: form.cara_memperoleh,
-      status: 'diajukan',
-      deadline_awal: deadlineAwalStr,
-    })
+    const { data: insertedData, error: insertError } = await supabase
+      .from('permohonan')
+      .insert({
+        user_id: user.id,
+        jenis_informasi: form.jenis_informasi,
+        deskripsi: form.deskripsi,
+        cara_memperoleh: form.cara_memperoleh,
+        status: 'diajukan',
+        deadline_awal: deadlineAwalStr,
+      })
+      .select('id')
+      .single()
 
     setShowConfirmModal(false)
 
@@ -84,6 +89,13 @@ export default function FormPermohonanPage() {
       setErrorMsg('Gagal mengirim permohonan. Terjadi kesalahan sistem, silakan coba beberapa saat lagi.')
       setLoading(false)
     } else {
+      // Kirim notifikasi email ke Admin dan Pemohon (asynchronous, non-blocking)
+      if (insertedData?.id) {
+        sendNewPermohonanNotification(insertedData.id).catch((err) => {
+          console.error('[Email Notification Error] sendNewPermohonanNotification:', err)
+        })
+      }
+
       setToast({
         message: 'Permohonan informasi publik berhasil diajukan!',
         type: 'success',

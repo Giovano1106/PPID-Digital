@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ClipboardText, FolderOpen, Table } from '@phosphor-icons/react'
+import { ClipboardText, FolderOpen, Table, EnvelopeSimple } from '@phosphor-icons/react'
 
 export default function AdminNav() {
   const pathname = usePathname()
@@ -24,6 +24,12 @@ export default function AdminNav() {
       href: '/admin/daftar-informasi',
       label: 'Daftar Informasi Publik',
       icon: Table,
+      exact: false,
+    },
+    {
+      href: '/admin/email-templates',
+      label: 'Template Email',
+      icon: EnvelopeSimple,
       exact: false,
     },
   ]
