@@ -29,7 +29,6 @@ export default function AdminEmailTemplatesPage() {
   const [templates, setTemplates] = useState<Record<string, EmailTemplateData>>({})
   const [selectedKey, setSelectedKey] = useState<string>('pengajuan_baru_admin')
   const [loading, setLoading] = useState(true)
-  const [isUsingDatabase, setIsUsingDatabase] = useState(false)
   const [defaultAdminEmail, setDefaultAdminEmail] = useState('sipardig2026@gmail.com')
 
   // Form State
@@ -71,7 +70,6 @@ export default function AdminEmailTemplatesPage() {
     const res = await getAdminEmailTemplates()
     if (res.success && res.templates) {
       setTemplates(res.templates)
-      setIsUsingDatabase(Boolean(res.isUsingDatabase))
       if (res.defaultAdminEmail) {
         setDefaultAdminEmail(res.defaultAdminEmail)
         setTestTargetEmail(res.defaultAdminEmail)
@@ -256,15 +254,6 @@ export default function AdminEmailTemplatesPage() {
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-extrabold tracking-wide uppercase bg-[#0e4891]/10 text-[#0e4891]">
               <EnvelopeSimple weight="bold" size={13} /> CMS Notifikasi Email
-            </span>
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                isUsingDatabase
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-slate-100 text-slate-600 border border-slate-200'
-              }`}
-            >
-              {isUsingDatabase ? 'Mode Database Supabase' : 'Mode Fallback Sistem'}
             </span>
           </div>
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
