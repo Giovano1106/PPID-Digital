@@ -37,13 +37,8 @@ drop policy if exists "admin kelola template email" on public.email_templates;
 create policy "admin kelola template email"
 on public.email_templates
 for all
-using (
-  exists (
-    select 1 from public.profiles
-    where profiles.id = auth.uid()
-    and profiles.role = 'admin'
-  )
-);
+using ( public.is_admin() )
+with check ( public.is_admin() );
 
 -- 3. Seed Awal 6 Template Resmi PPID CIKASDA Sulteng
 insert into public.email_templates (
