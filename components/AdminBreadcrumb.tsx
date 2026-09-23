@@ -7,6 +7,12 @@ export default function AdminBreadcrumb() {
   const pathname = usePathname()
 
   const getBreadcrumbs = () => {
+    if (pathname === '/admin/survei') {
+      return [
+        { label: 'Admin Console', href: '/admin' },
+        { label: 'Survei Kepuasan (IKM)', href: '/admin/survei', active: true },
+      ]
+    }
     if (pathname === '/admin/konten') {
       return [
         { label: 'Admin Console', href: '/admin' },
@@ -17,6 +23,12 @@ export default function AdminBreadcrumb() {
       return [
         { label: 'Admin Console', href: '/admin' },
         { label: 'Daftar Informasi Publik', href: '/admin/daftar-informasi', active: true },
+      ]
+    }
+    if (pathname === '/admin/email-templates') {
+      return [
+        { label: 'Admin Console', href: '/admin' },
+        { label: 'Template Email', href: '/admin/email-templates', active: true },
       ]
     }
     return [

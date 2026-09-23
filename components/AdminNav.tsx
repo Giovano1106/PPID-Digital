@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ClipboardText, FolderOpen, Table, EnvelopeSimple } from '@phosphor-icons/react'
+import { ClipboardText, FolderOpen, Table, EnvelopeSimple, Star } from '@phosphor-icons/react'
 
 export default function AdminNav() {
   const pathname = usePathname()
@@ -13,6 +13,12 @@ export default function AdminNav() {
       label: 'Kelola Permohonan',
       icon: ClipboardText,
       exact: true,
+    },
+    {
+      href: '/admin/survei',
+      label: 'Survei Kepuasan (IKM)',
+      icon: Star,
+      exact: false,
     },
     {
       href: '/admin/konten',
