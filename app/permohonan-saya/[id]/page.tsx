@@ -3,6 +3,8 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
 import { ArrowLeft, Timer, ChatTeardropText, Info, FileText, ArrowUpRight } from '@phosphor-icons/react/dist/ssr'
 import PermohonanRealtimeListener from '@/components/PermohonanRealtimeListener'
+import SurveiKepuasanCard from '@/components/SurveiKepuasanCard'
+import { getSurveiByPermohonanId } from '@/app/actions/survei'
 
 export default async function PermohonanDetailPage({
   params,
@@ -37,6 +39,15 @@ export default async function PermohonanDetailPage({
   // 3. Keamanan: Pastikan permohonan ini milik user yang sedang login
   if (permohonan.user_id !== user.id) {
     redirect('/permohonan-saya')
+  }
+
+  // 4. Fetch data survei kepuasan masyarakat jika permohonan sudah dijawab
+  let initialSurvei = null
+  if (permohonan.status === 'dijawab') {
+    const surveiRes = await getSurveiByPermohonanId(permohonan.id)
+    if (surveiRes.success && surveiRes.data) {
+      initialSurvei = surveiRes.data
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -262,6 +273,13 @@ export default async function PermohonanDetailPage({
               </div>
             )}
             
+            {/* Survei Kepuasan Masyarakat (IKM) */}
+            {permohonan.status === 'dijawab' && (
+              <SurveiKepuasanCard
+                permohonanId={permohonan.id}
+                initialSurvei={initialSurvei}
+              />
+            )}
           </div>
         </div>
       </div>
