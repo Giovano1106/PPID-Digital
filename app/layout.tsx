@@ -10,16 +10,17 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "PPID Digital — Dinas Cipta Karya & Sumber Daya Air Prov. Sulteng",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://ppid-digital.vercel.app'),
+  title: "PPID Digital | Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah",
   description:
     "Portal Layanan Informasi dan Dokumentasi Publik Digital Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah.",
   icons: {
     icon: "/logo-sulteng.webp",
   },
   openGraph: {
-    title: "PPID Digital — Dinas Cipta Karya & Sumber Daya Air",
+    title: "PPID Digital | Dinas Cipta Karya dan Sumber Daya Air",
     description: "Portal Layanan Informasi Publik Digital Resmi Provinsi Sulawesi Tengah.",
-    url: "https://ppid.sultengprov.go.id", // Placeholder URL
+    url: "https://ppid-digital.vercel.app",
     siteName: "PPID CIKASDA",
     images: [
       {
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PPID Digital — Dinas Cipta Karya & Sumber Daya Air",
+    title: "PPID Digital | Dinas Cipta Karya dan Sumber Daya Air",
     description: "Portal Layanan Informasi Publik Digital Resmi Provinsi Sulawesi Tengah.",
     images: ["/logo-cikasda.webp"],
   },

@@ -117,8 +117,8 @@ export default function SurveiKepuasanCard({
           created_at: new Date().toISOString(),
         })
       }
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Gagal mengirim survei. Silakan periksa koneksi Anda.')
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Gagal mengirim survei. Silakan periksa koneksi Anda.')
     } finally {
       setIsSubmitting(false)
     }
@@ -137,15 +137,15 @@ export default function SurveiKepuasanCard({
       : null
 
     return (
-      <div className="mt-8 border border-emerald-200 bg-emerald-50/40 rounded-2xl p-6 md:p-8 relative overflow-hidden">
+      <div className="mt-8 border border-slate-200 bg-white rounded-2xl p-6 md:p-8 shadow-xs relative">
         {/* Header Bukti Survei */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-emerald-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
           <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-sm mt-0.5">
-              <CheckCircle weight="fill" size={24} />
+            <div className="p-2.5 bg-[#0e4891] text-white rounded-xl shadow-xs mt-0.5">
+              <CheckCircle weight="bold" size={24} />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold tracking-wide uppercase mb-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0e4891] border border-blue-100 text-[11px] font-bold tracking-wide uppercase mb-1">
                 <ShieldCheck weight="bold" size={13} />
                 Partisipasi Terverifikasi
               </div>
@@ -159,8 +159,8 @@ export default function SurveiKepuasanCard({
           </div>
 
           {formattedDate && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-white/80 px-3 py-1.5 rounded-lg border border-emerald-100 shadow-2xs self-start sm:self-auto">
-              <CalendarBlank size={14} className="text-emerald-700" />
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 self-start sm:self-auto">
+              <CalendarBlank size={14} className="text-slate-500" />
               <span>Diisi pada: {formattedDate}</span>
             </div>
           )}
@@ -169,7 +169,7 @@ export default function SurveiKepuasanCard({
         {/* Ringkasan Skor Penilaian */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Skor Keseluruhan */}
-          <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-2xs">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
               Kepuasan Umum
             </span>
@@ -179,7 +179,7 @@ export default function SurveiKepuasanCard({
                   key={star}
                   size={16}
                   weight={star <= survei.skor_keseluruhan ? 'fill' : 'regular'}
-                  className={star <= survei.skor_keseluruhan ? 'text-amber-500' : 'text-slate-300'}
+                  className={star <= survei.skor_keseluruhan ? 'text-amber-600' : 'text-slate-300'}
                 />
               ))}
             </div>
@@ -189,7 +189,7 @@ export default function SurveiKepuasanCard({
           </div>
 
           {/* Kecepatan Layanan */}
-          <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-2xs">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
               Kecepatan SLA
             </span>
@@ -199,7 +199,7 @@ export default function SurveiKepuasanCard({
                   key={star}
                   size={16}
                   weight={star <= survei.kecepatan_layanan ? 'fill' : 'regular'}
-                  className={star <= survei.kecepatan_layanan ? 'text-amber-500' : 'text-slate-300'}
+                  className={star <= survei.kecepatan_layanan ? 'text-amber-600' : 'text-slate-300'}
                 />
               ))}
             </div>
@@ -209,7 +209,7 @@ export default function SurveiKepuasanCard({
           </div>
 
           {/* Kesesuaian Informasi */}
-          <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-2xs">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
               Kesesuaian Informasi
             </span>
@@ -219,7 +219,7 @@ export default function SurveiKepuasanCard({
                   key={star}
                   size={16}
                   weight={star <= survei.kesesuaian_informasi ? 'fill' : 'regular'}
-                  className={star <= survei.kesesuaian_informasi ? 'text-amber-500' : 'text-slate-300'}
+                  className={star <= survei.kesesuaian_informasi ? 'text-amber-600' : 'text-slate-300'}
                 />
               ))}
             </div>
@@ -229,7 +229,7 @@ export default function SurveiKepuasanCard({
           </div>
 
           {/* Kemudahan Prosedur */}
-          <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-2xs">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
               Kemudahan Prosedur
             </span>
@@ -239,7 +239,7 @@ export default function SurveiKepuasanCard({
                   key={star}
                   size={16}
                   weight={star <= survei.kemudahan_prosedur ? 'fill' : 'regular'}
-                  className={star <= survei.kemudahan_prosedur ? 'text-amber-500' : 'text-slate-300'}
+                  className={star <= survei.kemudahan_prosedur ? 'text-amber-600' : 'text-slate-300'}
                 />
               ))}
             </div>
@@ -251,7 +251,7 @@ export default function SurveiKepuasanCard({
 
         {/* Catatan / Saran jika ada */}
         {survei.kritik_saran && (
-          <div className="mt-4 bg-white/90 p-4 rounded-xl border border-emerald-100">
+          <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 flex items-center gap-1.5">
               <ChatTeardropText size={15} className="text-[#0e4891]" />
               Masukan / Saran yang Diberikan:
@@ -312,7 +312,7 @@ export default function SurveiKepuasanCard({
                   <Star
                     size={28}
                     weight={isFilled ? 'fill' : 'regular'}
-                    className={isFilled ? 'text-amber-500' : 'text-slate-300'}
+                    className={isFilled ? 'text-amber-600' : 'text-slate-300'}
                   />
                 </button>
               )
@@ -462,8 +462,8 @@ export default function SurveiKepuasanCard({
         )}
 
         {successMsg && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-2">
-            <CheckCircle weight="fill" size={16} />
+          <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-[#0e4891] text-xs font-bold flex items-center gap-2">
+            <CheckCircle weight="bold" size={16} />
             <span>{successMsg}</span>
           </div>
         )}

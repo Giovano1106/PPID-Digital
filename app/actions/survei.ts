@@ -30,8 +30,8 @@ export interface SurveiKepuasanRow {
   created_at: string
   permohonan?: {
     id: number
-    nomor_registrasi: string
-    deskripsi: string
+    jenis_informasi?: string
+    deskripsi?: string
   } | null
   profiles?: {
     nama: string
@@ -60,7 +60,7 @@ export interface StatistikIKM {
  * - 65.00 s.d. 76.60  : Mutu C (Kurang Baik)
  * - 25.00 s.d. 64.99  : Mutu D (Tidak Baik)
  */
-export function hitungMutuPelayanan(ikmKonversi: number, totalResponden: number): MutuPelayanan {
+function hitungMutuPelayanan(ikmKonversi: number, totalResponden: number): MutuPelayanan {
   if (totalResponden === 0 || isNaN(ikmKonversi) || ikmKonversi <= 0) {
     return {
       nilai: '-',
@@ -73,25 +73,25 @@ export function hitungMutuPelayanan(ikmKonversi: number, totalResponden: number)
     return {
       nilai: 'A',
       kategori: 'Sangat Baik',
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      badgeColor: 'bg-blue-50 text-[#0e4891] border-blue-200'
     }
   } else if (ikmKonversi >= 76.61) {
     return {
       nilai: 'B',
       kategori: 'Baik',
-      badgeColor: 'bg-blue-50 text-[#0e4891] border-blue-200'
+      badgeColor: 'bg-slate-100 text-slate-700 border-slate-300'
     }
   } else if (ikmKonversi >= 65.00) {
     return {
       nilai: 'C',
       kategori: 'Kurang Baik',
-      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200'
+      badgeColor: 'bg-amber-50 text-amber-800 border-amber-200'
     }
   } else {
     return {
       nilai: 'D',
       kategori: 'Tidak Baik',
-      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200'
+      badgeColor: 'bg-rose-50 text-rose-800 border-rose-200'
     }
   }
 }
@@ -188,11 +188,11 @@ export async function submitSurveiKepuasan(payload: InputSurveiKepuasan) {
       success: true,
       message: 'Terima kasih atas partisipasi Anda dalam survei kepuasan masyarakat PPID CIKASDA.',
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[submitSurveiKepuasan Error]', error)
     return {
       success: false,
-      error: error?.message || 'Terjadi gangguan saat menyimpan hasil survei. Silakan coba kembali.',
+      error: error instanceof Error ? error.message : 'Terjadi gangguan saat menyimpan hasil survei. Silakan coba kembali.',
     }
   }
 }
@@ -225,9 +225,9 @@ export async function getSurveiByPermohonanId(permohonanId: number) {
     }
 
     return { success: true, data }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[getSurveiByPermohonanId Error]', error)
-    return { success: false, error: error?.message || 'Gagal memuat data survei', data: null }
+    return { success: false, error: error instanceof Error ? error.message : 'Gagal memuat data survei', data: null }
   }
 }
 
@@ -276,7 +276,7 @@ export async function getStatistikIKMAdmin(filters?: { startDate?: string; endDa
         created_at,
         permohonan (
           id,
-          nomor_registrasi,
+          jenis_informasi,
           deskripsi
         ),
         profiles (
@@ -382,11 +382,11 @@ export async function getStatistikIKMAdmin(filters?: { startDate?: string; endDa
         reviews: rows,
       },
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[getStatistikIKMAdmin Error]', error)
     return {
       success: false,
-      error: error?.message || 'Gagal memuat rekapitulasi data survei kepuasan',
+      error: error instanceof Error ? error.message : 'Gagal memuat rekapitulasi data survei kepuasan',
       data: null,
     }
   }

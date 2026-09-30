@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import {
   Star,
   ArrowsClockwise,
@@ -11,17 +10,12 @@ import {
   CheckCircle,
   WarningCircle,
   MagnifyingGlass,
-  CalendarBlank,
   ChatTeardropText,
-  Clock,
-  FileText,
-  SlidersHorizontal,
-  ArrowUpRight,
+  MicrosoftExcelLogo,
 } from '@phosphor-icons/react'
 import {
   getStatistikIKMAdmin,
   StatistikIKM,
-  SurveiKepuasanRow,
 } from '@/app/actions/survei'
 
 export default function AdminSurveiPage() {
@@ -34,9 +28,8 @@ export default function AdminSurveiPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterRating, setFilterRating] = useState<string>('all')
 
-  const fetchData = async (isManualRefresh = false) => {
-    if (isManualRefresh) setRefreshing(true)
-    else setLoading(true)
+  const handleManualRefresh = async () => {
+    setRefreshing(true)
     setErrorMsg(null)
 
     try {
@@ -46,16 +39,35 @@ export default function AdminSurveiPage() {
       } else {
         setErrorMsg(res.error || 'Gagal memuat rekapitulasi data survei IKM.')
       }
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Terjadi kesalahan sistem saat memuat data.')
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Terjadi kesalahan sistem saat memuat data.')
     } finally {
-      setLoading(false)
       setRefreshing(false)
     }
   }
 
   useEffect(() => {
-    fetchData()
+    let ignore = false
+
+    getStatistikIKMAdmin()
+      .then((res) => {
+        if (ignore) return
+        if (res.success && res.data) {
+          setData(res.data)
+        } else {
+          setErrorMsg(res.error || 'Gagal memuat rekapitulasi data survei IKM.')
+        }
+        setLoading(false)
+      })
+      .catch((err: unknown) => {
+        if (ignore) return
+        setErrorMsg(err instanceof Error ? err.message : 'Terjadi kesalahan sistem saat memuat data.')
+        setLoading(false)
+      })
+
+    return () => {
+      ignore = true
+    }
   }, [])
 
   // Filter reviews
@@ -69,13 +81,16 @@ export default function AdminSurveiPage() {
     // Search query filter
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase()
-      const regNo = r.permohonan?.nomor_registrasi?.toLowerCase() || ''
+      const ticketId = `#${r.permohonan_id}`
+      const jenisInfo = r.permohonan?.jenis_informasi?.toLowerCase() || ''
       const nama = r.profiles?.nama?.toLowerCase() || ''
       const email = r.profiles?.email?.toLowerCase() || ''
       const kritik = r.kritik_saran?.toLowerCase() || ''
 
       return (
-        regNo.includes(query) ||
+        ticketId.includes(query) ||
+        r.permohonan_id.toString().includes(query) ||
+        jenisInfo.includes(query) ||
         nama.includes(query) ||
         email.includes(query) ||
         kritik.includes(query)
@@ -87,6 +102,118 @@ export default function AdminSurveiPage() {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleDownloadExcel = () => {
+    if (!data || data.totalResponden === 0) return
+
+    const todayDateStr = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+
+    const tableRows = (data.reviews || [])
+      .map(
+        (row, index) => `
+        <tr>
+          <td style="text-align: center;">${index + 1}</td>
+          <td style="text-align: center;"><b>#${row.permohonan_id}</b></td>
+          <td>${new Date(row.created_at).toLocaleDateString('id-ID')}</td>
+          <td><b>${row.profiles?.nama || 'Pemohon'}</b></td>
+          <td>${row.profiles?.email || '-'}</td>
+          <td style="text-align: center;">${row.skor_keseluruhan}</td>
+          <td style="text-align: center;">${row.kecepatan_layanan}</td>
+          <td style="text-align: center;">${row.kesesuaian_informasi}</td>
+          <td style="text-align: center;">${row.kemudahan_prosedur}</td>
+          <td>${row.kritik_saran || '-'}</td>
+        </tr>
+      `
+      )
+      .join('')
+
+    const excelHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8" />
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Rekapitulasi IKM</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 11px; }
+          .title { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+          .subtitle { font-size: 12px; font-weight: bold; text-align: center; color: #0e4891; margin-bottom: 12px; }
+          .meta { font-size: 10px; color: #555555; margin-bottom: 16px; }
+          .stat-table { border-collapse: collapse; margin-bottom: 16px; }
+          .stat-table td { padding: 6px 12px; border: 1px solid #0e4891; font-weight: bold; background-color: #f0f4f8; }
+          .data-table { border-collapse: collapse; width: 100%; }
+          .data-table th { background-color: #0e4891; color: #ffffff; font-weight: bold; border: 1px solid #000000; padding: 8px; text-align: center; }
+          .data-table td { border: 1px solid #cccccc; padding: 6px; vertical-align: top; }
+        </style>
+      </head>
+      <body>
+        <div class="title">REKAPITULASI INDEKS KEPUASAN MASYARAKAT (IKM)</div>
+        <div class="subtitle">PPID DIGITAL | DINAS CIPTA KARYA DAN SUMBER DAYA AIR PROVINSI SULAWESI TENGAH</div>
+        <div class="meta">Standar PermenPAN-RB No. 14 Tahun 2017 | Tanggal Cetak: ${todayDateStr}</div>
+
+        <table class="stat-table">
+          <tr>
+            <td>Total Responden: ${data.totalResponden}</td>
+            <td>Nilai IKM Konversi: ${data.ikmKonversi.toFixed(2)} / 100</td>
+            <td>Mutu Pelayanan: ${data.mutu.nilai} (${data.mutu.kategori})</td>
+            <td>Indeks Rata-rata: ${data.indeksIKM.toFixed(2)} / 5.00</td>
+          </tr>
+          <tr>
+            <td>Rata-rata Kepuasan Umum: ${data.rataRataKeseluruhan.toFixed(2)}</td>
+            <td>Rata-rata Kecepatan SLA: ${data.rataRataKecepatan.toFixed(2)}</td>
+            <td>Rata-rata Kesesuaian Info: ${data.rataRataKesesuaian.toFixed(2)}</td>
+            <td>Rata-rata Kemudahan: ${data.rataRataKemudahan.toFixed(2)}</td>
+          </tr>
+        </table>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>ID Permohonan</th>
+              <th>Tanggal Survei</th>
+              <th>Nama Pemohon</th>
+              <th>Email</th>
+              <th>Kepuasan Umum (1-5)</th>
+              <th>Kecepatan SLA (1-5)</th>
+              <th>Kesesuaian Info (1-5)</th>
+              <th>Kemudahan (1-5)</th>
+              <th>Kritik, Saran &amp; Aspirasi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `
+
+    const blob = new Blob(['\uFEFF' + excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `Rekapitulasi_IKM_PPID_${new Date().toISOString().split('T')[0]}.xls`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -115,7 +242,7 @@ export default function AdminSurveiPage() {
         {/* Action Buttons */}
         <div className="flex items-center gap-2 self-start sm:self-auto print:hidden">
           <button
-            onClick={() => fetchData(true)}
+            onClick={handleManualRefresh}
             disabled={refreshing || loading}
             className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs disabled:opacity-50"
           >
@@ -125,6 +252,15 @@ export default function AdminSurveiPage() {
               className={refreshing ? 'animate-spin' : ''}
             />
             <span>{refreshing ? 'Memperbarui...' : 'Segarkan'}</span>
+          </button>
+
+          <button
+            onClick={handleDownloadExcel}
+            disabled={loading || !data || data.totalResponden === 0}
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <MicrosoftExcelLogo size={15} weight="fill" className="text-slate-700" />
+            <span>Unduh Excel</span>
           </button>
 
           <button
@@ -139,13 +275,13 @@ export default function AdminSurveiPage() {
 
       {/* Migration Notice Banner if Table Missing */}
       {data?.isTableMissing && (
-        <div className="p-5 rounded-2xl border border-amber-200 bg-amber-50/70 text-slate-800 space-y-2">
-          <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
-            <WarningCircle weight="fill" size={20} className="text-amber-600" />
+        <div className="p-5 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 space-y-2">
+          <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+            <WarningCircle weight="bold" size={20} className="text-amber-600" />
             <span>Tabel Survei Belum Aktif di Database Supabase</span>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Struktur tabel <code className="px-1.5 py-0.5 bg-amber-100 rounded text-amber-900 font-mono text-[11px]">survei_kepuasan</code> belum dieksekusi di database Supabase Anda. Silakan jalankan file SQL migrasi <code className="px-1.5 py-0.5 bg-amber-100 rounded text-amber-900 font-mono text-[11px]">supabase/migrations/0004_survei_kepuasan.sql</code> melalui menu <strong>SQL Editor</strong> pada Supabase Dashboard untuk mengaktifkan fitur pencatatan IKM secara penuh.
+            Struktur tabel <code className="px-1.5 py-0.5 bg-slate-200 rounded text-slate-900 font-mono text-[11px]">survei_kepuasan</code> belum dieksekusi di database Supabase Anda. Silakan jalankan file SQL migrasi <code className="px-1.5 py-0.5 bg-slate-200 rounded text-slate-900 font-mono text-[11px]">supabase/migrations/0004_survei_kepuasan.sql</code> melalui menu <strong>SQL Editor</strong> pada Supabase Dashboard untuk mengaktifkan fitur pencatatan IKM secara penuh.
           </p>
         </div>
       )}
@@ -160,89 +296,101 @@ export default function AdminSurveiPage() {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Nilai IKM Konversi (Skala 25-100) */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0e4891]">
               Nilai IKM Konversi
             </span>
-            <ChartLineUp size={20} className="text-[#0e4891]" weight="duotone" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-900">
-              {loading ? '...' : (data?.ikmKonversi || 0) > 0 ? data?.ikmKonversi.toFixed(2) : '-'}
+            <span className="w-7 h-7 rounded-lg bg-blue-50 text-[#0e4891] flex items-center justify-center">
+              <ChartLineUp size={16} weight="bold" />
             </span>
-            <span className="text-xs font-semibold text-slate-400">/ 100</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">
-            Standar PermenPAN-RB (Skala 25 - 100)
-          </p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-[#0e4891]" />
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-slate-900 tracking-tight">
+                {loading ? '...' : (data?.ikmKonversi || 0) > 0 ? data?.ikmKonversi.toFixed(2) : '-'}
+              </span>
+              <span className="text-xs font-semibold text-slate-400">/ 100</span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">
+              Standar PermenPAN-RB (Skala 25 - 100)
+            </p>
+          </div>
         </div>
 
         {/* Card 2: Mutu Pelayanan & Predikat */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Mutu Pelayanan
             </span>
-            <CheckCircle size={20} className="text-emerald-600" weight="duotone" />
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-black text-slate-900">
-              {loading ? '...' : data?.mutu?.nilai || '-'}
-            </span>
-            <span
-              className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${
-                data?.mutu?.badgeColor || 'bg-slate-100 text-slate-700 border-slate-200'
-              }`}
-            >
-              {loading ? 'Memuat...' : data?.mutu?.kategori || 'Belum Ada Data'}
+            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <CheckCircle size={16} weight="bold" />
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">
-            Predikat Kinerja Pelayanan Publik
-          </p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600" />
+          <div className="mt-3">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-black text-slate-900 tracking-tight">
+                {loading ? '...' : data?.mutu?.nilai || '-'}
+              </span>
+              <span
+                className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${
+                  data?.mutu?.badgeColor || 'bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                {loading ? 'Memuat...' : data?.mutu?.kategori || 'Belum Ada Data'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">
+              Predikat Kinerja Pelayanan Publik
+            </p>
+          </div>
         </div>
 
         {/* Card 3: Total Responden */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Total Responden
             </span>
-            <Users size={20} className="text-indigo-600" weight="duotone" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-900">
-              {loading ? '...' : data?.totalResponden || 0}
+            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+              <Users size={16} weight="bold" />
             </span>
-            <span className="text-xs font-semibold text-slate-400">Pemohon</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">
-            Wajib 1 Survei per 1 Tiket Dijawab
-          </p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-400 to-indigo-600" />
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-slate-900 tracking-tight">
+                {loading ? '...' : data?.totalResponden || 0}
+              </span>
+              <span className="text-xs font-semibold text-slate-400">Pemohon</span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">
+              Wajib 1 Survei per 1 Tiket Dijawab
+            </p>
+          </div>
         </div>
 
         {/* Card 4: Indeks Rata-rata 4 Unsur (Skala 1-5) */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Indeks Rata-rata
             </span>
-            <Star size={20} className="text-amber-500" weight="fill" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-900">
-              {loading ? '...' : (data?.indeksIKM || 0) > 0 ? data?.indeksIKM.toFixed(2) : '-'}
+            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <Star size={16} weight="bold" />
             </span>
-            <span className="text-xs font-semibold text-slate-400">/ 5.00</span>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2">
-            Rata-rata Kumulatif 4 Aspek Layanan
-          </p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-amber-600" />
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-slate-900 tracking-tight">
+                {loading ? '...' : (data?.indeksIKM || 0) > 0 ? data?.indeksIKM.toFixed(2) : '-'}
+              </span>
+              <span className="text-xs font-semibold text-slate-400">/ 5.00</span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">
+              Rata-rata Kumulatif 4 Aspek Layanan
+            </p>
+          </div>
         </div>
       </div>
 
@@ -265,11 +413,11 @@ export default function AdminSurveiPage() {
           </div>
 
           <div className="space-y-5">
-            {/* Unsur 1: Kepuasan Umum */}
+              {/* Unsur 1: Kepuasan Umum */}
             <div>
               <div className="flex justify-between items-center text-xs mb-1.5">
                 <span className="font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-[#0e4891] flex items-center justify-center font-bold text-[10px]">
+                  <span className="w-5 h-5 rounded-md bg-blue-50 text-[#0e4891] border border-blue-100 flex items-center justify-center font-bold text-[10px]">
                     U1
                   </span>
                   Kepuasan Umum Layanan Informasi Publik
@@ -292,7 +440,7 @@ export default function AdminSurveiPage() {
             <div>
               <div className="flex justify-between items-center text-xs mb-1.5">
                 <span className="font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-[#0e4891] flex items-center justify-center font-bold text-[10px]">
+                  <span className="w-5 h-5 rounded-md bg-blue-50 text-[#0e4891] border border-blue-100 flex items-center justify-center font-bold text-[10px]">
                     U2
                   </span>
                   Kecepatan Respons & Ketepatan SLA
@@ -303,7 +451,7 @@ export default function AdminSurveiPage() {
               </div>
               <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-indigo-600 h-full rounded-full transition-all duration-500"
+                  className="bg-[#0e4891] h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${Math.min(100, ((data?.rataRataKecepatan || 0) / 5) * 100)}%`,
                   }}
@@ -315,7 +463,7 @@ export default function AdminSurveiPage() {
             <div>
               <div className="flex justify-between items-center text-xs mb-1.5">
                 <span className="font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-[#0e4891] flex items-center justify-center font-bold text-[10px]">
+                  <span className="w-5 h-5 rounded-md bg-blue-50 text-[#0e4891] border border-blue-100 flex items-center justify-center font-bold text-[10px]">
                     U3
                   </span>
                   Kesesuaian & Kelengkapan Dokumen Informasi
@@ -326,7 +474,7 @@ export default function AdminSurveiPage() {
               </div>
               <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+                  className="bg-[#0e4891] h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${Math.min(100, ((data?.rataRataKesesuaian || 0) / 5) * 100)}%`,
                   }}
@@ -338,7 +486,7 @@ export default function AdminSurveiPage() {
             <div>
               <div className="flex justify-between items-center text-xs mb-1.5">
                 <span className="font-bold text-slate-800 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-[#0e4891] flex items-center justify-center font-bold text-[10px]">
+                  <span className="w-5 h-5 rounded-md bg-blue-50 text-[#0e4891] border border-blue-100 flex items-center justify-center font-bold text-[10px]">
                     U4
                   </span>
                   Kemudahan Prosedur & Navigasi Portal PPID
@@ -349,7 +497,7 @@ export default function AdminSurveiPage() {
               </div>
               <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-teal-600 h-full rounded-full transition-all duration-500"
+                  className="bg-[#0e4891] h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${Math.min(100, ((data?.rataRataKemudahan || 0) / 5) * 100)}%`,
                   }}
@@ -380,12 +528,12 @@ export default function AdminSurveiPage() {
                 <div key={rating} className="flex items-center gap-2 text-xs">
                   <div className="flex items-center gap-1 w-16 text-slate-700 font-bold shrink-0">
                     <span>{rating}</span>
-                    <Star size={13} weight="fill" className="text-amber-500" />
+                    <Star size={13} weight="fill" className="text-amber-600" />
                   </div>
 
                   <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-amber-400 h-full rounded-full transition-all duration-500"
+                      className="bg-[#0e4891] h-full rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -405,19 +553,19 @@ export default function AdminSurveiPage() {
             </div>
             <div className="flex justify-between">
               <span>88.31 - 100.00:</span>
-              <span className="font-bold text-emerald-700">A (Sangat Baik)</span>
+              <span className="font-bold text-[#0e4891]">A (Sangat Baik)</span>
             </div>
             <div className="flex justify-between">
               <span>76.61 - 88.30:</span>
-              <span className="font-bold text-blue-700">B (Baik)</span>
+              <span className="font-bold text-slate-800">B (Baik)</span>
             </div>
             <div className="flex justify-between">
               <span>65.00 - 76.60:</span>
-              <span className="font-bold text-amber-700">C (Kurang Baik)</span>
+              <span className="font-bold text-amber-800">C (Kurang Baik)</span>
             </div>
             <div className="flex justify-between">
               <span>25.00 - 64.99:</span>
-              <span className="font-bold text-rose-700">D (Tidak Baik)</span>
+              <span className="font-bold text-rose-800">D (Tidak Baik)</span>
             </div>
           </div>
         </div>
@@ -447,7 +595,7 @@ export default function AdminSurveiPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari no. reg, nama, saran..."
+                placeholder="Cari ID tiket (#...), nama, saran..."
                 className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-300 bg-white placeholder-slate-400 focus:border-[#0e4891] focus:ring-1 focus:ring-[#0e4891] outline-none"
               />
             </div>
@@ -473,7 +621,7 @@ export default function AdminSurveiPage() {
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50 text-slate-700 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
               <tr>
-                <th className="py-3 px-4">No. Registrasi</th>
+                <th className="py-3 px-4">ID Permohonan</th>
                 <th className="py-3 px-4">Tanggal Survei</th>
                 <th className="py-3 px-4">Pemohon</th>
                 <th className="py-3 px-4 text-center">Kepuasan</th>
@@ -504,9 +652,9 @@ export default function AdminSurveiPage() {
               ) : (
                 filteredReviews.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
-                    {/* No. Registrasi */}
+                    {/* ID Permohonan */}
                     <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
-                      {row.permohonan?.nomor_registrasi || `#${row.permohonan_id}`}
+                      #{row.permohonan_id}
                     </td>
 
                     {/* Tanggal */}
@@ -530,9 +678,9 @@ export default function AdminSurveiPage() {
 
                     {/* Skor Keseluruhan */}
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs">
+                      <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-bold text-xs">
                         <span>{row.skor_keseluruhan}</span>
-                        <Star size={13} weight="fill" className="text-amber-500" />
+                        <Star size={13} weight="fill" className="text-amber-600" />
                       </div>
                     </td>
 
@@ -541,19 +689,19 @@ export default function AdminSurveiPage() {
                       <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold">
                         <span
                           title="Kecepatan SLA"
-                          className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-100"
+                          className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
                         >
                           SLA: {row.kecepatan_layanan}
                         </span>
                         <span
                           title="Kesesuaian Informasi"
-                          className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-100"
+                          className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
                         >
                           Info: {row.kesesuaian_informasi}
                         </span>
                         <span
                           title="Kemudahan Prosedur"
-                          className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200"
+                          className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
                         >
                           Akses: {row.kemudahan_prosedur}
                         </span>

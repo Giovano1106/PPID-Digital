@@ -657,7 +657,7 @@ export default function AdminDaftarInformasiPage() {
                                     className="text-slate-300 font-mono text-xs select-none"
                                     title="Belum ada link (#)"
                                   >
-                                    —
+                                    -
                                   </span>
                                 )}
                               </td>

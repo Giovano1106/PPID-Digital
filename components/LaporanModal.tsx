@@ -131,7 +131,7 @@ export default function LaporanModal({
       </head>
       <body>
         <div class="title">LAPORAN REKAPITULASI PERMOHONAN INFORMASI PUBLIK</div>
-        <div class="subtitle">PPID DIGITAL — DINAS CIPTA KARYA DAN SUMBER DAYA AIR PROV. SULTENG</div>
+        <div class="subtitle">PPID DIGITAL | DINAS CIPTA KARYA DAN SUMBER DAYA AIR PROVINSI SULAWESI TENGAH</div>
         <div class="meta">Tanggal Cetak: ${todayDateStr}</div>
 
         <table class="stat-table">
@@ -263,7 +263,7 @@ export default function LaporanModal({
                   Laporan Rekapitulasi Permohonan Informasi Publik
                 </h1>
                 <p className="text-xs font-bold text-[#0e4891] mt-0.5">
-                  PPID Digital — Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah
+                  PPID Digital | Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-3 text-[11px] text-slate-500 font-medium pt-2 border-t border-slate-100">
                   <span className="flex items-center gap-1.5">
