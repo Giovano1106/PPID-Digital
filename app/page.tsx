@@ -141,7 +141,7 @@ export default async function HomePage() {
 
           <div className="flex flex-wrap items-center gap-4">
             <Link
-              href={user ? '/permohonan-saya/ajukan' : '/daftar'}
+              href={user ? '/permohonan-saya/ajukan' : '/login'}
               className="bg-white hover:bg-slate-100 text-[#0e4891] font-bold px-7 py-3.5 rounded-xl transition-all shadow-sm text-base"
             >
               Ajukan Permohonan Informasi

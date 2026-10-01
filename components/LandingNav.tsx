@@ -65,7 +65,7 @@ export default function LandingNav() {
           onClose={() => setToast(null)}
         />
       )}
-      
+
       <ConfirmModal
         isOpen={showLogoutModal}
         title="Keluar dari Akun?"
@@ -147,7 +147,7 @@ export default function LandingNav() {
                   Masuk
                 </Link>
                 <Link
-                  href="/daftar"
+                  href="/login"
                   className="bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md"
                 >
                   Ajukan Permohonan
