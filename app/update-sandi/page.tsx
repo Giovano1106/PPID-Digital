@@ -55,13 +55,38 @@ export default function UpdateSandiPage() {
     <div className="min-h-screen bg-slate-50 font-plus-jakarta flex flex-col items-center justify-center p-6 relative">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Header CIKASDA */}
-        <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
-          <div className="flex items-center gap-2 mb-3">
-            <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
-            <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
+        <div className="bg-gradient-to-br from-[#0e4891] via-[#0d4182] to-[#09356d] p-8 text-center text-white relative flex flex-col items-center overflow-hidden">
+          {/* Subtle Ambient Light Decoration */}
+          <div className="absolute -top-12 -right-12 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-blue-400/15 rounded-full blur-2xl pointer-events-none" />
+
+          {/* Unified Official Logo Emblem Badge */}
+          <div className="relative mb-4.5 inline-flex items-center gap-3.5 bg-white px-4 py-2.5 rounded-2xl shadow-lg border border-white/80 ring-4 ring-white/15 transition-transform duration-300 hover:scale-[1.02]">
+            <div className="flex items-center justify-center shrink-0">
+              <Image
+                src="/logo-sulteng.webp"
+                alt="Logo Provinsi Sulawesi Tengah"
+                width={36}
+                height={44}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+            </div>
+            <div className="h-7 w-px bg-slate-200 shrink-0" />
+            <div className="flex items-center justify-center shrink-0 px-0.5">
+              <Image
+                src="/logo-cikasda.webp"
+                alt="Logo Dinas CIKASDA"
+                width={100}
+                height={38}
+                className="h-9 w-auto object-contain"
+                priority
+              />
+            </div>
           </div>
-          <h1 className="text-xl font-extrabold tracking-wide uppercase">PPID DIGITAL</h1>
-          <p className="text-xs text-blue-100 mt-1 font-medium leading-relaxed">
+
+          <h1 className="text-xl font-black tracking-wide uppercase text-white drop-shadow-xs">PPID DIGITAL</h1>
+          <p className="text-xs text-blue-100 mt-1 font-medium leading-relaxed max-w-xs mx-auto">
             Perbarui Kata Sandi Anda
           </p>
         </div>
