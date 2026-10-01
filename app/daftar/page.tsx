@@ -1,114 +1,50 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArrowLeft, Warning } from '@phosphor-icons/react'
 import { createClient } from '@/app/lib/supabase/client'
-import { ArrowLeft, Warning, CheckCircle } from '@phosphor-icons/react'
-import Toast, { ToastType } from '@/components/Toast'
 
-export default function RegisterPage() {
-  const router = useRouter()
+export default function DaftarPage() {
   const supabase = createClient()
-
-  const [namaLengkap, setNamaLengkap] = useState('')
-  const [nik, setNik] = useState('')
-  const [telepon, setTelepon] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleGoogleSignUp = async () => {
     setLoading(true)
     setErrorMsg('')
-    setSuccessMsg('')
 
-    // 1. Validasi Nama Lengkap (hanya huruf, spasi, petik tunggal, dan titik)
-    const namaClean = namaLengkap.trim()
-    if (namaClean.length < 3) {
-      setErrorMsg('Nama lengkap minimal harus terdiri dari 3 karakter.')
-      setLoading(false)
-      return
-    }
+    try {
+      const redirectToUrl = `${window.location.origin}/api/auth/callback?next=/permohonan-saya&oauth=google`
 
-    const nameRegex = /^[a-zA-Z\s'\.]+$/
-    if (!nameRegex.test(namaClean)) {
-      setErrorMsg('Nama lengkap hanya boleh berisi huruf, spasi, titik (.), dan tanda petik (\'). Simbol lain dan angka tidak diperbolehkan.')
-      setLoading(false)
-      return
-    }
-
-    // 2. Validasi NIK (harus 16 digit angka)
-    if (!/^\d{16}$/.test(nik)) {
-      setErrorMsg('NIK harus terdiri dari tepat 16 digit angka.')
-      setLoading(false)
-      return
-    }
-
-    // 3. Validasi Nomor Telepon / WA
-    const cleanTelepon = telepon.trim().replace(/\s+/g, '')
-    const phoneRegex = /^(\+62|62|0)8[1-9][0-9]{7,11}$/
-    if (!phoneRegex.test(cleanTelepon)) {
-      setErrorMsg('Nomor telepon/WA tidak valid. Masukkan nomor yang diawali 08... atau 628... (10-14 digit).')
-      setLoading(false)
-      return
-    }
-
-    // 4. Validasi Kata Sandi
-    if (password.length < 6) {
-      setErrorMsg('Kata sandi minimal terdiri dari 6 karakter.')
-      setLoading(false)
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setErrorMsg('Konfirmasi kata sandi tidak cocok dengan kata sandi yang dimasukkan.')
-      setLoading(false)
-      return
-    }
-
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: {
-          nama: namaClean,
-          nik: nik,
-          telepon: cleanTelepon,
-          role: 'pemohon',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectToUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
         },
-      },
-    })
+      })
 
-    if (signUpError) {
-      if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
-        setErrorMsg('Pendaftaran gagal: Email sudah terdaftar. Silakan gunakan email lain atau masuk ke akun Anda.')
-      } else {
-        console.error('[Sign Up Error]', signUpError)
-        setErrorMsg('Pendaftaran gagal. Terjadi kesalahan sistem, silakan coba beberapa saat lagi.')
+      if (error) {
+        console.error('[Google OAuth Error]', error)
+        setErrorMsg(error.message || 'Gagal menghubungkan ke layanan Google. Silakan coba kembali.')
+        setLoading(false)
       }
-    } else {
-      const msg = 'Pendaftaran berhasil! Mengalihkan ke halaman login...'
-      setSuccessMsg(msg)
-      setToast({ message: msg, type: 'success' })
-      setTimeout(() => {
-        router.push('/login')
-      }, 2000)
+    } catch (err: unknown) {
+      console.error('[OAuth Exception]', err)
+      setErrorMsg('Terjadi kendala sistem saat memulai pendaftaran.')
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex flex-col items-center justify-center p-6 py-12 relative">
+    <div className="min-h-screen bg-slate-50 font-plus-jakarta flex flex-col items-center justify-center p-6 py-12 relative selection:bg-[#0e4891] selection:text-white">
       {/* Top navigation back link */}
-      <div className="w-full max-w-lg mb-4 flex items-center justify-between">
+      <div className="w-full max-w-md mb-4 flex items-center justify-between">
         <Link
           href="/"
           className="text-xs font-bold text-slate-500 hover:text-[#0e4891] transition-colors flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs"
@@ -117,158 +53,89 @@ export default function RegisterPage() {
         </Link>
       </div>
 
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Header CIKASDA */}
         <div className="bg-[#0e4891] p-8 text-center text-white relative flex flex-col items-center">
           <div className="flex items-center gap-2 mb-3">
-            <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
-            <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={48} height={48} className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20" />
+            <Image
+              src="/logo-sulteng.webp"
+              alt="Logo Sulteng"
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20"
+            />
+            <Image
+              src="/logo-cikasda.webp"
+              alt="Logo CIKASDA"
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain bg-white/10 p-1.5 rounded-xl border border-white/20"
+            />
           </div>
-          <h1 className="text-xl font-extrabold tracking-wide uppercase">Pendaftaran Pemohon PPID</h1>
+          <h1 className="text-xl font-extrabold tracking-wide uppercase">Pendaftaran Pemohon</h1>
           <p className="text-xs text-blue-100 mt-1 font-medium leading-relaxed">
             Dinas Cipta Karya & Sumber Daya Air Provinsi Sulawesi Tengah
           </p>
         </div>
 
         <div className="p-8">
-          <h2 className="text-lg font-bold text-slate-900 mb-1">Form Registrasi Akun Baru</h2>
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Daftar Akun Baru</h2>
           <p className="text-xs text-slate-600 mb-6 font-medium">
-            Lengkapi data identitas pemohon di bawah ini dengan benar.
+            Pendaftaran akun pemohon menggunakan akun Google.
           </p>
 
           {errorMsg && (
-            <div className="mb-6 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 leading-relaxed flex items-start gap-2.5">
+            <div className="mb-6 rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 leading-relaxed flex items-start gap-2.5">
               <Warning weight="fill" size={16} className="text-rose-500 shrink-0 mt-0.5" />
               <div>{errorMsg}</div>
             </div>
           )}
-          {successMsg && (
-            <div className="mb-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-semibold text-emerald-700 leading-relaxed flex items-start gap-2.5">
-              <CheckCircle weight="fill" size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-              <div>{successMsg}</div>
-            </div>
-          )}
 
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
-                Nama Lengkap (Sesuai KTP) <span className="text-rose-600">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={namaLengkap}
-                onChange={(e) => setNamaLengkap(e.target.value)}
-                placeholder="Contoh: Ahmad Abdullah, S.T."
-                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-              />
-              <p className="text-[11px] text-slate-500 mt-1">Hanya huruf, spasi, titik (.), dan tanda petik (\'). Tanpa simbol/angka.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
-                  NIK (16 Digit) <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={16}
-                  value={nik}
-                  onChange={(e) => setNik(e.target.value.replace(/\D/g, ''))}
-                  placeholder="720101XXXXXXXXXX"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all font-mono shadow-2xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
-                  No. Telepon / WA <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={telepon}
-                  onChange={(e) => setTelepon(e.target.value)}
-                  placeholder="081234567890"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
-                Alamat Email <span className="text-rose-600">*</span>
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="contoh@gmail.com"
-                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
-                  Kata Sandi <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min. 6 karakter"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5">
-                  Ulangi Kata Sandi <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Sama dengan kata sandi"
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-[#0e4891] hover:bg-[#0a366f] py-3.5 text-sm font-bold text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 mt-4 focus:outline-none focus:ring-4 focus:ring-[#0e4891]/20 active:scale-[0.99]"
-            >
-              {loading ? 'Memproses Pendaftaran...' : 'DAFTAR SEKARANG'}
-            </button>
-          </form>
+          {/* Tombol Utama Daftar dengan Google */}
+          <button
+            type="button"
+            onClick={handleGoogleSignUp}
+            disabled={loading}
+            className="w-full rounded-xl border border-slate-300 bg-white hover:bg-slate-50 hover:border-slate-400 py-3.5 px-4 text-sm font-bold text-slate-800 shadow-sm hover:shadow transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-3 cursor-pointer active:scale-[0.99]"
+          >
+            {loading ? (
+              <span className="text-xs text-slate-500 font-semibold">Menghubungkan ke Google...</span>
+            ) : (
+              <>
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.3 7.31 24 12 24z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"
+                  />
+                </svg>
+                <span>Daftar dengan Akun Google</span>
+              </>
+            )}
+          </button>
 
           <div className="mt-8 border-t border-slate-100 pt-6 text-center text-xs font-semibold text-slate-600">
-            Sudah punya akun?{' '}
+            Sudah memiliki akun pemohon?{' '}
             <Link
               href="/login"
               className="font-bold text-[#0e4891] hover:underline"
             >
-              Masuk di sini
+              Masuk ke Akun
             </Link>
           </div>
         </div>
       </div>
-
-      {/* TOAST NOTIFICATION */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   )
 }
