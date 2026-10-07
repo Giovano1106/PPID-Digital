@@ -4,7 +4,7 @@ import KategoriCard from '@/components/KategoriCard'
 import LandingNav from '@/components/LandingNav'
 import AlurPermohonanDiagram from '@/components/AlurPermohonanDiagram'
 import LandingAnimations from '@/components/animations/LandingAnimations'
-import MascotWidget from '@/components/animations/MascotWidget'
+import MascotChatbot from '@/components/chatbot/MascotChatbot'
 import Image from 'next/image'
 import {
   MapPin,
@@ -187,7 +187,7 @@ export default async function HomePage() {
             {/* Content Info */}
             <div data-animate="tentang-content" className="flex-1">
               <div className="text-xs font-bold text-[#0e4891] uppercase tracking-wider mb-2">
-                Profil & Komitmen P1elayanan
+                Profil & Komitmen Pelayanan
               </div>
               <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
                 {getKontenBySection('tentang_ppid')?.judul || 'Tentang PPID CIKASDA'}
@@ -331,8 +331,8 @@ export default async function HomePage() {
         </footer>
       </LandingAnimations>
 
-      {/* Mascot Widget - Floating di pojok kanan bawah landing page */}
-      <MascotWidget imageSrc="/mascot1.webp" />
+      {/* Mascot Chatbot - Asisten Digital Si Cika di pojok kanan bawah */}
+      <MascotChatbot triggerImageSrc="/mascot1.webp" />
     </div>
   )
 }
