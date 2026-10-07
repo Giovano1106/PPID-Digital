@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Simple placeholder mascot: a friendly circle character with CIKASDA colors -->
+  <!-- Body -->
+  <circle cx="100" cy="110" r="60" fill="#0e4891"/>
+  <!-- Face -->
+  <circle cx="100" cy="100" r="52" fill="#1a5cb8"/>
+  <!-- Left eye -->
+  <circle cx="82" cy="90" r="8" fill="white"/>
+  <circle cx="84" cy="89" r="4" fill="#0e4891"/>
+  <!-- Right eye -->
+  <circle cx="118" cy="90" r="8" fill="white"/>
+  <circle cx="120" cy="89" r="4" fill="#0e4891"/>
+  <!-- Smile -->
+  <path d="M 80 108 Q 100 128 120 108" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Hat/cap top -->
+  <rect x="65" y="52" width="70" height="12" rx="4" fill="#0a366f"/>
+  <rect x="72" y="44" width="56" height="14" rx="6" fill="#0e4891"/>
+  <!-- Tiny badge on hat -->
+  <circle cx="100" cy="50" r="5" fill="#60a5fa"/>
+  <!-- Blush marks -->
+  <ellipse cx="72" cy="106" rx="8" ry="5" fill="#3b82f6" opacity="0.3"/>
+  <ellipse cx="128" cy="106" rx="8" ry="5" fill="#3b82f6" opacity="0.3"/>
+</svg>

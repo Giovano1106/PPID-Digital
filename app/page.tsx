@@ -3,6 +3,8 @@ import { createClient } from '@/app/lib/supabase/server'
 import KategoriCard from '@/components/KategoriCard'
 import LandingNav from '@/components/LandingNav'
 import AlurPermohonanDiagram from '@/components/AlurPermohonanDiagram'
+import LandingAnimations from '@/components/animations/LandingAnimations'
+import MascotWidget from '@/components/animations/MascotWidget'
 import Image from 'next/image'
 import {
   MapPin,
@@ -114,196 +116,223 @@ export default async function HomePage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-plus-jakarta antialiased selection:bg-[#0e4891] selection:text-white">
       <LandingNav />
 
-      {/* HERO SECTION */}
-      <section className="relative py-32 px-6 border-b border-slate-200 overflow-hidden">
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
-        ></div>
+      <LandingAnimations>
+        {/* HERO SECTION */}
+        <section className="relative py-32 px-6 border-b border-slate-200 overflow-hidden">
+          {/* Background Image */}
+          <div
+            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
+          ></div>
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 z-0 bg-[#0e4891]/90 md:bg-transparent md:bg-gradient-to-r md:from-[#0e4891] md:from-10% md:via-[#0e4891]/80 md:via-40% md:to-transparent md:to-60%"></div>
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 z-0 bg-[#0e4891]/90 md:bg-transparent md:bg-gradient-to-r md:from-[#0e4891] md:from-10% md:via-[#0e4891]/80 md:via-40% md:to-transparent md:to-60%"></div>
 
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-start">
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xs border border-white/20 text-xs font-semibold text-white mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-300"></span>
-            Layanan Portal Resmi Informasi Publik Digital
-          </div>
-
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15] max-w-3xl mb-6">
-            Akses Layanan Informasi Publik <span className="text-blue-200">CIKASDA</span> Sulawesi Tengah
-          </h1>
-
-          <p className="text-lg md:text-xl text-blue-100 font-medium leading-relaxed max-w-2xl mb-10">
-            Wujud komitmen transparansi, akuntabilitas, dan pelayanan informasi terbuka bagi seluruh masyarakat Sulawesi Tengah.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <Link
-              href={user ? '/permohonan-saya/ajukan' : '/login'}
-              className="bg-white hover:bg-slate-100 text-[#0e4891] font-bold px-7 py-3.5 rounded-xl transition-all shadow-sm text-base"
+          <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-start">
+            <div
+              data-animate="hero-badge"
+              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xs border border-white/20 text-xs font-semibold text-white mb-8"
             >
-              Ajukan Permohonan Informasi
-            </Link>
-            <Link
-              href="#kategori"
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-bold px-7 py-3.5 rounded-xl border border-white/20 transition-colors shadow-sm text-base"
-            >
-              Lihat Daftar Informasi
-            </Link>
-          </div>
-        </div>
-      </section>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-300"></span>
+              Layanan Portal Resmi Informasi Publik Digital
+            </div>
 
-      {/* TENTANG PPID SECTION */}
-      <section className="py-20 px-6 border-b border-slate-200 bg-slate-50">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-12 items-start">
-          <div className="md:w-1/3">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
-              {getKontenBySection('tentang_ppid')?.judul || 'Tentang PPID CIKASDA'}
-            </h2>
+            <h1
+              data-animate="hero-title"
+              className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15] max-w-3xl mb-6"
+            >
+              Akses Layanan Informasi Publik <span className="text-blue-200">CIKASDA</span> Sulawesi Tengah
+            </h1>
+
+            <p
+              data-animate="hero-desc"
+              className="text-lg md:text-xl text-blue-100 font-medium leading-relaxed max-w-2xl mb-10"
+            >
+              Wujud komitmen transparansi, akuntabilitas, dan pelayanan informasi terbuka bagi seluruh masyarakat Sulawesi Tengah.
+            </p>
+
+            <div data-animate="hero-cta" className="flex flex-wrap items-center gap-4">
+              <Link
+                href={user ? '/permohonan-saya/ajukan' : '/login'}
+                className="bg-white hover:bg-slate-100 text-[#0e4891] font-bold px-7 py-3.5 rounded-xl transition-all shadow-sm text-base"
+              >
+                Ajukan Permohonan Informasi
+              </Link>
+              <Link
+                href="#kategori"
+                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-bold px-7 py-3.5 rounded-xl border border-white/20 transition-colors shadow-sm text-base"
+              >
+                Lihat Daftar Informasi
+              </Link>
+            </div>
           </div>
-          <div className="md:w-2/3">
-            <div className="prose prose-slate prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium prose-strong:text-slate-900 max-w-none text-lg">
-              <p>
-                {getKontenBySection('tentang_ppid')?.isi_teks ||
-                  'Pejabat Pengelola Informasi dan Dokumentasi (PPID) pada Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah berfungsi sebagai layanan informasi publik dalam rangka mewujudkan penyelenggaraan negara yang baik, yaitu transparan, efektif dan efisien, akuntabel serta dapat dipertanggungjawabkan.'}
+        </section>
+
+        {/* TENTANG PPID SECTION */}
+        <section className="py-20 px-6 border-b border-slate-200 bg-slate-50 overflow-hidden">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 lg:gap-14 items-center">
+            {/* Mascot Showcase */}
+            <div data-animate="tentang-mascot" className="shrink-0 flex flex-col items-center text-center">
+              <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-3xl bg-gradient-to-b from-blue-50/80 to-white border border-blue-100/80 p-4 shadow-sm flex items-center justify-center transition-all hover:shadow-md">
+                <Image
+                  src="/mascot2.webp"
+                  alt="Maskot PPID CIKASDA - Dokumen Pelayanan"
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-contain drop-shadow-md"
+                />
+              </div>
+            </div>
+
+            {/* Content Info */}
+            <div data-animate="tentang-content" className="flex-1">
+              <div className="text-xs font-bold text-[#0e4891] uppercase tracking-wider mb-2">
+                Profil & Komitmen P1elayanan
+              </div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
+                {getKontenBySection('tentang_ppid')?.judul || 'Tentang PPID CIKASDA'}
+              </h2>
+              <div className="prose prose-slate prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium prose-strong:text-slate-900 max-w-none text-base sm:text-lg">
+                <p>
+                  {getKontenBySection('tentang_ppid')?.isi_teks ||
+                    'Pejabat Pengelola Informasi dan Dokumentasi (PPID) pada Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah berfungsi sebagai layanan informasi publik dalam rangka mewujudkan penyelenggaraan negara yang baik, yaitu transparan, efektif dan efisien, akuntabel serta dapat dipertanggungjawabkan.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ALUR LAYANAN SECTION */}
+        <section id="alur-permohonan" className="py-20 px-6 border-b border-slate-200 bg-slate-50">
+          <div className="max-w-7xl mx-auto">
+            <div data-animate="alur-header" className="text-center max-w-2xl mx-auto mb-14">
+              <div className="text-xs font-bold text-[#0e4891] uppercase tracking-wider mb-2">
+                Prosedur Baku Pelayanan
+              </div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">
+                Alur Pengajuan Permohonan Informasi
+              </h2>
+              <p className="text-slate-600 font-medium text-base">
+                Prosedur sederhana, transparan, dan terstruktur untuk memperoleh informasi publik resmi sesuai amanat UU No. 14 Tahun 2008.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ALUR LAYANAN SECTION */}
-      <section id="alur-permohonan" className="py-20 px-6 border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <div className="text-xs font-bold text-[#0e4891] uppercase tracking-wider mb-2">
-              Prosedur Baku Pelayanan
+            <div data-animate="alur-diagram">
+              <AlurPermohonanDiagram mode="compact" />
             </div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">
-              Alur Pengajuan Permohonan Informasi
-            </h2>
-            <p className="text-slate-600 font-medium text-base">
-              Prosedur sederhana, transparan, dan terstruktur untuk memperoleh informasi publik resmi sesuai amanat UU No. 14 Tahun 2008.
-            </p>
           </div>
-          <AlurPermohonanDiagram mode="compact" />
-        </div>
-      </section>
+        </section>
 
-      {/* KATEGORI INFORMASI SECTION */}
-      <section id="kategori" className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
-              {getKontenBySection('kategori_informasi')?.judul || 'Kategori Informasi Publik'}
-            </h2>
-            <p className="text-slate-600 font-medium text-lg">
-              {getKontenBySection('kategori_informasi')?.isi_teks || 'Telusuri berbagai kategori dokumen dan informasi publik yang tersedia secara terbuka untuk masyarakat.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {KATEGORI_KEYS.map((kategori) => {
-              const konten = getKontenBySection(kategori.key)
-              return (
-                <KategoriCard
-                  key={kategori.key}
-                  href={kategori.href}
-                  title={konten?.judul || kategori.label}
-                  description={konten?.isi_teks || kategori.description}
-                  count={getDokumenCountByKategori(kategori.key)}
-                  badge={kategori.badge}
-                  showCount={kategori.showCount}
-                  buttonText={kategori.buttonText}
-                />
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-slate-900 text-slate-300 py-16 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex items-center gap-1.5">
-                <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={40} height={40} className="w-10 h-10 object-contain" />
-                <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={40} height={40} className="w-10 h-10 object-contain" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-base tracking-tight text-white leading-none">
-                  PPID DIGITAL
-                </span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
-                  Dinas CIKASDA Prov. Sulteng
-                </span>
-              </div>
+        {/* KATEGORI INFORMASI SECTION */}
+        <section id="kategori" className="py-24 px-6 bg-white">
+          <div className="max-w-7xl mx-auto">
+            <div data-animate="kategori-header" className="text-center max-w-2xl mx-auto mb-16">
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
+                {getKontenBySection('kategori_informasi')?.judul || 'Kategori Informasi Publik'}
+              </h2>
+              <p className="text-slate-600 font-medium text-lg">
+                {getKontenBySection('kategori_informasi')?.isi_teks || 'Telusuri berbagai kategori dokumen dan informasi publik yang tersedia secara terbuka untuk masyarakat.'}
+              </p>
             </div>
-            <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">
-              Portal Layanan Informasi Publik Digital resmi dari Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah. Membangun transparansi melalui akses informasi yang mudah dan cepat.
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {KATEGORI_KEYS.map((kategori) => {
+                const konten = getKontenBySection(kategori.key)
+                return (
+                  <div key={kategori.key} data-animate="kategori-card" className="h-full">
+                    <KategoriCard
+                      href={kategori.href}
+                      title={konten?.judul || kategori.label}
+                      description={konten?.isi_teks || kategori.description}
+                      count={getDokumenCountByKategori(kategori.key)}
+                      badge={kategori.badge}
+                      showCount={kategori.showCount}
+                      buttonText={kategori.buttonText}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer className="bg-slate-900 text-slate-300 py-16 px-6">
+          <div data-animate="footer-content" className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-1.5">
+                  <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={40} height={40} className="w-10 h-10 object-contain" />
+                  <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={40} height={40} className="w-10 h-10 object-contain" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-extrabold text-base tracking-tight text-white leading-none">
+                    PPID DIGITAL
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
+                    Dinas CIKASDA Prov. Sulteng
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">
+                Portal Layanan Informasi Publik Digital resmi dari Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah. Membangun transparansi melalui akses informasi yang mudah dan cepat.
+              </p>
+            </div>
+
+            {/* Kontak */}
+            <div>
+              <h3 className="text-white font-bold text-lg mb-6">Hubungi Kami</h3>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <MapPin className="text-blue-400 mt-1 shrink-0" size={18} weight="fill" />
+                  <span className="text-sm font-medium leading-relaxed">
+                    Jl. Mohammad Yamin No.11, Tatura Utara, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111
+                  </span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone className="text-blue-400 shrink-0" size={18} weight="fill" />
+                  <span className="text-sm font-medium">0812-4217-0628</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <EnvelopeSimple className="text-blue-400 shrink-0" size={18} weight="fill" />
+                  <span className="text-sm font-medium">cikasda.sulteng@gmail.com</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Tautan Cepat */}
+            <div>
+              <h3 className="text-white font-bold text-lg mb-6">Tautan Cepat</h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link href="#kategori" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                    Daftar Informasi Publik
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/daftar" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                    Buat Akun Pemohon
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                    Masuk Sistem
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-sm font-medium text-slate-500">
+              &copy; {new Date().getFullYear()} PPID Dinas CIKASDA Prov. Sulteng. Hak Cipta Dilindungi.
             </p>
           </div>
+        </footer>
+      </LandingAnimations>
 
-          {/* Kontak */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6">Hubungi Kami</h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="text-blue-400 mt-1 shrink-0" size={18} weight="fill" />
-                <span className="text-sm font-medium leading-relaxed">
-                  Jl. Mohammad Yamin No.11, Tatura Utara, Kec. Palu Sel., Kota Palu, Sulawesi Tengah 94111
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="text-blue-400 shrink-0" size={18} weight="fill" />
-                <span className="text-sm font-medium">0812-4217-0628</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <EnvelopeSimple className="text-blue-400 shrink-0" size={18} weight="fill" />
-                <span className="text-sm font-medium">cikasda.sulteng@gmail.com</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Tautan Cepat */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6">Tautan Cepat</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="#kategori" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
-                  Daftar Informasi Publik
-                </Link>
-              </li>
-              <li>
-                <Link href="/daftar" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
-                  Buat Akun Pemohon
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
-                  Masuk Sistem
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm font-medium text-slate-500">
-            &copy; {new Date().getFullYear()} PPID Dinas CIKASDA Prov. Sulteng. Hak Cipta Dilindungi.
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold bg-slate-800 px-3 py-1 rounded-full text-slate-400">
-              Versi 1.0.0
-            </span>
-          </div>
-        </div>
-      </footer>
+      {/* Mascot Widget - Floating di pojok kanan bawah landing page */}
+      <MascotWidget imageSrc="/mascot1.webp" />
     </div>
   )
 }
