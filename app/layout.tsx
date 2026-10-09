@@ -50,8 +50,12 @@ export default function RootLayout({
     <html
       lang="id"
       className={`${plusJakartaSans.variable} h-full antialiased scroll-smooth`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-plus-jakarta bg-slate-50 text-slate-900">
+      <body
+        className="min-h-full flex flex-col font-plus-jakarta bg-slate-50 text-slate-900"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

@@ -16,6 +16,8 @@ import {
 
 gsap.registerPlugin(useGSAP)
 
+const SESSION_STORAGE_KEY = 'ppid_cikasda_chat_session_v1'
+
 interface MascotChatbotProps {
   /** Path ke gambar maskot untuk floating trigger di pojok kanan bawah */
   triggerImageSrc?: string
@@ -37,6 +39,40 @@ export default function MascotChatbot({
   const floatingRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const windowRef = useRef<HTMLDivElement>(null)
+
+  // 1. Muat riwayat percakapan dari sessionStorage saat pertama kali load di klien
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(
+            parsed.map((m: any) => ({
+              ...m,
+              timestamp: new Date(m.timestamp),
+              isStreaming: false,
+            }))
+          )
+        }
+      }
+    } catch {
+      // Abaikan jika storage disabled/private mode
+    }
+  }, [])
+
+  // 2. Simpan riwayat ke sessionStorage saat pesan bertambah
+  useEffect(() => {
+    try {
+      // Hanya simpan jika bukan sedang streaming
+      const hasStreaming = messages.some((m) => m.isStreaming)
+      if (!hasStreaming && messages.length > 0) {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(messages))
+      }
+    } catch {
+      // Storage error ignored
+    }
+  }, [messages])
 
   // Floating idle animation untuk maskot trigger
   useGSAP(
@@ -120,16 +156,23 @@ export default function MascotChatbot({
   }
 
   const handleReset = () => {
-    setMessages([
+    const initial = [
       {
         ...WELCOME_MESSAGE,
         timestamp: new Date(),
       },
-    ])
+    ]
+    setMessages(initial)
     setIsTyping(false)
+    try {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY)
+    } catch {
+      // Ignore
+    }
   }
 
-  const handleSendMessage = (userText: string) => {
+  // Pengiriman pesan dengan arsitektur Hybrid (Tier 1 Quick FAQ + Tier 2 AI Streaming)
+  const handleSendMessage = async (userText: string, isFromQuickChip = false) => {
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       sender: 'user',
@@ -137,43 +180,163 @@ export default function MascotChatbot({
       timestamp: new Date(),
     }
 
-    setMessages((prev) => [...prev, userMsg])
+    const nextMessages = [...messages, userMsg]
+    setMessages(nextMessages)
     setIsTyping(true)
 
-    // Simulasi respons penelusuran FAQ pengetahuan PPID CIKASDA
-    setTimeout(() => {
-      const match = searchKnowledgeBase(userText)
+    // TIER 1: Jika berasal dari tombol Quick Chip, jawab instan tanpa memanggil API
+    if (isFromQuickChip) {
+      setTimeout(() => {
+        const match = searchKnowledgeBase(userText)
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          sender: 'bot',
+          text:
+            match?.answer ||
+            'Silakan ajukan permohonan informasi via menu daring atau hubungi kami di WhatsApp 0812-4217-0628.',
+          timestamp: new Date(),
+          actionLink: match?.actionLink,
+        }
+        setMessages((prev) => [...prev, botMsg])
+        setIsTyping(false)
+      }, 350)
+      return
+    }
 
-      let botText: string
-      let actionLink: { label: string; href: string } | undefined
+    // TIER 2: Pertanyaan bebas pengguna dikirim ke Route Handler /api/chat
+    try {
+      // Format riwayat percakapan untuk konteks LLM
+      const history = nextMessages
+        .filter((m) => m.id !== 'welcome')
+        .slice(-4)
+        .map((m) => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          text: m.text,
+        }))
 
-      if (match) {
-        botText = match.answer
-        actionLink = match.actionLink
-      } else {
-        botText =
-          'Mohon maaf, saya belum menemukan jawaban pasti untuk pertanyaan tersebut dalam panduan baku PPID.\n\nAnda dapat:\n1. Mengajukan permohonan informasi resmi via sistem daring.\n2. Menghubungi tim PPID CIKASDA via WhatsApp di **0812-4217-0628** atau email **cikasda.sulteng@gmail.com** pada jam kerja (Senin s/d Jumat, 08.00 - 16.00 WITA).'
-        actionLink = {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userText,
+          history,
+        }),
+      })
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error(
+            'Terlalu banyak pertanyaan dalam waktu singkat. Mohon tunggu 1 menit sebelum bertanya lagi.'
+          )
+        }
+        throw new Error('Gagal menghubungi asisten.')
+      }
+
+      if (!response.body) {
+        throw new Error('Respons tidak memiliki body stream.')
+      }
+
+      // Siapkan bot message untuk streaming
+      setIsTyping(false)
+      const botMsgId = `bot-${Date.now()}`
+
+      // Deteksi aksi pintasan jika pertanyaan menyebut permohonan
+      let detectedActionLink: { label: string; href: string } | undefined
+      const lowerQuery = userText.toLowerCase()
+      if (
+        lowerQuery.includes('ajukan') ||
+        lowerQuery.includes('permohonan') ||
+        lowerQuery.includes('formulir')
+      ) {
+        detectedActionLink = {
           label: 'Ajukan Permohonan Daring',
           href: '/permohonan-saya/ajukan',
         }
+      } else if (
+        lowerQuery.includes('kategori') ||
+        lowerQuery.includes('dokumen') ||
+        lowerQuery.includes('daftar informasi')
+      ) {
+        detectedActionLink = {
+          label: 'Telusuri Kategori Informasi',
+          href: '#kategori',
+        }
       }
 
-      const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        sender: 'bot',
-        text: botText,
-        timestamp: new Date(),
-        actionLink,
+      // Inisialisasi bubble bot kosong dengan flag isStreaming
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: botMsgId,
+          sender: 'bot',
+          text: '',
+          timestamp: new Date(),
+          isStreaming: true,
+          actionLink: detectedActionLink,
+        },
+      ])
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let accumulatedText = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        accumulatedText += chunk
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botMsgId
+              ? {
+                  ...msg,
+                  text: accumulatedText,
+                }
+              : msg
+          )
+        )
       }
 
-      setMessages((prev) => [...prev, botMsg])
+      // Selesai streaming
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMsgId
+            ? {
+                ...msg,
+                isStreaming: false,
+              }
+            : msg
+        )
+      )
+    } catch (err: any) {
       setIsTyping(false)
-    }, 450)
+      const fallbackText =
+        err?.message && err.message.includes('Terlalu banyak')
+          ? err.message
+          : 'Mohon maaf, saat ini koneksi ke asisten sedang mengalami kendala jaringan.\n\nAnda dapat menanyakan langsung kepada petugas PPID CIKASDA via WhatsApp di 0812-4217-0628 atau email cikasda.sulteng@gmail.com pada jam kerja (Senin s/d Jumat, 08.00 - 16.00 WITA).'
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `bot-fallback-${Date.now()}`,
+          sender: 'bot',
+          text: fallbackText,
+          timestamp: new Date(),
+          actionLink: {
+            label: 'Ajukan Permohonan Daring',
+            href: '/permohonan-saya/ajukan',
+          },
+        },
+      ])
+    }
   }
 
   const handleSelectChip = (chip: QuickChip) => {
-    handleSendMessage(chip.query)
+    handleSendMessage(chip.query, true)
   }
 
   return (
@@ -200,7 +363,7 @@ export default function MascotChatbot({
           <QuickChips onSelect={handleSelectChip} disabled={isTyping} />
 
           {/* Input Teks */}
-          <ChatInput onSend={handleSendMessage} disabled={isTyping} />
+          <ChatInput onSend={(t) => handleSendMessage(t, false)} disabled={isTyping} />
         </div>
       )}
 

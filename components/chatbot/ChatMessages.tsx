@@ -1,15 +1,16 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowSquareOut } from '@phosphor-icons/react'
+import { ArrowSquareOut, Copy, Check } from '@phosphor-icons/react'
 
 export interface ChatMessage {
   id: string
   sender: 'bot' | 'user'
   text: string
   timestamp: Date
+  isStreaming?: boolean
   actionLink?: {
     label: string
     href: string
@@ -25,30 +26,40 @@ interface ChatMessagesProps {
 /**
  * Format markdown sederhana (**bold**, newline, bullet) tanpa library berat luar.
  */
-function renderFormattedText(text: string) {
+function renderFormattedText(text: string, isStreaming?: boolean) {
   const lines = text.split('\n')
 
-  return lines.map((line, lineIndex) => {
-    // Parsing **bold**
-    const parts = line.split(/(\*\*.*?\*\*)/g)
+  return (
+    <>
+      {lines.map((line, lineIndex) => {
+        // Parsing **bold**
+        const parts = line.split(/(\*\*.*?\*\*)/g)
 
-    const renderedLine = parts.map((part, partIndex) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
+        const renderedLine = parts.map((part, partIndex) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong key={partIndex} className="font-bold text-slate-900">
+                {part.slice(2, -2)}
+              </strong>
+            )
+          }
+          return part
+        })
+
         return (
-          <strong key={partIndex} className="font-bold text-slate-900">
-            {part.slice(2, -2)}
-          </strong>
+          <span key={lineIndex} className="block leading-relaxed min-h-[1.2em]">
+            {renderedLine}
+          </span>
         )
-      }
-      return part
-    })
-
-    return (
-      <span key={lineIndex} className="block leading-relaxed min-h-[1.2em]">
-        {renderedLine}
-      </span>
-    )
-  })
+      })}
+      {isStreaming && (
+        <span
+          className="inline-block w-1.5 h-3.5 bg-[#0e4891] ml-0.5 animate-pulse align-middle"
+          aria-hidden="true"
+        />
+      )}
+    </>
+  )
 }
 
 export default function ChatMessages({
@@ -57,15 +68,27 @@ export default function ChatMessages({
   onActionClick,
 }: ChatMessagesProps) {
   const endRef = useRef<HTMLDivElement>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
 
+  const handleCopy = (id: string, text: string) => {
+    // Bersihkan markdown token saat menyalin ke clipboard
+    const cleanText = text.replace(/\*\*/g, '')
+    navigator.clipboard.writeText(cleanText)
+    setCopiedId(id)
+    setTimeout(() => {
+      setCopiedId(null)
+    }, 1800)
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50">
       {messages.map((msg) => {
         const isBot = msg.sender === 'bot'
+        const isCopied = copiedId === msg.id
 
         return (
           <div
@@ -89,21 +112,21 @@ export default function ChatMessages({
 
             {/* Message Bubble Container */}
             <div
-              className={`max-w-[82%] sm:max-w-[78%] flex flex-col ${
+              className={`max-w-[84%] sm:max-w-[80%] flex flex-col group ${
                 isBot ? 'items-start' : 'items-end'
               }`}
             >
               <div
-                className={`p-3.5 text-xs sm:text-[13px] leading-relaxed shadow-sm ${
+                className={`p-3.5 text-xs sm:text-[13px] leading-relaxed shadow-sm relative ${
                   isBot
                     ? 'bg-white text-slate-700 border border-slate-200/90 rounded-2xl rounded-bl-sm'
                     : 'bg-[#0e4891] text-white rounded-2xl rounded-br-sm'
                 }`}
               >
-                {renderFormattedText(msg.text)}
+                {renderFormattedText(msg.text, msg.isStreaming)}
 
                 {/* Optional Action Button Link */}
-                {msg.actionLink && (
+                {msg.actionLink && !msg.isStreaming && (
                   <div className="mt-3 pt-2.5 border-t border-slate-100">
                     <Link
                       href={msg.actionLink.href}
@@ -117,13 +140,36 @@ export default function ChatMessages({
                 )}
               </div>
 
-              {/* Timestamp */}
-              <span className="text-[10px] text-slate-400 mt-1 px-1">
-                {new Intl.DateTimeFormat('id-ID', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                }).format(msg.timestamp)}
-              </span>
+              {/* Footer Meta (Timestamp + Tombol Salin untuk Bot) */}
+              <div className="flex items-center gap-2 mt-1 px-1">
+                <span className="text-[10px] text-slate-400">
+                  {new Intl.DateTimeFormat('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }).format(new Date(msg.timestamp))}
+                </span>
+
+                {isBot && !msg.isStreaming && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(msg.id, msg.text)}
+                    aria-label="Salin jawaban ini"
+                    className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1 opacity-80 group-hover:opacity-100"
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check size={11} weight="bold" className="text-emerald-600" />
+                        <span className="text-emerald-600">Tersalin</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={11} weight="bold" />
+                        <span>Salin</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )

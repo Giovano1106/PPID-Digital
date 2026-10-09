@@ -61,7 +61,7 @@ export const KNOWLEDGE_BASE: FAQItem[] = [
       'formulir',
     ],
     answer:
-      'Untuk mengajukan permohonan informasi secara daring:\n1. Masuk ke sistem atau buat akun pemohon terlebih dahulu.\n2. Buka menu **Permohonan Saya** dan klik **Ajukan Permohonan**.\n3. Isi formulir rincian informasi yang dibutuhkan serta unggah foto KTP/identitas.\n4. Tim PPID CIKASDA akan memverifikasi dan memproses permintaan Anda.',
+      'Untuk mengajukan permohonan informasi secara daring:\n1. Masuk ke sistem atau buat akun pemohon terlebih dahulu.\n2. Lengkapi data profil diri (Nama Lengkap, 16 digit NIK, dan nomor WhatsApp aktif). Tidak perlu mengunggah foto KTP.\n3. Buka menu **Permohonan Saya** dan klik **Ajukan Permohonan**.\n4. Pilih kategori informasi, tulis rincian kebutuhan informasi, dan cara memperolehnya.\n5. Tim PPID CIKASDA akan memverifikasi dan memproses permintaan Anda.',
     actionLink: {
       label: 'Ajukan Permohonan Sekarang',
       href: '/permohonan-saya/ajukan',
@@ -95,6 +95,7 @@ export const KNOWLEDGE_BASE: FAQItem[] = [
     keywords: [
       'syarat',
       'ketentuan',
+      'nik',
       'ktp',
       'identitas',
       'dokumen pemohon',
@@ -103,7 +104,7 @@ export const KNOWLEDGE_BASE: FAQItem[] = [
       'surat kuasa',
     ],
     answer:
-      'Persyaratan dokumen pengajuan:\n• **Perorangan**: Kartu Tanda Penduduk (KTP) / identitas resmi yang masih berlaku.\n• **Badan Hukum / Organisasi**: Salinan akta pendirian yang disahkan Kemenkumham dan surat kuasa dari pimpinan organisasi.\n• Menyertakan kontak aktif (nomor HP/WhatsApp dan email) serta tujuan penggunaan informasi yang jelas dan dapat dipertanggungjawabkan.',
+      'Persyaratan pengajuan di sistem PPID Digital CIKASDA:\n• **Perorangan**: Cukup mengisi data diri berupa Nama Lengkap, 16 digit NIK, dan kontak aktif (WhatsApp/telepon) pada profil akun. Tidak perlu melampirkan atau mengunggah foto KTP fisik.\n• **Formulir Permohonan**: Mengisi rincian kebutuhan informasi beserta tujuan penggunaannya secara jelas dan bertanggung jawab.\n• **Badan Hukum / Organisasi**: Menyertakan nama lembaga dan identitas perwakilan yang sah.',
     actionLink: {
       label: 'Daftar Akun Pemohon',
       href: '/daftar',

@@ -38,10 +38,10 @@ export default function AlurPermohonanDiagram({
                 <IdentificationCard size={24} weight="bold" />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-2 group-hover:text-[#0e4891] transition-colors">
-                Isi Formulir & KTP
+                Isi Data Diri & Formulir
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                Pemohon mendaftar dan mengisi formulir permohonan daring dengan melampirkan identitas resmi (KTP / Surat Kuasa).
+                Pemohon mendaftar dengan melengkapi data diri (Nama, 16 digit NIK, nomor kontak) lalu mengisi formulir rincian informasi daring tanpa perlu unggah foto KTP.
               </p>
             </div>
             <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-medium text-slate-500">
@@ -221,7 +221,7 @@ export default function AlurPermohonanDiagram({
                 Penyampaian Permohonan
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                Pemohon menyampaikan permohonan melalui portal daring PPID CIKASDA atau datang langsung ke meja layanan dengan melampirkan identitas diri resmi (KTP perorangan / Akta Pendirian bagi Badan Hukum).
+                Pemohon menyampaikan permohonan melalui portal daring PPID CIKASDA dengan melengkapi identitas resmi (Nama, 16 digit NIK, nomor kontak aktif) tanpa perlu unggah foto KTP fisik.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">

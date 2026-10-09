@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD - Sistem PPID Digital</title>
+<style>
+  :root {
+    --ink: #1f2320;
+    --ink-soft: #4b4f4a;
+    --muted: #767a73;
+    --line: #e2e0d6;
+    --paper: #fdfcf8;
+    --card: #ffffff;
+    --accent: #0f6e56;
+    --accent-soft: #e1f5ee;
+    --accent-ink: #085041;
+    --warn-soft: #faeeda;
+    --warn-ink: #854f0b;
+    --danger-soft: #fcebeb;
+    --danger-ink: #a32d2d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.65;
+  }
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  header.doc-header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 30px;
+    margin: 0 0 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 16px;
+  }
+  .meta-row div span {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+  h2 {
+    font-size: 20px;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  h3 {
+    font-size: 16px;
+    margin: 28px 0 10px;
+    color: var(--ink);
+  }
+  p { margin: 0 0 14px; color: var(--ink-soft); }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; color: var(--ink-soft); }
+  li { margin-bottom: 6px; }
+  strong { color: var(--ink); }
+  .lead {
+    font-size: 16px;
+    color: var(--ink-soft);
+    max-width: 640px;
+  }
+  .callout {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--accent-ink);
+    margin: 16px 0;
+  }
+  .callout.warn { background: var(--warn-soft); border-color: #ba7517; color: var(--warn-ink); }
+  .callout.danger { background: var(--danger-soft); border-color: #a32d2d; color: var(--danger-ink); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    background: #f4f2ea;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  td { color: var(--ink-soft); }
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .badge.must { background: var(--danger-soft); color: var(--danger-ink); }
+  .badge.should { background: var(--warn-soft); color: var(--warn-ink); }
+  .badge.could { background: #eeedfe; color: #3c3489; }
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .feature-card h3 {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 640px) {
+    .two-col { grid-template-columns: 1fr; }
+    .page { padding: 32px 18px 64px; }
+  }
+  .mini-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .mini-card .role {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .timeline {
+    border-left: 2px solid var(--line);
+    padding-left: 20px;
+    margin: 16px 0;
+  }
+  .timeline .step {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .timeline .step::before {
+    content: "";
+    position: absolute;
+    left: -25px;
+    top: 4px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .timeline .step .when {
+    font-size: 12px;
+    color: var(--accent-ink);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  code {
+    background: #f0efe6;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <div class="eyebrow">Product requirements document</div>
+    <h1>Sistem PPID Digital — Portal Layanan Informasi Publik</h1>
+    <p class="lead">Website PPID dengan landing page informasi publik, alur permohonan informasi oleh masyarakat, dan dashboard admin untuk merespons permohonan serta mengelola konten — dibangun dengan constraint budget operasional nol rupiah.</p>
+    <div class="meta-row">
+      <div><span>Versi</span>1.0</div>
+      <div><span>Status</span>Draft</div>
+      <div><span>Pemilik proyek</span>Vurion (Antigravity)</div>
+      <div><span>Konteks</span>Proyek magang MBKM — Kerja Praktek</div>
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="num">1</span>Ringkasan</h2>
+    <p>Instansi membutuhkan kanal digital resmi bagi masyarakat untuk mengakses informasi publik dan mengajukan permohonan informasi sesuai UU No. 14 Tahun 2008 tentang Keterbukaan Informasi Publik. Saat ini proses ini kemungkinan besar masih manual (datang langsung / surat), sehingga sulit dilacak baik oleh pemohon maupun oleh PPID sendiri.</p>
+    <p>Produk ini terdiri dari dua sisi: <strong>sisi publik</strong> (landing page informasi + form pengajuan + riwayat permohonan pribadi) dan <strong>sisi admin</strong> (dashboard untuk merespons permohonan yang masuk, dengan notifikasi real-time ke Telegram, serta mengelola konten landing page).</p>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>Tujuan</h2>
+    <h3>Tujuan produk</h3>
+    <ul>
+      <li>Masyarakat dapat melihat informasi publik (berkala, serta-merta, setiap saat) tanpa perlu datang langsung ke kantor.</li>
+      <li>Masyarakat dapat mengajukan permohonan informasi secara online dan memantau status permohonannya sendiri.</li>
+      <li>Admin PPID mendapat notifikasi segera saat ada permohonan baru masuk, meski tidak sedang membuka website.</li>
+      <li>Admin dapat merespons permohonan dan memperbarui konten landing page tanpa bantuan developer.</li>
+    </ul>
+    <h3>Non-tujuan (di luar cakupan versi ini)</h3>
+    <ul>
+      <li>Verifikasi identitas otomatis (OCR KTP, face match, integrasi Dukcapil) — verifikasi NIK dilakukan manual oleh admin bila diperlukan.</li>
+      <li>Alur keberatan informasi (banding) — hanya permohonan informasi tahap pertama.</li>
+      <li>Multi-bahasa dan aplikasi mobile native.</li>
+      <li>Pembayaran biaya penggandaan/salinan dokumen (bila ada) — di luar cakupan sistem ini.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>Pengguna & peran</h2>
+    <div class="two-col">
+      <div class="mini-card">
+        <div class="role">Peran publik</div>
+        <strong>Pemohon informasi</strong>
+        <p style="margin-top:6px;">Warga yang ingin mencari informasi publik atau mengajukan permohonan resmi. Membuat akun dengan data diri dasar, lalu bisa melacak status permohonannya.</p>
+      </div>
+      <div class="mini-card">
+        <div class="role">Peran internal</div>
+        <strong>Admin PPID</strong>
+        <p style="margin-top:6px;">Petugas pengelola informasi yang menerima notifikasi permohonan baru, menjawab permohonan, dan mengelola konten landing page. Menggunakan satu akun admin (shared) yang dapat dipakai oleh lebih dari satu petugas secara bergantian — bukan akun per individu.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>Ruang lingkup fitur</h2>
+
+    <div class="feature-card">
+      <h3>4.1 Landing page &amp; informasi publik <span class="badge must">wajib</span></h3>
+      <p>Halaman beranda menampilkan 4 kategori informasi publik sesuai UU No. 14/2008 tentang Keterbukaan Informasi Publik. Konten tiap kategori berupa teks langsung atau tautan embed Google Drive untuk dokumen/laporan.</p>
+      <table>
+        <thead><tr><th>Kategori</th><th>Definisi</th><th>Contoh isi</th></tr></thead>
+        <tbody>
+          <tr><td>Berkala</td><td>Wajib diumumkan rutin minimal tiap 6 bulan, tanpa perlu diminta</td><td>Laporan tahunan, profil instansi, anggaran</td></tr>
+          <tr><td>Serta-merta</td><td>Wajib diumumkan tanpa penundaan karena menyangkut keselamatan/hajat hidup orang banyak</td><td>Info bencana, kondisi darurat</td></tr>
+          <tr><td>Setiap saat</td><td>Tidak berkala, tapi wajib selalu tersedia begitu diminta</td><td>SOP, dasar hukum, data statistik tetap</td></tr>
+          <tr><td>Dikecualikan</td><td>Tidak dibuka ke publik, namun daftar &amp; alasan pengecualiannya tetap harus diumumkan</td><td>Dokumen rahasia negara/pihak lain</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Kriteria selesai:</strong> pengunjung tanpa login dapat menelusuri keempat kategori informasi dan membuka/mengunduh dokumen terkait.</p>
+    </div>
+
+    <div class="feature-card">
+      <h3>4.2 Registrasi &amp; autentikasi <span class="badge must">wajib</span></h3>
+      <p>Pendaftaran akun dengan data: nama lengkap, NIK (input manual, divalidasi 16 digit angka), email, dan nomor telepon. Tidak ada upload dokumen identitas — validasi keaslian NIK dilakukan manual oleh admin saat memproses permohonan, bukan di tahap registrasi.</p>
+      <p><strong>Kriteria selesai:</strong> pengguna dapat mendaftar, login, dan data profilnya tersimpan aman (tidak bisa diakses pengguna lain).</p>
+    </div>
+
+    <div class="feature-card">
+      <h3>4.3 Pengajuan permohonan &amp; riwayat <span class="badge must">wajib</span></h3>
+      <p>Pengguna yang sudah login dapat mengisi form permohonan (jenis informasi, deskripsi kebutuhan, cara memperoleh informasi yang diinginkan). Halaman <code>Riwayat Saya</code> menampilkan daftar seluruh permohonan miliknya beserta status (Diajukan / Diproses / Dijawab / Ditolak) dan jawaban admin bila sudah tersedia.</p>
+      <p>Setiap permohonan otomatis mendapat <strong>batas waktu jawab (SLA)</strong> sesuai UU KIP: <strong>10 hari kerja</strong> sejak diajukan, dengan opsi <strong>perpanjangan 7 hari kerja</strong> (total maksimal 17 hari kerja) yang dapat diaktifkan admin bila informasi belum dikuasai/didokumentasikan. Sisa waktu ditampilkan sebagai badge (mis. "Sisa 3 hari kerja") baik di halaman riwayat pemohon maupun di dashboard admin.</p>
+      <p><strong>Kriteria selesai:</strong> pengguna hanya bisa melihat permohonan miliknya sendiri; status dan sisa SLA ter-update otomatis; admin dapat mengaktifkan perpanjangan 7 hari kerja dengan mencantumkan alasan.</p>
+    </div>
+
+    <div class="feature-card">
+      <h3>4.4 Notifikasi admin via Telegram <span class="badge must">wajib</span></h3>
+      <p>Setiap ada permohonan baru masuk, bot Telegram mengirim pesan ke akun/grup admin berisi ringkasan permohonan dan tautan langsung ke halaman detail di dashboard. Ini menggantikan kebutuhan admin untuk terus memantau website secara manual.</p>
+      <p><strong>Kriteria selesai:</strong> notifikasi terkirim dalam hitungan detik setelah permohonan disubmit, tanpa gagal diam-diam (ada log/fallback bila pengiriman gagal).</p>
+    </div>
+
+    <div class="feature-card">
+      <h3>4.5 Dashboard admin <span class="badge must">wajib</span></h3>
+      <p>Area khusus admin (role-based access) untuk: melihat daftar seluruh permohonan masuk, membuka detail dan menjawab/mengubah status, serta mengelola konten landing page (tambah/edit/hapus entri informasi — teks langsung atau tautan Google Drive).</p>
+      <p><strong>Kriteria selesai:</strong> admin dapat menyelesaikan siklus penuh (lihat permohonan → jawab → status berubah di sisi pengguna) tanpa berinteraksi dengan database secara manual.</p>
+    </div>
+
+    <div class="feature-card">
+      <h3>4.6 Captcha &amp; anti-spam <span class="badge should">disarankan</span></h3>
+      <p>Cloudflare Turnstile pada form registrasi dan form pengajuan, untuk mencegah bot membanjiri database dan notifikasi Telegram admin.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span>Alur pengguna utama</h2>
+    <ol>
+      <li>Pemohon membuka landing page, menelusuri kategori informasi publik tanpa perlu login.</li>
+      <li>Bila informasi yang dicari tidak tersedia, pemohon mendaftar akun (nama, NIK, email, telepon) lalu login.</li>
+      <li>Pemohon mengisi form pengajuan permohonan informasi.</li>
+      <li>Sistem menyimpan permohonan dengan status <em>Diajukan</em> dan mengirim notifikasi Telegram ke admin.</li>
+      <li>Admin membuka dashboard, meninjau permohonan, lalu mengubah status dan menuliskan jawaban.</li>
+      <li>Pemohon membuka halaman <em>Riwayat Saya</em> dan melihat status/jawaban terbaru.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="num">6</span>Model data (ringkas)</h2>
+    <table>
+      <thead>
+        <tr><th>Tabel</th><th>Fungsi</th><th>Kolom kunci</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>profiles</code></td>
+          <td>Data akun pengguna (publik &amp; admin)</td>
+          <td>nik, nama, role, created_at</td>
+        </tr>
+        <tr>
+          <td><code>permohonan</code></td>
+          <td>Catatan permohonan informasi</td>
+          <td>user_id, jenis_informasi, deskripsi, status, jawaban_admin, deadline_awal (created_at + 10 hari kerja), diperpanjang (boolean), deadline_akhir (+7 hari kerja jika diperpanjang)</td>
+        </tr>
+        <tr>
+          <td><code>konten_landing</code></td>
+          <td>Konten dinamis landing page</td>
+          <td>section_key (berkala / serta_merta / setiap_saat / dikecualikan), judul, isi_teks, link_drive, updated_by</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px;color:var(--muted);">Skema relasi lengkap sudah digambarkan pada diagram ERD terpisah di percakapan sebelumnya.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">7</span>Stack teknis (budget nol)</h2>
+    <table>
+      <thead>
+        <tr><th>Komponen</th><th>Pilihan</th><th>Alasan</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Frontend + backend</td><td>Next.js</td><td>Full-stack di satu framework, familiar, deploy gratis di Vercel</td></tr>
+        <tr><td>Database + Auth</td><td>Supabase (Postgres)</td><td>Free tier mencukupi skala PPID daerah, RLS bawaan untuk isolasi data antar pengguna</td></tr>
+        <tr><td>Hosting</td><td>Vercel</td><td>Free tier, tanpa kartu kredit</td></tr>
+        <tr><td>Notifikasi admin</td><td>Telegram Bot API</td><td>Gratis tanpa batas, tanpa perlu nomor bisnis</td></tr>
+        <tr><td>Dokumen besar (laporan, regulasi)</td><td>Embed Google Drive</td><td>Menghemat kuota storage Supabase</td></tr>
+        <tr><td>Anti-spam</td><td>Cloudflare Turnstile</td><td>Gratis, melindungi kuota database &amp; notifikasi</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="num">8</span>Persyaratan non-fungsional</h2>
+    <h3>Keamanan &amp; privasi data</h3>
+    <div class="callout warn">
+      NIK adalah data pribadi. Meski tidak lagi menyimpan foto KTP, NIK tetap harus diperlakukan sebagai data sensitif sesuai UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi.
+    </div>
+    <ul>
+      <li>Row Level Security aktif di semua tabel — pengguna hanya bisa membaca/menulis datanya sendiri.</li>
+      <li>Kolom NIK tidak ditampilkan secara terbuka di UI mana pun selain profil pemilik akun dan dashboard admin.</li>
+      <li>Checkbox persetujuan (consent) eksplisit saat registrasi, disertai halaman kebijakan privasi ringkas.</li>
+      <li>Role admin dikelola manual (bukan self-service signup) untuk mencegah eskalasi hak akses.</li>
+    </ul>
+    <h3>Keandalan</h3>
+    <ul>
+      <li>Kegagalan pengiriman notifikasi Telegram tidak boleh menggagalkan penyimpanan permohonan — notifikasi bersifat best-effort dengan log kegagalan.</li>
+      <li>Status permohonan dan riwayat harus konsisten meski admin dan pengguna mengakses bersamaan.</li>
+    </ul>
+    <h3>Biaya operasional</h3>
+    <p>Seluruh komponen wajib berada dalam free tier masing-masing penyedia layanan. Tidak ada biaya berlangganan bulanan yang bergantung pada kartu kredit.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">9</span>Metrik keberhasilan</h2>
+    <ul>
+      <li>Permohonan baru mendapat notifikasi Telegram dalam waktu kurang dari 1 menit sejak disubmit.</li>
+      <li>Admin dapat memperbarui konten landing page tanpa deploy ulang aplikasi.</li>
+      <li>Nol insiden kebocoran data pribadi (NIK) selama periode magang.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">10</span>Risiko &amp; mitigasi</h2>
+    <table>
+      <thead><tr><th>Risiko</th><th>Mitigasi</th></tr></thead>
+      <tbody>
+        <tr><td>Kuota free tier Supabase/Vercel terlampaui bila trafik naik</td><td>Pantau penggunaan berkala; optimalkan query dan gunakan Google Drive untuk file besar</td></tr>
+        <tr><td>NIK dipalsukan tanpa verifikasi dokumen</td><td>Verifikasi lanjutan dilakukan manual oleh admin saat proses tindak lanjut permohonan, bukan otomatis di sistem</td></tr>
+        <tr><td>Admin melewatkan notifikasi Telegram</td><td>Tambahkan indikator jumlah permohonan belum diproses di dashboard sebagai lapisan kedua</td></tr>
+        <tr><td>Spam registrasi/permohonan otomatis</td><td>Cloudflare Turnstile di form publik</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="num">11</span>Pertanyaan terbuka</h2>
+    <ul>
+      <li>Apakah admin PPID memiliki lebih dari satu orang / perlu multi-admin dengan pembagian tugas?</li>
+      <li>Apakah perlu SLA waktu respons permohonan yang ditampilkan ke publik (mis. maksimal 10 hari kerja sesuai UU KIP)?</li>
+      <li>Apakah kategori informasi (berkala/serta-merta/setiap saat/dikecualikan) sudah ditentukan strukturnya oleh pembimbing lapangan, atau perlu didiskusikan lebih lanjut?</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">12</span>Milestone pengerjaan</h2>
+    <div class="timeline">
+      <div class="step">
+        <div class="when">Tahap 1</div>
+        <div>Setup project, skema database, autentikasi dasar, landing page statis</div>
+      </div>
+      <div class="step">
+        <div class="when">Tahap 2</div>
+        <div>Form pengajuan permohonan, halaman riwayat, integrasi bot Telegram</div>
+      </div>
+      <div class="step">
+        <div class="when">Tahap 3</div>
+        <div>Dashboard admin: respons permohonan &amp; manajemen konten landing page</div>
+      </div>
+      <div class="step">
+        <div class="when">Tahap 4</div>
+        <div>Pengujian keamanan (RLS, akses role), anti-spam, dan penyempurnaan UI</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Dokumen ini adalah draft awal dan dapat berubah mengikuti masukan pembimbing lapangan / dosen pembimbing selama masa magang.
+  </footer>
+
+</div>
+</body>
+</html>

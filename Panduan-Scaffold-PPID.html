@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan Scaffold - Sistem PPID</title>
+<style>
+  :root {
+    --ink: #1f2320;
+    --ink-soft: #4b4f4a;
+    --muted: #767a73;
+    --line: #e2e0d6;
+    --paper: #fdfcf8;
+    --card: #ffffff;
+    --accent: #0f6e56;
+    --accent-soft: #e1f5ee;
+    --accent-ink: #085041;
+    --warn-soft: #faeeda;
+    --warn-ink: #854f0b;
+    --code-bg: #161512;
+    --code-ink: #e5e2d6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; line-height: 1.65; }
+  .page { max-width: 900px; margin: 0 auto; padding: 56px 32px 96px; }
+  header.doc-header { border-bottom: 2px solid var(--ink); padding-bottom: 24px; margin-bottom: 40px; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  h1 { font-size: 28px; margin: 0 0 12px; font-weight: 700; letter-spacing: -0.01em; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 24px; font-size: 13px; color: var(--ink-soft); margin-top: 16px; }
+  .meta-row div span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  h2 { font-size: 20px; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 10px; }
+  h2 .num { color: var(--accent); font-size: 15px; font-weight: 700; }
+  h3 { font-size: 15.5px; margin: 26px 0 10px; color: var(--ink); }
+  p { margin: 0 0 14px; color: var(--ink-soft); }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; color: var(--ink-soft); }
+  li { margin-bottom: 6px; }
+  strong { color: var(--ink); }
+  .lead { font-size: 16px; color: var(--ink-soft); max-width: 660px; }
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 14px 18px; border-radius: 6px; font-size: 14px; color: var(--accent-ink); margin: 16px 0; }
+  .callout.warn { background: var(--warn-soft); border-color: #ba7517; color: var(--warn-ink); }
+  code { background: #f0efe6; padding: 1px 6px; border-radius: 4px; font-size: 12.5px; font-family: "SFMono-Regular", Consolas, monospace; }
+  pre { background: var(--code-bg); color: var(--code-ink); padding: 18px 20px; border-radius: 10px; overflow-x: auto; font-size: 12.8px; line-height: 1.6; margin: 8px 0 20px; }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .file-tag { display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: -8px; }
+  .toc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; margin: 24px 0 40px; }
+  .toc div { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+  .toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; }
+  .toc li { font-size: 13.5px; margin-bottom: 6px; color: var(--ink-soft); break-inside: avoid; }
+  .tree { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 12.8px; color: var(--ink-soft); line-height: 1.75; overflow-x: auto; }
+  .tree .dir { color: var(--accent-ink); font-weight: 600; }
+  .tree .note { color: var(--muted); }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+  @media (max-width: 640px) {
+    .page { padding: 32px 18px 64px; }
+    .toc ol { columns: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-header">
+    <div class="eyebrow">Panduan setup proyek</div>
+    <h1>Scaffolding — Next.js + Supabase untuk sistem PPID</h1>
+    <p class="lead">Langkah-langkah dari nol: inisialisasi proyek, struktur folder, koneksi Supabase, proteksi route berdasarkan role, sampai deploy ke Vercel.</p>
+    <div class="meta-row">
+      <div><span>Terkait</span>PRD &amp; TDD Sistem PPID Digital v1.0</div>
+      <div><span>Framework</span>Next.js (App Router) + TypeScript</div>
+    </div>
+  </header>
+
+  <div class="toc">
+    <div>Daftar isi</div>
+    <ol>
+      <li>Inisialisasi proyek</li>
+      <li>Struktur folder</li>
+      <li>Environment variables</li>
+      <li>Koneksi Supabase (client &amp; server)</li>
+      <li>Middleware proteksi route</li>
+      <li>Skeleton halaman per fitur</li>
+      <li>Setup migrasi database</li>
+      <li>Deploy ke Vercel</li>
+      <li>Urutan pengerjaan disarankan</li>
+    </ol>
+  </div>
+
+  <section>
+    <h2><span class="num">1</span>Inisialisasi proyek</h2>
+    <pre><code>npx create-next-app@latest ppid-app --typescript --tailwind --app --src-dir=false
+cd ppid-app
+npm install @supabase/supabase-js @supabase/ssr</code></pre>
+    <p>Pilih <strong>App Router</strong> (bukan Pages Router) saat prompt muncul — seluruh contoh di dokumen ini mengasumsikan App Router.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>Struktur folder</h2>
+    <div class="tree">
+<span class="dir">ppid-app/</span><br>
+├─ <span class="dir">app/</span><br>
+│&nbsp;&nbsp;├─ <span class="dir">(public)/</span><span class="note"> — bisa diakses tanpa login</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ page.tsx <span class="note"># landing page</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ berkala/page.tsx<br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ serta-merta/page.tsx<br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ setiap-saat/page.tsx<br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;└─ dikecualikan/page.tsx<br>
+│&nbsp;&nbsp;├─ <span class="dir">(auth)/</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ login/page.tsx<br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;└─ daftar/page.tsx<br>
+│&nbsp;&nbsp;├─ <span class="dir">permohonan-saya/</span><span class="note"> — wajib login (role pemohon/admin)</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ page.tsx <span class="note"># daftar riwayat</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;└─ ajukan/page.tsx <span class="note"># form pengajuan baru</span><br>
+│&nbsp;&nbsp;├─ <span class="dir">admin/</span><span class="note"> — wajib role admin</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ page.tsx <span class="note"># daftar semua permohonan</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├─ permohonan/[id]/page.tsx<br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;└─ konten/page.tsx <span class="note"># kelola landing page</span><br>
+│&nbsp;&nbsp;├─ layout.tsx<br>
+│&nbsp;&nbsp;└─ middleware.ts<br>
+├─ <span class="dir">lib/supabase/</span><br>
+│&nbsp;&nbsp;├─ client.ts <span class="note"># dipakai di client component</span><br>
+│&nbsp;&nbsp;└─ server.ts <span class="note"># dipakai di server component/action</span><br>
+├─ <span class="dir">components/</span><br>
+├─ <span class="dir">supabase/</span><br>
+│&nbsp;&nbsp;├─ migrations/0001_init.sql <span class="note"># isi dari dokumen TDD</span><br>
+│&nbsp;&nbsp;└─ functions/notify-telegram/index.ts<br>
+└─ .env.local
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:10px;">Route group <code>(public)</code> dan <code>(auth)</code> pakai tanda kurung supaya tidak muncul di URL — Next.js App Router mengabaikannya saat generate path.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>Environment variables</h2>
+    <span class="file-tag">.env.local</span>
+    <pre><code>NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxxxxxxxxxxxxxx
+SUPABASE_SERVICE_ROLE_KEY=xxxxxxxxxxxxxxxx</code></pre>
+    <div class="callout warn">
+      <code>SUPABASE_SERVICE_ROLE_KEY</code> melewati semua RLS policy — jangan pernah dipakai di client component atau dikirim ke browser. Hanya untuk server action/route handler yang memang butuh akses penuh (jarang dibutuhkan di proyek ini karena RLS sudah menangani sebagian besar kasus).
+    </div>
+    <p>Nilai <code>NEXT_PUBLIC_SUPABASE_URL</code> dan <code>ANON_KEY</code> diambil dari Supabase Dashboard &gt; Project Settings &gt; API.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>Koneksi Supabase</h2>
+    <span class="file-tag">lib/supabase/client.ts</span>
+    <pre><code>import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}</code></pre>
+    <span class="file-tag">lib/supabase/server.ts</span>
+    <pre><code>import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export async function createClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+}</code></pre>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span>Middleware proteksi route</h2>
+    <p>Melindungi <code>/permohonan-saya/*</code> (wajib login) dan <code>/admin/*</code> (wajib role admin) sebelum halaman dirender.</p>
+    <span class="file-tag">middleware.ts</span>
+    <pre><code>import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({ request })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const path = request.nextUrl.pathname
+
+  if (!user && path.startsWith('/permohonan-saya')) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (path.startsWith('/admin')) {
+    if (!user) return NextResponse.redirect(new URL('/login', request.url))
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/permohonan-saya/:path*', '/admin/:path*'],
+}</code></pre>
+  </section>
+
+  <section>
+    <h2><span class="num">6</span>Skeleton halaman per fitur</h2>
+    <p>Urutan file yang perlu dibuat, dari yang paling sederhana:</p>
+    <ol>
+      <li><code>app/(public)/page.tsx</code> — landing page, fetch <code>konten_landing</code> tanpa auth</li>
+      <li><code>app/(auth)/daftar/page.tsx</code> — form nama, NIK, email, telepon, password → <code>supabase.auth.signUp()</code> dengan metadata <code>{ nama, nik }</code></li>
+      <li><code>app/(auth)/login/page.tsx</code> — <code>supabase.auth.signInWithPassword()</code></li>
+      <li><code>app/permohonan-saya/ajukan/page.tsx</code> — form insert ke tabel <code>permohonan</code></li>
+      <li><code>app/permohonan-saya/page.tsx</code> — list query <code>permohonan</code> milik user, tampilkan badge status + sisa SLA</li>
+      <li><code>app/admin/page.tsx</code> — list semua permohonan (RLS otomatis izinkan karena role admin)</li>
+      <li><code>app/admin/permohonan/[id]/page.tsx</code> — detail + form update status &amp; jawaban</li>
+      <li><code>app/admin/konten/page.tsx</code> — CRUD <code>konten_landing</code></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="num">7</span>Setup migrasi database</h2>
+    <pre><code>npx supabase login
+npx supabase link --project-ref xxxxxxxxxxxx
+npx supabase db push</code></pre>
+    <p>Taruh seluruh DDL dari dokumen TDD (tabel, RLS, trigger) ke <code>supabase/migrations/0001_init.sql</code> sebelum menjalankan <code>db push</code>, supaya histori perubahan skema tetap tercatat di Git.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">8</span>Deploy ke Vercel</h2>
+    <ol>
+      <li>Push proyek ke GitHub.</li>
+      <li>Buka <a href="https://vercel.com/new">vercel.com/new</a>, import repository.</li>
+      <li>Tambahkan tiga environment variable dari bagian 3 di pengaturan project Vercel.</li>
+      <li>Deploy — Vercel otomatis build ulang setiap ada push ke branch utama.</li>
+    </ol>
+    <p>Untuk Edge Function Telegram, deploy terpisah lewat Supabase CLI (<code>supabase functions deploy notify-telegram</code>) seperti sudah dijelaskan di dokumen TDD — ini tidak ikut proses deploy Vercel karena jalan di sisi Supabase.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">9</span>Urutan pengerjaan disarankan</h2>
+    <ol>
+      <li>Jalankan migrasi database (bagian 7) sampai tabel &amp; RLS aktif di Supabase.</li>
+      <li>Setup koneksi Supabase di Next.js (bagian 4) dan pastikan bisa fetch data dummy.</li>
+      <li>Bangun alur auth (daftar, login, middleware) sampai bisa bedakan sesi pemohon vs admin.</li>
+      <li>Bangun landing page publik — paling cepat terlihat progresnya, bagus untuk demo awal.</li>
+      <li>Bangun form pengajuan &amp; halaman riwayat pemohon.</li>
+      <li>Bangun dashboard admin, lalu sambungkan Edge Function Telegram terakhir setelah alur insert permohonan stabil.</li>
+    </ol>
+  </section>
+
+  <footer>
+    Dokumen ini melengkapi PRD dan TDD Sistem PPID Digital v1.0. Ikuti urutan di bagian 9 agar setiap tahap bisa diuji sebelum lanjut ke tahap berikutnya.
+  </footer>
+
+</div>
+</body>
+</html>
