@@ -28,7 +28,9 @@ export async function GET(request: Request) {
       }
 
       // Bangun URL redirect dengan membawa penanda oauth=google jika ada
-      const targetPath = next.startsWith('/') ? next : `/${next}`
+      // Cegah Open Redirect (CWE-601): Pastikan path lokal valid (diawali '/' tunggal, bukan '//' atau mengandung backslash)
+      const isSafePath = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')
+      const targetPath = isSafePath ? next : '/permohonan-saya'
       const redirectUrl = new URL(targetPath, origin)
       if (oauth) {
         redirectUrl.searchParams.set('oauth', oauth)
