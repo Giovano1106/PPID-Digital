@@ -26,20 +26,18 @@ export default function LupaSandiPage() {
     const isNik = /^\d{16}$/.test(targetEmail)
 
     if (isNik) {
-      // Cari email yang terikat dengan NIK tersebut di tabel profiles
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('nik', targetEmail)
-        .maybeSingle()
+      // Cari email yang terikat dengan NIK tersebut via RPC security definer yang aman
+      const { data: emailData, error: rpcError } = await supabase.rpc('get_email_by_nik', {
+        p_nik: targetEmail,
+      })
 
-      if (profileError || !profileData || !profileData.email) {
+      if (rpcError || !emailData) {
         setErrorMsg('NIK tidak ditemukan dalam sistem. Silakan periksa kembali.')
         setLoading(false)
         return
       }
 
-      targetEmail = profileData.email
+      targetEmail = emailData
     }
 
     // Mengirim tautan pemulihan kata sandi
