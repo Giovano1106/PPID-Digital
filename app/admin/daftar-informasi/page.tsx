@@ -19,7 +19,13 @@ import {
   CaretRight,
   MagnifyingGlass,
   ArrowRight,
-  Info
+  Info,
+  Calendar,
+  Check,
+  X,
+  UploadSimple,
+  CircleNotch,
+  CloudArrowUp
 } from '@phosphor-icons/react'
 import {
   getDaftarInformasiTables,
@@ -29,12 +35,15 @@ import {
   createDaftarInformasiItem,
   updateDaftarInformasiItem,
   deleteDaftarInformasiItem,
-  seedInitialDaftarInformasi
+  seedInitialDaftarInformasi,
+  addTahunToTable,
+  editTahunInTable,
+  deleteTahunFromTable
 } from '@/app/actions/daftar-informasi'
 import {
   DaftarInformasiTable,
   DaftarInformasiItem,
-  TAHUN_LIST
+  getTableYears
 } from '@/app/informasi/data/daftarInformasiDefault'
 
 export default function AdminDaftarInformasiPage() {
@@ -46,13 +55,22 @@ export default function AdminDaftarInformasiPage() {
 
   // Toast & Modals
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
-  const [modalType, setModalType] = useState<'addTable' | 'editTable' | 'addItem' | 'editItem' | null>(null)
+  const [modalType, setModalType] = useState<
+    'addTable' | 'editTable' | 'addItem' | 'editItem' | 'manageYears' | null
+  >(null)
   const [seeding, setSeeding] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   // Delete Confirmations
   const [deleteTableConfirm, setDeleteTableConfirm] = useState<DaftarInformasiTable | null>(null)
   const [deleteItemConfirm, setDeleteItemConfirm] = useState<DaftarInformasiItem | null>(null)
+  const [deleteYearConfirm, setDeleteYearConfirm] = useState<string | null>(null)
+
+  // Year Column Management State
+  const [newYearInput, setNewYearInput] = useState('')
+  const [editingYear, setEditingYear] = useState<{ oldYear: string; newYear: string } | null>(null)
+  const [applyToAllTables, setApplyToAllTables] = useState(false)
+  const [inlineNewYear, setInlineNewYear] = useState('')
 
   // Form State - Table
   const [tableJudul, setTableJudul] = useState('')
@@ -61,14 +79,39 @@ export default function AdminDaftarInformasiPage() {
 
   // Form State - Item
   const [itemNama, setItemNama] = useState('')
-  const [itemLinks, setItemLinks] = useState<Record<string, string>>({
-    '2022': '#',
-    '2023': '#',
-    '2024': '#',
-    '2025': '#',
-    '2026': '#'
-  })
+  const [itemLinks, setItemLinks] = useState<Record<string, string>>({})
   const [selectedItem, setSelectedItem] = useState<DaftarInformasiItem | null>(null)
+  const [uploadingYear, setUploadingYear] = useState<string | null>(null)
+
+  const handleYearFileUpload = async (th: string, file?: File | null) => {
+    if (!file) return
+    setUploadingYear(th)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('raw_only', 'true')
+    formData.append('kategori_key', 'raw_upload')
+
+    try {
+      const res = await fetch('/api/admin/upload-drive', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        showToast(data.error || 'Gagal mengunggah file ke Google Drive.', 'error')
+      } else if (data.fileUrl) {
+        setItemLinks((prev) => ({
+          ...prev,
+          [th]: data.fileUrl,
+        }))
+        showToast(`Berkas tahun ${th} berhasil diunggah langsung ke Google Drive!`)
+      }
+    } catch (err: any) {
+      showToast('Error: ' + err?.message, 'error')
+    } finally {
+      setUploadingYear(null)
+    }
+  }
 
   const showToast = (message: string, type: ToastType = 'success') => {
     setToast({ message, type })
@@ -105,6 +148,7 @@ export default function AdminDaftarInformasiPage() {
   }, [tables, tableSearch])
 
   const activeTable = tables[activeTableIndex] || null
+  const activeYears = useMemo(() => getTableYears(activeTable), [activeTable])
 
   // Handler: Sinkronisasi / Inisialisasi Data Awal ke Supabase
   const handleSeedData = async () => {
@@ -195,30 +239,130 @@ export default function AdminDaftarInformasiPage() {
   // ==========================================
   const openAddItemModal = () => {
     setItemNama('')
-    setItemLinks({
-      '2022': '#',
-      '2023': '#',
-      '2024': '#',
-      '2025': '#',
-      '2026': '#'
+    const initialLinks: Record<string, string> = {}
+    activeYears.forEach((th) => {
+      initialLinks[th] = '#'
     })
+    setItemLinks(initialLinks)
     setSelectedItem(null)
+    setInlineNewYear('')
     setModalType('addItem')
   }
 
   const openEditItemModal = (item: DaftarInformasiItem) => {
     setItemNama(item.nama)
     const currentLinks: Record<string, string> = {}
-    TAHUN_LIST.forEach((th) => {
+    const itemYears = Object.keys(item.links || {})
+    const mergedYears = Array.from(new Set([...activeYears, ...itemYears])).sort((a, b) => {
+      const numA = parseInt(a, 10)
+      const numB = parseInt(b, 10)
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+      return a.localeCompare(b)
+    })
+    mergedYears.forEach((th) => {
       currentLinks[th] = item.links?.[th] || '#'
     })
     setItemLinks(currentLinks)
     setSelectedItem(item)
+    setInlineNewYear('')
     setModalType('editItem')
   }
 
   const handleLinkChange = (tahun: string, val: string) => {
     setItemLinks((prev) => ({ ...prev, [tahun]: val }))
+  }
+
+  const handleAddYearToItem = () => {
+    const yr = inlineNewYear.trim()
+    if (!yr) return
+    setItemLinks((prev) => ({ ...prev, [yr]: '#' }))
+    setInlineNewYear('')
+  }
+
+  const handleRemoveYearFromItem = (yr: string) => {
+    setItemLinks((prev) => {
+      const copy = { ...prev }
+      delete copy[yr]
+      return copy
+    })
+  }
+
+  // ==========================================
+  // YEAR COLUMN MANAGEMENT HANDLERS
+  // ==========================================
+  const handleAddYear = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const yr = newYearInput.trim()
+    if (!yr) {
+      showToast('Masukkan angka atau label tahun.', 'error')
+      return
+    }
+    if (!activeTable?.id) {
+      showToast('Tabel belum tersimpan di database.', 'error')
+      return
+    }
+
+    setSubmitting(true)
+    const res = await addTahunToTable(activeTable.id, yr, applyToAllTables)
+    setSubmitting(false)
+    if (res.success) {
+      showToast(
+        `Tahun ${yr} berhasil ditambahkan ${
+          applyToAllTables ? 'ke semua tabel' : 'ke tabel ini'
+        }.`
+      )
+      setNewYearInput('')
+      loadData()
+    } else {
+      showToast('Gagal menambahkan tahun: ' + res.error, 'error')
+    }
+  }
+
+  const handleEditYear = async (oldYear: string, newYear: string) => {
+    const yr = newYear.trim()
+    if (!yr) {
+      showToast('Tahun tidak boleh kosong.', 'error')
+      return
+    }
+    if (yr === oldYear) {
+      setEditingYear(null)
+      return
+    }
+    if (!activeTable?.id) return
+
+    setSubmitting(true)
+    const res = await editTahunInTable(activeTable.id, oldYear, yr, applyToAllTables)
+    setSubmitting(false)
+    if (res.success) {
+      showToast(
+        `Tahun ${oldYear} berhasil diubah menjadi ${yr} ${
+          applyToAllTables ? 'di semua tabel' : 'di tabel ini'
+        }.`
+      )
+      setEditingYear(null)
+      loadData()
+    } else {
+      showToast('Gagal mengubah tahun: ' + res.error, 'error')
+    }
+  }
+
+  const handleDeleteYear = async (yearToDelete: string) => {
+    if (!activeTable?.id) return
+
+    setSubmitting(true)
+    const res = await deleteTahunFromTable(activeTable.id, yearToDelete, applyToAllTables)
+    setSubmitting(false)
+    setDeleteYearConfirm(null)
+    if (res.success) {
+      showToast(
+        `Kolom tahun ${yearToDelete} berhasil dihapus ${
+          applyToAllTables ? 'dari semua tabel' : 'dari tabel ini'
+        }.`
+      )
+      loadData()
+    } else {
+      showToast('Gagal menghapus tahun: ' + res.error, 'error')
+    }
   }
 
   const handleItemSubmit = async (e: React.FormEvent) => {
@@ -325,6 +469,21 @@ export default function AdminDaftarInformasiPage() {
         cancelText="Batal"
         onConfirm={confirmDeleteItem}
         onClose={() => setDeleteItemConfirm(null)}
+        loading={submitting}
+        variant="danger"
+      />
+
+      {/* CONFIRM MODAL HAPUS TAHUN */}
+      <ConfirmModal
+        isOpen={!!deleteYearConfirm}
+        title={`Hapus Kolom Tahun ${deleteYearConfirm || ''}?`}
+        message={`Apakah Anda yakin ingin menghapus kolom tahun ${deleteYearConfirm || ''} ${
+          applyToAllTables ? 'dari SEMUA tabel kategori' : 'dari tabel ini'
+        }? Seluruh tautan dokumen pada kolom tahun tersebut akan dibersihkan.`}
+        confirmText="Ya, Hapus Kolom Tahun"
+        cancelText="Batal"
+        onConfirm={() => deleteYearConfirm && handleDeleteYear(deleteYearConfirm)}
+        onClose={() => setDeleteYearConfirm(null)}
         loading={submitting}
         variant="danger"
       />
@@ -579,7 +738,7 @@ export default function AdminDaftarInformasiPage() {
               </div>
 
               {/* Sub-header: Rincian Dokumen & Tombol Tambah Baris */}
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between gap-4">
+              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="font-extrabold text-sm text-slate-900">
                     Rincian Baris Dokumen & Tautan Tahun
@@ -588,13 +747,28 @@ export default function AdminDaftarInformasiPage() {
                     Total {activeTable.items?.length || 0} baris dokumen terdaftar pada tabel ini.
                   </p>
                 </div>
-                <button
-                  onClick={openAddItemModal}
-                  className="bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
-                >
-                  <Plus size={15} weight="bold" />
-                  Tambah Baris Data
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => {
+                      setNewYearInput('')
+                      setEditingYear(null)
+                      setApplyToAllTables(false)
+                      setModalType('manageYears')
+                    }}
+                    className="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Kelola kolom tahun pada tabel ini"
+                  >
+                    <Calendar size={15} weight="bold" />
+                    <span>Kelola Kolom Tahun ({activeYears.length})</span>
+                  </button>
+                  <button
+                    onClick={openAddItemModal}
+                    className="bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <Plus size={15} weight="bold" />
+                    Tambah Baris Data
+                  </button>
+                </div>
               </div>
 
               {/* Matriks Tabel Interaktif */}
@@ -605,7 +779,7 @@ export default function AdminDaftarInformasiPage() {
                       <th className="py-3 px-5 font-bold text-xs uppercase tracking-wider w-[40%]">
                         Nama Data / Dokumen
                       </th>
-                      {TAHUN_LIST.map((th) => (
+                      {activeYears.map((th) => (
                         <th
                           key={th}
                           className="py-3 px-2 font-bold text-xs text-center font-mono w-[8%]"
@@ -635,7 +809,7 @@ export default function AdminDaftarInformasiPage() {
                           </td>
 
                           {/* Year Indicators */}
-                          {TAHUN_LIST.map((th) => {
+                          {activeYears.map((th) => {
                             const linkVal = (row.links as Record<string, string>)[th]
                             const hasLink = linkVal && linkVal !== '#'
 
@@ -688,7 +862,7 @@ export default function AdminDaftarInformasiPage() {
                     ) : (
                       <tr>
                         <td
-                          colSpan={TAHUN_LIST.length + 2}
+                          colSpan={activeYears.length + 2}
                           className="py-12 text-center text-xs text-slate-500 italic"
                         >
                           Belum ada baris data pada tabel ini. Klik tombol "Tambah Baris Data" untuk menambahkan.
@@ -798,24 +972,97 @@ export default function AdminDaftarInformasiPage() {
           </div>
 
           <div className="pt-2 border-t border-slate-100">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">
-              Tautan Dokumen / URL per Tahun (Isi '#' jika belum tersedia):
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-900">
+                Tautan Dokumen / URL per Tahun (Isi '#' jika belum tersedia):
+              </label>
+            </div>
+
             <div className="space-y-2.5">
-              {TAHUN_LIST.map((th) => (
-                <div key={th} className="flex items-center gap-3">
-                  <span className="w-14 text-xs font-mono font-bold text-slate-700 shrink-0">
-                    {th}:
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="https://drive.google.com/... atau #"
-                    value={itemLinks[th] || '#'}
-                    onChange={(e) => handleLinkChange(th, e.target.value)}
-                    className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-mono text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-                  />
-                </div>
-              ))}
+              {Object.keys(itemLinks)
+                .sort((a, b) => {
+                  const numA = parseInt(a, 10)
+                  const numB = parseInt(b, 10)
+                  if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+                  return a.localeCompare(b)
+                })
+                .map((th) => (
+                  <div key={th} className="flex items-center gap-2">
+                    <span className="w-14 text-xs font-mono font-bold text-slate-700 shrink-0">
+                      {th}:
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="https://drive.google.com/... atau #"
+                      value={itemLinks[th] || '#'}
+                      onChange={(e) => handleLinkChange(th, e.target.value)}
+                      className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-mono text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
+                    />
+
+                    {/* Tombol Unggah Langsung ke Google Drive */}
+                    <label
+                      className={`px-2.5 py-2 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                        uploadingYear === th
+                          ? 'bg-blue-50 text-[#0e4891] border-blue-200'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                      }`}
+                      title={`Unggah file ${th} langsung ke Google Drive`}
+                    >
+                      {uploadingYear === th ? (
+                        <>
+                          <CircleNotch size={14} weight="bold" className="animate-spin text-[#0e4891]" />
+                          <span className="text-[11px]">Unggah...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadSimple size={14} weight="bold" className="text-[#0e4891]" />
+                          <span className="text-[11px]">Unggah</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        disabled={uploadingYear !== null}
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+                        className="hidden"
+                        onChange={(e) => handleYearFileUpload(th, e.target.files?.[0])}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveYearFromItem(th)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title={`Hapus tahun ${th} dari baris ini`}
+                    >
+                      <Trash size={14} weight="bold" />
+                    </button>
+                  </div>
+                ))}
+            </div>
+
+            {/* Tambah Tahun Cepat di Modal Item */}
+            <div className="mt-4 pt-3 border-t border-dashed border-slate-200 flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Tambah tahun baru (misal: 2027)"
+                value={inlineNewYear}
+                onChange={(e) => setInlineNewYear(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddYearToItem()
+                  }
+                }}
+                className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-mono text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-[#0e4891] focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddYearToItem}
+                className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-[#0e4891] text-slate-700 hover:text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+              >
+                <Plus size={13} weight="bold" />
+                <span>Tambah Tahun</span>
+              </button>
             </div>
           </div>
 
@@ -836,6 +1083,178 @@ export default function AdminDaftarInformasiPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL: KELOLA KOLOM TAHUN */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={modalType === 'manageYears'}
+        onClose={() => {
+          setModalType(null)
+          setEditingYear(null)
+        }}
+        title={`Kelola Kolom Tahun: ${activeTable?.judul || ''}`}
+      >
+        <div className="space-y-6">
+          {/* DAFTAR KOLOM TAHUN SAAT INI */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Kolom Tahun Terdaftar ({activeYears.length})
+              </label>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Klik ikon pensil untuk mengubah, atau tempat sampah untuk menghapus.
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-60 overflow-y-auto p-1">
+              {activeYears.map((th) => {
+                const isEditing = editingYear?.oldYear === th
+
+                return (
+                  <div
+                    key={th}
+                    className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition-colors"
+                  >
+                    {isEditing ? (
+                      <div className="flex items-center gap-1.5 flex-1 mr-2">
+                        <input
+                          type="text"
+                          value={editingYear.newYear}
+                          onChange={(e) =>
+                            setEditingYear({ ...editingYear, newYear: e.target.value })
+                          }
+                          className="w-full px-2 py-1 text-xs font-mono font-bold bg-white border border-[#0e4891] rounded-lg focus:outline-none"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleEditYear(editingYear.oldYear, editingYear.newYear)
+                            } else if (e.key === 'Escape') {
+                              setEditingYear(null)
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          disabled={submitting}
+                          onClick={() => handleEditYear(editingYear.oldYear, editingYear.newYear)}
+                          className="p-1 rounded-lg bg-[#0e4891] text-white hover:bg-[#0a366f] transition-colors cursor-pointer"
+                          title="Simpan perubahan"
+                        >
+                          <Check size={14} weight="bold" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingYear(null)}
+                          className="p-1 rounded-lg bg-slate-200 text-slate-600 hover:bg-slate-300 transition-colors cursor-pointer"
+                          title="Batal"
+                        >
+                          <X size={14} weight="bold" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-lg bg-blue-50 text-[#0e4891] flex items-center justify-center font-mono font-bold text-xs border border-blue-100">
+                          {th.slice(-2)}
+                        </span>
+                        <div>
+                          <span className="font-mono font-extrabold text-sm text-slate-900">
+                            {th}
+                          </span>
+                          <span className="text-[10px] block text-slate-500 font-medium">
+                            Kolom aktif
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {!isEditing && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingYear({ oldYear: th, newYear: th })}
+                          className="p-1.5 text-slate-500 hover:text-[#0e4891] hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-colors cursor-pointer"
+                          title={`Ubah label tahun ${th}`}
+                        >
+                          <PencilSimple size={14} weight="bold" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteYearConfirm(th)}
+                          className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-colors cursor-pointer"
+                          title={`Hapus kolom tahun ${th}`}
+                        >
+                          <Trash size={14} weight="bold" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* FORM TAMBAH TAHUN BARU */}
+          <form onSubmit={handleAddYear} className="p-4 rounded-xl border border-blue-100 bg-blue-50/40 space-y-3">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-900">
+              Tambah Kolom Tahun Baru
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Contoh: 2027 atau 2021"
+                value={newYearInput}
+                onChange={(e) => setNewYearInput(e.target.value)}
+                className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-mono font-medium text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
+              />
+              <button
+                type="submit"
+                disabled={submitting || !newYearInput.trim()}
+                className="bg-[#0e4891] hover:bg-[#0a366f] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+              >
+                <Plus size={14} weight="bold" />
+                <span>{submitting ? 'Menyimpan...' : 'Tambah Tahun'}</span>
+              </button>
+            </div>
+
+            {/* CHECKBOX SINKRONKAN SEMUA TABEL */}
+            <div className="pt-2 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="applyAllTables"
+                checked={applyToAllTables}
+                onChange={(e) => setApplyToAllTables(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-[#0e4891] focus:ring-[#0e4891] cursor-pointer"
+              />
+              <label htmlFor="applyAllTables" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                Terapkan juga ke seluruh 10 kategori tabel (Sinkronkan semua tabel)
+              </label>
+            </div>
+          </form>
+
+          {/* PETUNJUK INFORMASI */}
+          <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-2.5">
+            <Info size={16} weight="bold" className="text-slate-500 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+              Menambahkan kolom tahun baru akan otomatis menyediakan slot pengisian tautan dokumen (default bernilai <code className="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800">#</code>) pada setiap baris dokumen. Menghapus tahun akan menghapus data tautan untuk tahun tersebut.
+            </p>
+          </div>
+
+          <div className="flex justify-end pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                setModalType(null)
+                setEditingYear(null)
+              }}
+              className="px-5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
   DaftarInformasiTable,
-  TAHUN_LIST,
+  getTableYears,
 } from '@/app/informasi/data/daftarInformasiDefault'
 import {
   MagnifyingGlass,
@@ -119,6 +119,7 @@ export default function DaftarInformasiPublikView({
       {filteredTables.map((table, tIdx) => {
         const isActionKlik = table.action_type === 'klik'
         const actionLabel = isActionKlik ? 'Klik' : 'Unduh'
+        const tableYears = getTableYears(table)
 
         return (
           <div
@@ -146,7 +147,7 @@ export default function DaftarInformasiPublikView({
                 <thead>
                   <tr className="bg-[#0e4891] text-white">
                     <th className="py-4 px-6 font-bold text-sm w-1/2">Data</th>
-                    {TAHUN_LIST.map((th) => (
+                    {tableYears.map((th) => (
                       <th
                         key={th}
                         className="py-4 px-4 font-bold text-sm text-center font-mono w-[10%]"
@@ -166,7 +167,7 @@ export default function DaftarInformasiPublikView({
                         <td className="py-4 px-6 text-xs md:text-sm font-medium text-slate-800 leading-relaxed">
                           {row.nama}
                         </td>
-                        {TAHUN_LIST.map((th) => {
+                        {tableYears.map((th) => {
                           const targetUrl = (row.links as Record<string, string>)[th] || '#'
                           const isExternal = targetUrl.startsWith('http')
                           const isInternalRoute = targetUrl.startsWith('/')
@@ -223,7 +224,7 @@ export default function DaftarInformasiPublikView({
                   ) : (
                     <tr>
                       <td
-                        colSpan={TAHUN_LIST.length + 1}
+                        colSpan={tableYears.length + 1}
                         className="py-6 text-center text-xs text-slate-500 italic"
                       >
                         Belum ada rincian baris data pada tabel ini.

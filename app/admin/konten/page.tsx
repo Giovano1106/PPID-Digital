@@ -24,7 +24,12 @@ import {
   MagnifyingGlass,
   FilePdf,
   CheckCircle,
-  Info
+  Info,
+  UploadSimple,
+  LinkSimple,
+  CloudArrowUp,
+  CircleNotch,
+  FileText
 } from '@phosphor-icons/react'
 
 import {
@@ -32,7 +37,9 @@ import {
   updateKontenKategori,
   addDokumen,
   updateDokumen,
-  deleteDokumen
+  deleteDokumen,
+  addKontenKategori,
+  deleteKontenKategori
 } from '@/app/actions/admin'
 
 type KontenLanding = {
@@ -92,8 +99,16 @@ export default function AdminKontenPage() {
 
   // State Toast & Modals
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
-  const [activeModal, setActiveModal] = useState<'addDoc' | 'editDoc' | null>(null)
+  const [activeModal, setActiveModal] = useState<'addDoc' | 'editDoc' | 'addCategory' | null>(null)
   const [deleteDocItem, setDeleteDocItem] = useState<DokumenPublik | null>(null)
+  const [deleteCategoryConfirm, setDeleteCategoryConfirm] = useState<KontenLanding | null>(null)
+  const [submittingCategory, setSubmittingCategory] = useState(false)
+  const [deletingCategory, setDeletingCategory] = useState(false)
+
+  // Form Inputs - Kategori Baru
+  const [newCategoryJudul, setNewCategoryJudul] = useState('')
+  const [newCategoryDeskripsi, setNewCategoryDeskripsi] = useState('')
+  const [newCategoryKey, setNewCategoryKey] = useState('')
   const [targetKategoriKey, setTargetKategoriKey] = useState<string>('')
   const [selectedDoc, setSelectedDoc] = useState<DokumenPublik | null>(null)
 
@@ -101,8 +116,28 @@ export default function AdminKontenPage() {
   const [docNama, setDocNama] = useState('')
   const [docUrl, setDocUrl] = useState('')
 
+  // Google Drive Upload States
+  const [uploadMethod, setUploadMethod] = useState<'upload' | 'link'>('upload')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [driveConfigured, setDriveConfigured] = useState<boolean | null>(null)
+
   const showToast = (message: string, type: ToastType = 'success') => {
     setToast({ message, type })
+  }
+
+  const checkDriveStatus = async () => {
+    try {
+      const res = await fetch('/api/admin/drive-status')
+      const data = await res.json()
+      setDriveConfigured(Boolean(data.configured))
+      if (!data.configured) {
+        setUploadMethod('link')
+      }
+    } catch {
+      setDriveConfigured(false)
+      setUploadMethod('link')
+    }
   }
 
   const fetchData = async () => {
@@ -121,6 +156,7 @@ export default function AdminKontenPage() {
 
   useEffect(() => {
     fetchData()
+    checkDriveStatus()
   }, [])
 
   // Cari kategori aktif
@@ -171,12 +207,112 @@ export default function AdminKontenPage() {
     setSavingId(null)
   }
 
+  // Tambah Kategori Baru
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCategoryJudul.trim()) {
+      showToast('Judul kategori tidak boleh kosong.', 'error')
+      return
+    }
+
+    setSubmittingCategory(true)
+    const result = await addKontenKategori(
+      newCategoryJudul,
+      newCategoryDeskripsi,
+      newCategoryKey
+    )
+    setSubmittingCategory(false)
+
+    if (result.success && result.data) {
+      showToast(`Kategori "${result.data.judul}" berhasil dibuat!`)
+      setActiveModal(null)
+      setNewCategoryJudul('')
+      setNewCategoryDeskripsi('')
+      setNewCategoryKey('')
+      await fetchData()
+      setSelectedCategoryKey(result.data.section_key)
+    } else {
+      showToast(result.error || 'Gagal menambahkan kategori.', 'error')
+    }
+  }
+
+  // Hapus Kategori
+  const handleDeleteCategory = async () => {
+    if (!deleteCategoryConfirm) return
+    setDeletingCategory(true)
+    const result = await deleteKontenKategori(
+      deleteCategoryConfirm.id,
+      deleteCategoryConfirm.section_key
+    )
+    setDeletingCategory(false)
+    const deletedKey = deleteCategoryConfirm.section_key
+    setDeleteCategoryConfirm(null)
+
+    if (result.success) {
+      showToast('Kategori berhasil dihapus.')
+      await fetchData()
+      if (selectedCategoryKey === deletedKey) {
+        setSelectedCategoryKey('daftar_informasi_publik')
+      }
+    } else {
+      showToast(result.error || 'Gagal menghapus kategori.', 'error')
+    }
+  }
+
   // Buka Modal Tambah Dokumen
   const openAddDocModal = (kategoriKey: string) => {
     setTargetKategoriKey(kategoriKey)
     setDocNama('')
     setDocUrl('')
+    setUploadFile(null)
+    setUploadMethod(driveConfigured === false ? 'link' : 'upload')
     setActiveModal('addDoc')
+  }
+
+  // Handle Pemilihan Berkas untuk Unggah
+  const handleFileSelected = (file: File | null) => {
+    setUploadFile(file)
+    if (file && !docNama.trim()) {
+      const cleanName = file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]+/g, ' ')
+        .trim()
+      setDocNama(cleanName)
+    }
+  }
+
+  // Handle Unggah Berkas Langsung ke Google Drive API
+  const handleUploadDriveSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!uploadFile) {
+      showToast('Silakan pilih file dokumen terlebih dahulu.', 'error')
+      return
+    }
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', uploadFile)
+    formData.append('kategori_key', targetKategoriKey)
+    formData.append('nama_dokumen', docNama.trim() || uploadFile.name.replace(/\.[^/.]+$/, ''))
+
+    try {
+      const res = await fetch('/api/admin/upload-drive', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        showToast(data.error || 'Gagal mengunggah ke Google Drive.', 'error')
+      } else {
+        showToast('Dokumen berhasil diunggah langsung ke Google Drive & disimpan!')
+        setActiveModal(null)
+        setUploadFile(null)
+        fetchData()
+      }
+    } catch (err: any) {
+      showToast('Error: ' + err?.message, 'error')
+    } finally {
+      setUploading(false)
+    }
   }
 
   // Submit Tambah Dokumen
@@ -271,6 +407,19 @@ export default function AdminKontenPage() {
         onConfirm={handleDeleteDokumenSubmit}
         onClose={() => setDeleteDocItem(null)}
         loading={savingId?.startsWith('del-doc-')}
+        variant="danger"
+      />
+
+      {/* CONFIRM MODAL HAPUS KATEGORI */}
+      <ConfirmModal
+        isOpen={!!deleteCategoryConfirm}
+        title={`Hapus Kategori "${deleteCategoryConfirm?.judul || deleteCategoryConfirm?.section_key}"?`}
+        message={`Apakah Anda yakin ingin menghapus kategori "${deleteCategoryConfirm?.judul || deleteCategoryConfirm?.section_key}" beserta seluruh dokumen di dalamnya? Halaman publik /informasi/${deleteCategoryConfirm?.section_key} dan kartu kategori di halaman depan tidak akan dapat diakses lagi.`}
+        confirmText="Ya, Hapus Kategori"
+        cancelText="Batal"
+        onConfirm={handleDeleteCategory}
+        onClose={() => setDeleteCategoryConfirm(null)}
+        loading={deletingCategory}
         variant="danger"
       />
 
@@ -405,6 +554,23 @@ export default function AdminKontenPage() {
                 )
               })}
             </div>
+
+            {/* Tombol Tambah Kategori di Bawah Sidebar Kiri */}
+            <div className="mt-4 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setNewCategoryJudul('')
+                  setNewCategoryDeskripsi('')
+                  setNewCategoryKey('')
+                  setActiveModal('addCategory')
+                }}
+                className="w-full py-2.5 px-3 rounded-xl border border-dashed border-slate-300 hover:border-[#0e4891] text-slate-600 hover:text-[#0e4891] text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Plus size={14} weight="bold" />
+                Tambah Kategori Baru
+              </button>
+            </div>
           </div>
 
           {/* KOLOM KANAN: WORKSPACE EDITOR TERFOKUS */}
@@ -430,14 +596,28 @@ export default function AdminKontenPage() {
                   </div>
                 </div>
 
-                <Link
-                  href={`/informasi/${activeKategori.section_key}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-2xs shrink-0"
-                >
-                  <span>Lihat di Portal</span>
-                  <ArrowSquareOut size={14} weight="bold" />
-                </Link>
+                <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+                  <Link
+                    href={`/informasi/${activeKategori.section_key}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-2xs shrink-0"
+                  >
+                    <span>Lihat di Portal</span>
+                    <ArrowSquareOut size={14} weight="bold" />
+                  </Link>
+
+                  {activeKategori.section_key !== 'daftar_informasi_publik' && (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteCategoryConfirm(activeKategori)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer"
+                      title="Hapus kategori informasi ini"
+                    >
+                      <Trash size={14} weight="bold" />
+                      <span>Hapus Kategori</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* CARD 1: EDIT JUDUL & DESKRIPSI KATEGORI */}
@@ -473,7 +653,23 @@ export default function AdminKontenPage() {
                     />
                   </div>
 
-                  <div className="flex justify-end pt-2">
+                  <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
+                    {activeKategori.section_key !== 'daftar_informasi_publik' ? (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteCategoryConfirm(activeKategori)}
+                        className="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                        title="Hapus kategori informasi ini"
+                      >
+                        <Trash size={14} weight="bold" />
+                        <span>Hapus Kategori</span>
+                      </button>
+                    ) : (
+                      <span className="text-[11px] font-semibold text-slate-400 italic">
+                        Kategori inti matriks KIP terlindungi
+                      </span>
+                    )}
+
                     <button
                       disabled={savingId === `kat-${activeKategori.id}`}
                       onClick={() => handleSaveKategori(activeKategori)}
@@ -556,7 +752,7 @@ export default function AdminKontenPage() {
                         onClick={() => openAddDocModal(activeKategori.section_key)}
                         className="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 px-3.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
                       >
-                        <Plus weight="bold" size={14} /> Tambah Lampiran PDF
+                        <UploadSimple weight="bold" size={14} /> Unggah / Tambah Lampiran
                       </button>
                     </div>
 
@@ -612,19 +808,28 @@ export default function AdminKontenPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
                     <div>
                       <h3 className="font-extrabold text-sm text-slate-900">
-                        Berkas Dokumen PDF Google Drive
+                        Berkas Dokumen Informasi Publik
                       </h3>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Total {activeCategoryDocs.length} dokumen PDF terdaftar pada kategori ini.
+                        Total {activeCategoryDocs.length} berkas terdaftar pada kategori ini.
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => openAddDocModal(activeKategori.section_key)}
-                      className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
-                    >
-                      <Plus weight="bold" size={15} /> Tambah Dokumen PDF
-                    </button>
+                    <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+                      {driveConfigured && (
+                        <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold shadow-2xs">
+                          <CheckCircle size={15} weight="fill" className="text-emerald-500" />
+                          Google Drive Aktif
+                        </span>
+                      )}
+                      <button
+                        onClick={() => openAddDocModal(activeKategori.section_key)}
+                        className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <UploadSimple weight="bold" size={16} />
+                        <span>Unggah / Tambah Dokumen</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Search Dokumen */}
@@ -651,15 +856,15 @@ export default function AdminKontenPage() {
                       <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
                         <FilePdf size={24} weight="bold" />
                       </div>
-                      <h4 className="text-xs font-bold text-slate-800 mb-1">Belum Ada Dokumen PDF</h4>
+                      <h4 className="text-xs font-bold text-slate-800 mb-1">Belum Ada Berkas Dokumen</h4>
                       <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4 leading-relaxed">
-                        Kategori ini belum memiliki dokumen PDF yang diunggah. Klik tombol di bawah untuk menambahkan dokumen dari link Google Drive.
+                        Kategori ini belum memiliki dokumen yang diunggah. Klik tombol di bawah untuk mengunggah dokumen langsung ke Google Drive atau menautkan link manual.
                       </p>
                       <button
                         onClick={() => openAddDocModal(activeKategori.section_key)}
-                        className="text-xs font-bold text-[#0e4891] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                        className="text-xs font-bold text-[#0e4891] hover:underline inline-flex items-center gap-1.5 cursor-pointer bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl border border-blue-200 transition-colors"
                       >
-                        <Plus weight="bold" size={13} /> Tambah Dokumen Sekarang
+                        <UploadSimple weight="bold" size={14} /> Unggah Dokumen Sekarang
                       </button>
                     </div>
                   ) : (
@@ -719,74 +924,214 @@ export default function AdminKontenPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: TAMBAH DOKUMEN PDF */}
+      {/* MODAL: UNGGAH LANGSUNG KE GOOGLE DRIVE / TAUTKAN LINK MANUAL */}
       {/* ========================================================================= */}
       <Modal
         isOpen={activeModal === 'addDoc'}
-        onClose={() => setActiveModal(null)}
-        title="Tambah Dokumen PDF Baru"
+        onClose={() => {
+          if (!uploading) setActiveModal(null)
+        }}
+        title="Unggah / Tambah Dokumen Publik"
       >
-        <form onSubmit={handleAddDokumenSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Kategori Terpilih
-            </label>
-            <input
-              type="text"
-              disabled
-              value={formatCategoryLabel(targetKategoriKey)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-100 p-3 text-xs font-bold text-slate-600 cursor-not-allowed"
-            />
+        <div className="space-y-4">
+          {/* Target Kategori Badge */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                Kategori Tujuan
+              </span>
+              <span className="text-xs font-black text-slate-900">
+                {formatCategoryLabel(targetKategoriKey)}
+              </span>
+            </div>
+            {driveConfigured && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                <CheckCircle size={14} weight="fill" className="text-emerald-500" />
+                Drive Terhubung
+              </span>
+            )}
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Nama Dokumen <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="Contoh: SK Penunjukan PPID Pelaksana Tahun 2024"
-              value={docNama}
-              onChange={(e) => setDocNama(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-medium text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Link File Google Drive / PDF <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="url"
-              required
-              placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
-              value={docUrl}
-              onChange={(e) => setDocUrl(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-mono text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
-            />
-            <p className="text-[11px] text-slate-500 mt-1.5">
-              Pastikan pengaturan tautan Google Drive disetel ke <strong>"Siapa saja yang memiliki link dapat melihat"</strong>.
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+          {/* TAB PILIHAN METODE */}
+          <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-xl">
             <button
               type="button"
-              onClick={() => setActiveModal(null)}
-              className="px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+              onClick={() => setUploadMethod('upload')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                uploadMethod === 'upload'
+                  ? 'bg-white text-[#0e4891] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
-              Batal
+              <UploadSimple size={16} weight="bold" />
+              <span>Unggah Langsung (Drive API)</span>
             </button>
             <button
-              type="submit"
-              disabled={savingId === 'add-doc'}
-              className="bg-[#0e4891] hover:bg-[#0a366f] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+              type="button"
+              onClick={() => setUploadMethod('link')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                uploadMethod === 'link'
+                  ? 'bg-white text-[#0e4891] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
-              {savingId === 'add-doc' ? 'Menyimpan...' : 'Simpan Dokumen'}
+              <LinkSimple size={16} weight="bold" />
+              <span>Tautkan Link Manual</span>
             </button>
           </div>
-        </form>
+
+          {/* TAB 1: UNGGAH LANGSUNG KE GOOGLE DRIVE */}
+          {uploadMethod === 'upload' ? (
+            <form onSubmit={handleUploadDriveSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Pilih File Dokumen <span className="text-rose-500">*</span>
+                </label>
+                
+                <label className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-[#0e4891] rounded-2xl bg-slate-50/60 hover:bg-blue-50/30 transition-all cursor-pointer text-center group">
+                  <input
+                    type="file"
+                    required
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+                    onChange={(e) => handleFileSelected(e.target.files?.[0] || null)}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+
+                  {uploadFile ? (
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-xl bg-blue-100 text-[#0e4891] flex items-center justify-center mb-2">
+                        <FileText size={28} weight="bold" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-900 max-w-xs truncate" title={uploadFile.name}>
+                        {uploadFile.name}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                        {(uploadFile.size / 1024 / 1024).toFixed(2)} MB • Klik untuk ganti berkas
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 text-[#0e4891] group-hover:bg-blue-100 flex items-center justify-center mb-2 transition-colors">
+                        <CloudArrowUp size={28} weight="bold" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-800">
+                        Klik untuk memilih file dokumen
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+                        Mendukung PDF, Word (DOC/DOCX), Excel (XLS/XLSX) hingga maks. 25 MB.
+                      </p>
+                    </div>
+                  )}
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Nama Dokumen Publik <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: SK Pelayanan Informasi Publik 2024"
+                  value={docNama}
+                  onChange={(e) => setDocNama(e.target.value)}
+                  disabled={uploading}
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-medium text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs disabled:bg-slate-100"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Nama ini yang akan ditampilkan kepada publik di portal PPID.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 flex items-start gap-2.5">
+                <Info size={16} weight="bold" className="text-[#0e4891] shrink-0 mt-0.5" />
+                <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                  File akan otomatis diunggah langsung ke akun <strong>Google Drive PPID</strong> pada folder <code>ppid-digital</code> dan izin baca publik disetel secara otomatis.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploading || !uploadFile}
+                  className="bg-[#0e4891] hover:bg-[#0a366f] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {uploading ? (
+                    <>
+                      <CircleNotch size={15} weight="bold" className="animate-spin" />
+                      <span>Mengunggah ke Drive...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadSimple size={15} weight="bold" />
+                      <span>Unggah Langsung ke Drive</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* TAB 2: FORM TAUTKAN LINK MANUAL */
+            <form onSubmit={handleAddDokumenSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Nama Dokumen <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: SK Penunjukan PPID Pelaksana Tahun 2024"
+                  value={docNama}
+                  onChange={(e) => setDocNama(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-medium text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Link File Google Drive / URL Dokumen <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
+                  value={docUrl}
+                  onChange={(e) => setDocUrl(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-mono text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
+                />
+                <p className="text-[11px] text-slate-500 mt-1.5">
+                  Pastikan pengaturan tautan Google Drive disetel ke <strong>&quot;Siapa saja yang memiliki link dapat melihat&quot;</strong>.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingId === 'add-doc'}
+                  className="bg-[#0e4891] hover:bg-[#0a366f] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {savingId === 'add-doc' ? 'Menyimpan...' : 'Simpan Tautan Dokumen'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </Modal>
 
       {/* ========================================================================= */}
@@ -838,6 +1183,78 @@ export default function AdminKontenPage() {
               className="bg-[#0e4891] hover:bg-[#0a366f] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
             >
               {savingId?.startsWith('edit-doc-') ? 'Menyimpan...' : 'Perbarui Dokumen'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL: TAMBAH KATEGORI INFORMASI BARU */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={activeModal === 'addCategory'}
+        onClose={() => setActiveModal(null)}
+        title="Tambah Kategori Informasi Publik Baru"
+      >
+        <form onSubmit={handleCreateCategory} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Judul Kategori <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Contoh: Regulasi Daerah & Kebijakan Teknis"
+              value={newCategoryJudul}
+              onChange={(e) => setNewCategoryJudul(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-medium text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Slug URL / Kategori Key (Opsional)
+            </label>
+            <input
+              type="text"
+              placeholder="Contoh: regulasi_daerah (otomatis dari judul jika kosong)"
+              value={newCategoryKey}
+              onChange={(e) => setNewCategoryKey(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-mono text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Halaman publik kategori ini akan dapat diakses di: <code className="text-slate-600 font-mono">/informasi/[slug]</code>
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Deskripsi Pengantar <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={3}
+              required
+              placeholder="Jelaskan ringkasan informasi yang termuat pada kategori ini..."
+              value={newCategoryDeskripsi}
+              onChange={(e) => setNewCategoryDeskripsi(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-medium text-slate-900 focus:border-[#0e4891] focus:ring-2 focus:ring-[#0e4891]/20 focus:outline-none transition-all shadow-2xs leading-relaxed"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setActiveModal(null)}
+              className="px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={submittingCategory}
+              className="bg-[#0e4891] hover:bg-[#0a366f] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+            >
+              {submittingCategory ? 'Menyimpan...' : 'Simpan Kategori'}
             </button>
           </div>
         </form>

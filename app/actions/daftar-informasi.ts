@@ -359,3 +359,156 @@ export async function deleteDaftarInformasiItem(id: number | bigint) {
     return { success: false, error: err?.message || 'Gagal menghapus baris data.' }
   }
 }
+
+// ============================================================================
+// MANAJEMEN KOLOM TAHUN DINAMIS (TAMBAH / EDIT / HAPUS)
+// ============================================================================
+
+export async function addTahunToTable(
+  tableId: number | bigint,
+  newYear: string,
+  applyToAllTables: boolean = false
+) {
+  try {
+    const { supabase } = await checkIsAdmin()
+    const trimmedYear = newYear.trim()
+
+    if (!trimmedYear) {
+      return { success: false, error: 'Tahun tidak boleh kosong.' }
+    }
+
+    let query = supabase.from('daftar_informasi_item').select('id, tabel_id, links')
+    if (!applyToAllTables) {
+      query = query.eq('tabel_id', tableId)
+    }
+
+    const { data: items, error: fetchErr } = await query
+    if (fetchErr) throw fetchErr
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const links = (item.links || {}) as Record<string, string>
+        if (!(trimmedYear in links)) {
+          const updatedLinks = { ...links, [trimmedYear]: '#' }
+          const { error: updErr } = await supabase
+            .from('daftar_informasi_item')
+            .update({
+              links: updatedLinks,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', item.id)
+          if (updErr) throw updErr
+        }
+      }
+    }
+
+    revalidatePath('/admin/daftar-informasi')
+    revalidatePath('/informasi/[kategori]', 'page')
+    return { success: true }
+  } catch (err: any) {
+    console.error('[addTahunToTable Error]', err)
+    return { success: false, error: err?.message || 'Gagal menambahkan tahun.' }
+  }
+}
+
+export async function editTahunInTable(
+  tableId: number | bigint,
+  oldYear: string,
+  newYear: string,
+  applyToAllTables: boolean = false
+) {
+  try {
+    const { supabase } = await checkIsAdmin()
+    const trimmedOld = oldYear.trim()
+    const trimmedNew = newYear.trim()
+
+    if (!trimmedNew) {
+      return { success: false, error: 'Tahun baru tidak boleh kosong.' }
+    }
+    if (trimmedOld === trimmedNew) {
+      return { success: true }
+    }
+
+    let query = supabase.from('daftar_informasi_item').select('id, tabel_id, links')
+    if (!applyToAllTables) {
+      query = query.eq('tabel_id', tableId)
+    }
+
+    const { data: items, error: fetchErr } = await query
+    if (fetchErr) throw fetchErr
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const links = (item.links || {}) as Record<string, string>
+        if (trimmedOld in links) {
+          const val = links[trimmedOld] || '#'
+          const updatedLinks = { ...links, [trimmedNew]: val }
+          delete updatedLinks[trimmedOld]
+          const { error: updErr } = await supabase
+            .from('daftar_informasi_item')
+            .update({
+              links: updatedLinks,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', item.id)
+          if (updErr) throw updErr
+        }
+      }
+    }
+
+    revalidatePath('/admin/daftar-informasi')
+    revalidatePath('/informasi/[kategori]', 'page')
+    return { success: true }
+  } catch (err: any) {
+    console.error('[editTahunInTable Error]', err)
+    return { success: false, error: err?.message || 'Gagal mengubah tahun.' }
+  }
+}
+
+export async function deleteTahunFromTable(
+  tableId: number | bigint,
+  yearToDelete: string,
+  applyToAllTables: boolean = false
+) {
+  try {
+    const { supabase } = await checkIsAdmin()
+    const trimmedYear = yearToDelete.trim()
+
+    if (!trimmedYear) {
+      return { success: false, error: 'Tahun tidak boleh kosong.' }
+    }
+
+    let query = supabase.from('daftar_informasi_item').select('id, tabel_id, links')
+    if (!applyToAllTables) {
+      query = query.eq('tabel_id', tableId)
+    }
+
+    const { data: items, error: fetchErr } = await query
+    if (fetchErr) throw fetchErr
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const links = (item.links || {}) as Record<string, string>
+        if (trimmedYear in links) {
+          const updatedLinks = { ...links }
+          delete updatedLinks[trimmedYear]
+          const { error: updErr } = await supabase
+            .from('daftar_informasi_item')
+            .update({
+              links: updatedLinks,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', item.id)
+          if (updErr) throw updErr
+        }
+      }
+    }
+
+    revalidatePath('/admin/daftar-informasi')
+    revalidatePath('/informasi/[kategori]', 'page')
+    return { success: true }
+  } catch (err: any) {
+    console.error('[deleteTahunFromTable Error]', err)
+    return { success: false, error: err?.message || 'Gagal menghapus tahun.' }
+  }
+}

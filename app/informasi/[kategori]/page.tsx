@@ -24,9 +24,21 @@ import DaftarInformasiPublikView from '@/components/DaftarInformasiPublikView'
 import { getDaftarInformasiTables } from '@/app/actions/daftar-informasi'
 import { DaftarInformasiTable } from '@/app/informasi/data/daftarInformasiDefault'
 
-export const dynamicParams = false // Karena kita tahu persis ada 8 kategori, kategori lain akan 404
+export const dynamicParams = true // Mengizinkan kategori dinamis
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data } = await supabase.from('konten_landing').select('section_key')
+    if (data && data.length > 0) {
+      return data.map((d) => ({ kategori: d.section_key }))
+    }
+  } catch (e) {
+    // fallback
+  }
   return [
     { kategori: 'daftar_informasi_publik' },
     { kategori: 'surat_keputusan' },
@@ -47,20 +59,7 @@ export default async function KategoriInformasiPage({
   const resolvedParams = await params
   const kategoriKey = resolvedParams.kategori
   
-  const validCategories = [
-    'daftar_informasi_publik',
-    'surat_keputusan',
-    'visi_misi',
-    'sop_spm',
-    'pelayanan',
-    'penghargaan',
-    'permohonan_informasi',
-    'dokumen_program_kegiatan'
-  ]
-  
-  if (!validCategories.includes(kategoriKey)) {
-    notFound()
-  }
+  // Validasi kategori dinamis dari database
 
   // Gunakan standard client agar Next.js tidak membaca cookies() dan menggagalkan SSG
   const supabase = createClient(
@@ -74,6 +73,10 @@ export default async function KategoriInformasiPage({
     .select('judul, isi_teks')
     .eq('section_key', kategoriKey)
     .single()
+
+  if (!kontenData) {
+    notFound()
+  }
 
   // Ambil daftar dokumen
   const { data: dokumenList } = await supabase

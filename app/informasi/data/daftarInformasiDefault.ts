@@ -15,7 +15,39 @@ export interface DaftarInformasiTable {
   items: DaftarInformasiItem[]
 }
 
-export const TAHUN_LIST = ['2022', '2023', '2024', '2025', '2026']
+export const DEFAULT_TAHUN_LIST = ['2022', '2023', '2024', '2025', '2026']
+export const TAHUN_LIST = DEFAULT_TAHUN_LIST
+
+/**
+ * Mengambil daftar tahun yang ada pada sebuah tabel secara dinamis berdasarkan key di dalam links.
+ * Jika tabel belum memiliki data atau items kosong, fallback ke DEFAULT_TAHUN_LIST.
+ */
+export function getTableYears(table?: { items?: { links?: Record<string, string> }[] } | null): string[] {
+  if (!table || !table.items || table.items.length === 0) {
+    return [...DEFAULT_TAHUN_LIST]
+  }
+
+  const set = new Set<string>()
+  table.items.forEach((item) => {
+    if (item.links && typeof item.links === 'object') {
+      Object.keys(item.links).forEach((year) => {
+        const trimmed = year.trim()
+        if (trimmed) set.add(trimmed)
+      })
+    }
+  })
+
+  if (set.size === 0) {
+    return [...DEFAULT_TAHUN_LIST]
+  }
+
+  return Array.from(set).sort((a, b) => {
+    const numA = parseInt(a, 10)
+    const numB = parseInt(b, 10)
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+    return a.localeCompare(b)
+  })
+}
 
 export const DAFTAR_INFORMASI_DEFAULT: DaftarInformasiTable[] = [
   {

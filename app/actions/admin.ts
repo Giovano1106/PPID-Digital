@@ -231,6 +231,90 @@ export async function updateKontenKategori(id: number, judul: string, isi_teks: 
   }
 }
 
+export async function addKontenKategori(judul: string, isi_teks: string, customKey?: string) {
+  try {
+    const { supabase, user } = await checkIsAdmin()
+    const cleanJudul = judul.trim()
+    const cleanIsi = isi_teks.trim()
+
+    if (!cleanJudul) {
+      return { success: false, error: 'Judul kategori tidak boleh kosong.' }
+    }
+
+    let sectionKey = customKey?.trim()
+      ? customKey.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^\w\-]+/g, '')
+      : cleanJudul.toLowerCase().replace(/\s+/g, '_').replace(/[^\w\-]+/g, '')
+
+    if (!sectionKey) {
+      sectionKey = `kategori_${Date.now()}`
+    }
+
+    // Periksa apakah section_key sudah ada
+    const { data: existing } = await supabase
+      .from('konten_landing')
+      .select('id')
+      .eq('section_key', sectionKey)
+      .maybeSingle()
+
+    if (existing) {
+      sectionKey = `${sectionKey}_${Date.now().toString().slice(-4)}`
+    }
+
+    const { data, error } = await supabase
+      .from('konten_landing')
+      .insert({
+        section_key: sectionKey,
+        judul: cleanJudul,
+        isi_teks: cleanIsi || `Kumpulan dokumen dan informasi publik terkait ${cleanJudul}.`,
+        updated_by: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    revalidatePath('/admin/konten')
+    revalidatePath('/', 'layout')
+    revalidatePath('/informasi/[kategori]', 'page')
+    return { success: true, data }
+  } catch (error: any) {
+    console.error('[Admin Action Error: addKontenKategori]', error)
+    return { success: false, error: error?.message || 'Gagal menambahkan kategori baru.' }
+  }
+}
+
+export async function deleteKontenKategori(id: number, section_key: string) {
+  try {
+    const { supabase } = await checkIsAdmin()
+
+    if (section_key === 'daftar_informasi_publik') {
+      return {
+        success: false,
+        error: 'Kategori "Daftar Informasi Publik" adalah kategori inti sistem matriks dan tidak dapat dihapus.',
+      }
+    }
+
+    // Bersihkan semua dokumen terkait kategori ini terlebih dahulu
+    await supabase.from('dokumen_publik').delete().eq('kategori_key', section_key)
+
+    const { error } = await supabase
+      .from('konten_landing')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+
+    revalidatePath('/admin/konten')
+    revalidatePath('/', 'layout')
+    revalidatePath('/informasi/[kategori]', 'page')
+    return { success: true }
+  } catch (error: any) {
+    console.error('[Admin Action Error: deleteKontenKategori]', error)
+    return { success: false, error: error?.message || 'Gagal menghapus kategori.' }
+  }
+}
+
 export async function addDokumen(kategori_key: string, nama_dokumen: string, file_url: string) {
   try {
     const { supabase } = await checkIsAdmin()

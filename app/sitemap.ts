@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next'
+import { createClient } from '@supabase/supabase-js'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ppid-digital.vercel.app'
   const currentDate = new Date()
 
-  const categories = [
+  let categories = [
     'daftar_informasi_publik',
     'surat_keputusan',
     'visi_misi',
@@ -14,6 +15,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     'permohonan_informasi',
     'dokumen_program_kegiatan',
   ]
+
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data } = await supabase.from('konten_landing').select('section_key')
+    if (data && data.length > 0) {
+      categories = data.map((d) => d.section_key)
+    }
+  } catch (e) {
+    // fallback
+  }
 
   const categoryEntries: MetadataRoute.Sitemap = categories.map((slug) => ({
     url: `${baseUrl}/informasi/${slug}`,
@@ -48,6 +62,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.2,
     },
+    {
+      url: `${baseUrl}/berkala`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/serta-merta`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/setiap-saat`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/dikecualikan`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
   ]
 }
-
