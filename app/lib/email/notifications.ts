@@ -1,14 +1,12 @@
-'use server'
-
 import { createClient } from '@/app/lib/supabase/server'
 import { sendEmail, getAdminNotificationEmail, getAppUrl } from '@/app/lib/email/mailer'
 import { getEmailTemplateByKey } from '@/app/lib/email/template-store'
-import { compileEmailHtml } from '@/app/lib/email/template-engine'
+import { compileEmailHtml, EmailRenderContext } from '@/app/lib/email/template-engine'
 
 function formatDateIndo(dateStr: string | null | undefined): string {
   if (!dateStr) return '-'
   const parts = dateStr.split('T')[0].split('-').map(Number)
-  if (parts.length === 3) {
+  if (parts.length === 3 && parts.every((n) => !Number.isNaN(n))) {
     return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
@@ -19,18 +17,14 @@ function formatDateIndo(dateStr: string | null | undefined): string {
 }
 
 /**
- * Mengirim notifikasi email saat ada permohonan baru:
- * 1. Ke ADMIN (memberi tahu ada berkas baru masuk)
- * 2. Ke PEMOHON (sebagai tanda terima resmi registrasi permohonan)
- * Menggunakan template dinamis yang dapat dikelola via CMS Admin
+ * Mengirim notifikasi email internal saat ada permohonan baru (hanya dipanggil dari Server Action terotentikasi).
  */
-export async function sendNewPermohonanNotification(permohonanId: number) {
+export async function dispatchNewPermohonanNotification(permohonanId: number) {
   try {
     const supabase = await createClient()
     const appUrl = getAppUrl()
     const adminEmail = getAdminNotificationEmail()
 
-    // Ambil detail permohonan beserta data profil pemohon
     const { data: item, error } = await supabase
       .from('permohonan')
       .select(`
@@ -57,7 +51,6 @@ export async function sendNewPermohonanNotification(permohonanId: number) {
     const tanggalPengajuan = formatDateIndo(item.created_at)
     const deadlineAwalFormatted = formatDateIndo(item.deadline_awal)
 
-    // 1. Kirim Notifikasi ke ADMIN
     if (adminEmail) {
       const adminTpl = await getEmailTemplateByKey('pengajuan_baru_admin')
       const compiledAdmin = compileEmailHtml(adminTpl, {
@@ -81,7 +74,6 @@ export async function sendNewPermohonanNotification(permohonanId: number) {
       }).catch((err) => console.error('[Email Admin Error]', err))
     }
 
-    // 2. Kirim Tanda Terima ke PEMOHON (jika ada email pemohon)
     if (pemohonEmail) {
       const pemohonTpl = await getEmailTemplateByKey('pengajuan_baru_pemohon')
       const compiledPemohon = compileEmailHtml(pemohonTpl, {
@@ -102,21 +94,19 @@ export async function sendNewPermohonanNotification(permohonanId: number) {
     }
 
     return { success: true }
-  } catch (err: any) {
-    console.error('[sendNewPermohonanNotification Exception]', err)
-    return { success: false, error: err?.message }
+  } catch (err: unknown) {
+    console.error('[dispatchNewPermohonanNotification Exception]', err)
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Gagal mengirim notifikasi email',
+    }
   }
 }
 
 /**
- * Mengirim notifikasi email ke pemohon saat status permohonan diubah oleh Admin:
- * - diproses
- * - dijawab
- * - perpanjang (SLA +7 hari)
- * - tolak
- * Menggunakan template dinamis yang dapat dikelola via CMS Admin
+ * Mengirim notifikasi email internal saat status permohonan diubah oleh Admin (hanya dipanggil dari Server Action Admin).
  */
-export async function sendStatusUpdateNotification(
+export async function dispatchStatusUpdateNotification(
   permohonanId: number,
   status: 'diproses' | 'dijawab' | 'perpanjang' | 'tolak',
   extraData?: {
@@ -150,12 +140,11 @@ export async function sendStatusUpdateNotification(
     const pemohonNama = item.profiles?.nama || 'Pemohon Informasi'
 
     if (!pemohonEmail) {
-      console.log('[Email Status Update] Pemohon tidak memiliki email:', permohonanId)
       return { success: true, message: 'No applicant email' }
     }
 
     let templateKey = ''
-    const renderCtx: any = {
+    const renderCtx: EmailRenderContext = {
       id: item.id,
       nama: pemohonNama,
       jenis_informasi: item.jenis_informasi,
@@ -180,11 +169,13 @@ export async function sendStatusUpdateNotification(
         renderCtx.deadline_akhir = formatDateIndo(extraData?.deadlineAkhir || item.deadline_akhir)
         break
 
-      case 'tolak':
+      case 'tolak': {
         templateKey = 'penolakan'
-        renderCtx.alasan =
+        const rawAlasan =
           extraData?.alasan || item.jawaban_admin || 'Tidak memenuhi ketentuan perundang-undangan.'
+        renderCtx.alasan = rawAlasan.replace(/^\[DITOLAK\]\s*Alasan:\s*/i, '').trim()
         break
+      }
     }
 
     if (templateKey) {
@@ -199,8 +190,11 @@ export async function sendStatusUpdateNotification(
     }
 
     return { success: true }
-  } catch (err: any) {
-    console.error('[sendStatusUpdateNotification Exception]', err)
-    return { success: false, error: err?.message }
+  } catch (err: unknown) {
+    console.error('[dispatchStatusUpdateNotification Exception]', err)
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Gagal mengirim notifikasi status',
+    }
   }
 }

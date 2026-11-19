@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Warning } from '@phosphor-icons/react'
 import { createClient } from '@/app/lib/supabase/client'
-import { getEmailByNik } from '@/app/actions/auth-profile'
+import { signInWithEmailOrNik } from '@/app/actions/auth-profile'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -49,59 +49,22 @@ export default function LoginPage() {
     }
   }
 
-  // 2. Login menggunakan Form Konvensional (Email atau NIK + Kata Sandi)
+  // 2. Login menggunakan Form Konvensional (Email atau NIK + Kata Sandi via Server Action)
   const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setErrorMsg('')
 
-    const rawInput = identifier.trim()
-    let targetEmail = rawInput
+    const res = await signInWithEmailOrNik(identifier, password)
 
-    // Cek apakah input berupa NIK (16 digit angka, mengabaikan spasi/titik jika bukan format email)
-    const digitsOnly = rawInput.replace(/\D/g, '')
-    const isNik = digitsOnly.length === 16 && !rawInput.includes('@')
-
-    if (isNik) {
-      // Ambil email yang terikat dengan NIK melalui Server Action aman
-      const res = await getEmailByNik(digitsOnly)
-      if (!res.success || !res.email) {
-        setErrorMsg('NIK tidak ditemukan dalam sistem. Pastikan NIK sudah didaftarkan.')
-        setLoading(false)
-        return
-      }
-
-      targetEmail = res.email
-    }
-
-    const { data: authData, error } = await supabase.auth.signInWithPassword({
-      email: targetEmail,
-      password,
-    })
-
-    if (error) {
-      setErrorMsg('Email/NIK atau kata sandi tidak cocok. Silakan periksa kembali.')
+    if (!res.success) {
+      setErrorMsg(res.error || 'Email/NIK atau kata sandi tidak cocok. Silakan periksa kembali.')
       setLoading(false)
-    } else {
-      // Cek role user setelah login berhasil
-      if (authData?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', authData.user.id)
-          .maybeSingle()
-
-        if (profile?.role === 'admin') {
-          router.push('/admin')
-        } else {
-          router.push('/permohonan-saya')
-        }
-      } else {
-        router.push('/permohonan-saya')
-      }
-
-      router.refresh()
+      return
     }
+
+    router.push(res.redirectTo || '/permohonan-saya')
+    router.refresh()
   }
 
   return (

@@ -46,6 +46,13 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions): Promis
       return { success: true, mocked: true }
     }
 
+    const safeTo = to.replace(/[\r\n]+/g, '').trim()
+    const safeSubject = subject.replace(/[\r\n]+/g, ' ').trim()
+
+    if (!safeTo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(safeTo)) {
+      return { success: false, error: 'Alamat email tujuan tidak valid' }
+    }
+
     const transporter = nodemailer.createTransport({
       host,
       port,
@@ -58,16 +65,17 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions): Promis
 
     const info = await transporter.sendMail({
       from,
-      to,
-      subject,
+      to: safeTo,
+      subject: safeSubject,
       html,
     })
 
-    console.log(`[PPID Email Service] Email terkirim ke: ${to} (Message ID: ${info.messageId})`)
+    console.log(`[PPID Email Service] Email terkirim ke: ${safeTo} (Message ID: ${info.messageId})`)
     return { success: true }
-  } catch (error: any) {
-    console.error(`[PPID Email Service Error] Gagal mengirim email ke ${to}:`, error?.message || error)
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Gagal mengirim email'
+    console.error(`[PPID Email Service Error] Gagal mengirim email ke ${to}:`, msg)
     // Return graceful fail agar tidak menghentikan alur utama penyimpanan permohonan
-    return { success: false, error: error?.message || 'Gagal mengirim email' }
+    return { success: false, error: msg }
   }
 }

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/app/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { sanitizeUserError } from '@/app/lib/security'
 
 export interface InputSurveiKepuasan {
   permohonanId: number
@@ -152,6 +153,8 @@ export async function submitSurveiKepuasan(payload: InputSurveiKepuasan) {
       }
     }
 
+    const cleanKritikSaran = payload.kritikSaran?.trim().slice(0, 500) || null
+
     // 4. Masukkan Data ke Tabel survei_kepuasan
     const { error: insertError } = await supabase
       .from('survei_kepuasan')
@@ -162,7 +165,7 @@ export async function submitSurveiKepuasan(payload: InputSurveiKepuasan) {
         kecepatan_layanan: payload.kecepatanLayanan,
         kesesuaian_informasi: payload.kesesuaianInformasi,
         kemudahan_prosedur: payload.kemudahanProsedur,
-        kritik_saran: payload.kritikSaran?.trim() || null,
+        kritik_saran: cleanKritikSaran,
       })
 
     if (insertError) {
@@ -174,7 +177,7 @@ export async function submitSurveiKepuasan(payload: InputSurveiKepuasan) {
       if (insertError.code === '42P01') {
         return {
           success: false,
-          error: 'Tabel survei belum diterapkan di database Supabase. Silakan jalankan file migrasi 0004_survei_kepuasan.sql.',
+          error: 'Layanan survei sedang dalam pemeliharaan. Silakan hubungi petugas PPID.',
         }
       }
       throw insertError
@@ -192,16 +195,23 @@ export async function submitSurveiKepuasan(payload: InputSurveiKepuasan) {
     console.error('[submitSurveiKepuasan Error]', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Terjadi gangguan saat menyimpan hasil survei. Silakan coba kembali.',
+      error: sanitizeUserError(
+        error,
+        'Terjadi gangguan saat menyimpan hasil survei. Silakan coba kembali.'
+      ),
     }
   }
 }
 
 /**
- * Cek Apakah Permohonan Tertentu Sudah Pernah Diisi Surveinya
+ * Cek Apakah Permohonan Tertentu Sudah Pernah Diisi Surveinya (dengan proteksi kepemilikan/admin)
  */
 export async function getSurveiByPermohonanId(permohonanId: number) {
   try {
+    if (!Number.isInteger(permohonanId) || permohonanId <= 0) {
+      return { success: false, error: 'ID Permohonan tidak valid.', data: null }
+    }
+
     const supabase = await createClient()
     const {
       data: { user },
@@ -211,11 +221,22 @@ export async function getSurveiByPermohonanId(permohonanId: number) {
       return { success: false, error: 'Unauthorized', data: null }
     }
 
-    const { data, error } = await supabase
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    let query = supabase
       .from('survei_kepuasan')
       .select('*')
       .eq('permohonan_id', permohonanId)
-      .maybeSingle()
+
+    if (profile?.role !== 'admin') {
+      query = query.eq('user_id', user.id)
+    }
+
+    const { data, error } = await query.maybeSingle()
 
     if (error) {
       if (error.code === '42P01') {
@@ -227,7 +248,11 @@ export async function getSurveiByPermohonanId(permohonanId: number) {
     return { success: true, data }
   } catch (error: unknown) {
     console.error('[getSurveiByPermohonanId Error]', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Gagal memuat data survei', data: null }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Gagal memuat data survei.'),
+      data: null,
+    }
   }
 }
 
@@ -386,7 +411,7 @@ export async function getStatistikIKMAdmin(filters?: { startDate?: string; endDa
     console.error('[getStatistikIKMAdmin Error]', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal memuat rekapitulasi data survei kepuasan',
+      error: sanitizeUserError(error, 'Gagal memuat rekapitulasi data survei kepuasan.'),
       data: null,
     }
   }

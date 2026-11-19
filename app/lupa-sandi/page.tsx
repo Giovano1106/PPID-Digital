@@ -4,11 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Warning, CheckCircle } from '@phosphor-icons/react'
 import Image from 'next/image'
-import { createClient } from '@/app/lib/supabase/client'
+import { requestPasswordReset } from '@/app/actions/auth-profile'
 
 export default function LupaSandiPage() {
-  const supabase = createClient()
-
   const [identifier, setIdentifier] = useState('') // Bisa Email atau NIK
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -20,38 +18,19 @@ export default function LupaSandiPage() {
     setErrorMsg('')
     setSuccessMsg('')
 
-    let targetEmail = identifier.trim()
+    const res = await requestPasswordReset(identifier)
 
-    // Cek apakah input berupa NIK (16 digit angka)
-    const isNik = /^\d{16}$/.test(targetEmail)
-
-    if (isNik) {
-      // Cari email yang terikat dengan NIK tersebut via RPC security definer yang aman
-      const { data: emailData, error: rpcError } = await supabase.rpc('get_email_by_nik', {
-        p_nik: targetEmail,
-      })
-
-      if (rpcError || !emailData) {
-        setErrorMsg('NIK tidak ditemukan dalam sistem. Silakan periksa kembali.')
-        setLoading(false)
-        return
-      }
-
-      targetEmail = emailData
+    if (!res.success) {
+      setErrorMsg(res.error || 'Gagal memproses permintaan pemulihan kata sandi.')
+      setLoading(false)
+      return
     }
 
-    // Mengirim tautan pemulihan kata sandi
-    const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
-      redirectTo: `${window.location.origin}/api/auth/callback?next=/update-sandi`,
-    })
-
-    if (error) {
-      setErrorMsg('Gagal mengirim tautan. Pastikan email terdaftar atau coba lagi nanti.')
-      setLoading(false)
-    } else {
-      setSuccessMsg('Tautan pemulihan berhasil dikirim! Silakan periksa kotak masuk email Anda.')
-      setLoading(false)
-    }
+    setSuccessMsg(
+      res.message ||
+        'Jika email atau NIK tersebut terdaftar, tautan pemulihan kata sandi telah dikirim ke kotak masuk email Anda.'
+    )
+    setLoading(false)
   }
 
   return (

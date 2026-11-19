@@ -3,15 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/app/lib/supabase/client'
 import { ArrowLeft, Warning, Info, FileText } from '@phosphor-icons/react'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast, { ToastType } from '@/components/Toast'
-import { sendNewPermohonanNotification } from '@/app/actions/email'
+import { submitPermohonanInformasi } from '@/app/actions/permohonan'
 
 export default function FormPermohonanPage() {
   const router = useRouter()
-  const supabase = createClient()
 
   const [form, setForm] = useState({
     jenis_informasi: 'Dokumen Program dan Kegiatan',
@@ -44,67 +42,26 @@ export default function FormPermohonanPage() {
     setLoading(true)
     setErrorMsg('')
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const res = await submitPermohonanInformasi(form)
+    setShowConfirmModal(false)
 
-    if (!user) {
-      setErrorMsg('Sesi Anda telah berakhir. Silakan login kembali.')
+    if (!res.success) {
+      setErrorMsg(
+        res.error ||
+          'Gagal mengirim permohonan. Terjadi kesalahan sistem, silakan coba beberapa saat lagi.'
+      )
       setLoading(false)
-      setShowConfirmModal(false)
       return
     }
 
-    // Hitung SLA 10 Hari Kerja dari hari ini
-    const now = new Date()
-    let count = 0
-    const deadline = new Date(now)
-    while (count < 10) {
-      deadline.setDate(deadline.getDate() + 1)
-      const day = deadline.getDay()
-      if (day !== 0 && day !== 6) {
-        count++
-      }
-    }
-    const deadlineAwalStr = deadline.toISOString().split('T')[0]
-
-    // Simpan permohonan ke Database sesuai skema PRD
-    const { data: insertedData, error: insertError } = await supabase
-      .from('permohonan')
-      .insert({
-        user_id: user.id,
-        jenis_informasi: form.jenis_informasi,
-        deskripsi: form.deskripsi,
-        cara_memperoleh: form.cara_memperoleh,
-        status: 'diajukan',
-        deadline_awal: deadlineAwalStr,
-      })
-      .select('id')
-      .single()
-
-    setShowConfirmModal(false)
-
-    if (insertError) {
-      console.error('[Submit Error]', insertError)
-      setErrorMsg('Gagal mengirim permohonan. Terjadi kesalahan sistem, silakan coba beberapa saat lagi.')
-      setLoading(false)
-    } else {
-      // Kirim notifikasi email ke Admin dan Pemohon (asynchronous, non-blocking)
-      if (insertedData?.id) {
-        sendNewPermohonanNotification(insertedData.id).catch((err) => {
-          console.error('[Email Notification Error] sendNewPermohonanNotification:', err)
-        })
-      }
-
-      setToast({
-        message: 'Permohonan informasi publik berhasil diajukan!',
-        type: 'success',
-      })
-      setTimeout(() => {
-        router.push('/permohonan-saya')
-        router.refresh()
-      }, 1500)
-    }
+    setToast({
+      message: 'Permohonan informasi publik berhasil diajukan!',
+      type: 'success',
+    })
+    setTimeout(() => {
+      router.push('/permohonan-saya')
+      router.refresh()
+    }, 1500)
   }
 
   return (

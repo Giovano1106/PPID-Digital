@@ -6,8 +6,25 @@ import { revalidatePath } from 'next/cache'
 import {
   DAFTAR_INFORMASI_DEFAULT,
   DaftarInformasiTable,
-  DaftarInformasiItem
 } from '@/app/informasi/data/daftarInformasiDefault'
+import { isSafePublicUrl, sanitizeUserError } from '@/app/lib/security'
+
+function validateLinksMap(links: Record<string, string>): string | null {
+  for (const [tahun, url] of Object.entries(links || {})) {
+    if (!isSafePublicUrl(url, { allowRelativePath: true, allowHashPlaceholder: true })) {
+      return `Tautan untuk tahun "${tahun}" tidak valid. Gunakan URL http://, https://, path /, atau #. `
+    }
+  }
+  return null
+}
+
+function validateYearLabel(year: string): string | null {
+  const trimmed = year.trim()
+  if (!trimmed || trimmed.length > 20 || !/^[a-zA-Z0-9\-\s]+$/.test(trimmed)) {
+    return 'Label tahun harus terdiri dari 1 sampai 20 karakter huruf/angka.'
+  }
+  return null
+}
 
 function getPublicClient() {
   return createPublicSupabaseClient(
@@ -113,13 +130,13 @@ export async function getDaftarInformasiTables(): Promise<{
       data: fullTables,
       isFallback: false,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Daftar Informasi Action Catch]', err)
     return {
       success: true,
       data: DAFTAR_INFORMASI_DEFAULT,
       isFallback: true,
-      error: err?.message,
+      error: 'Gagal memuat tabel dari database, menampilkan data standar.',
     }
   }
 }
@@ -131,7 +148,6 @@ export async function seedInitialDaftarInformasi() {
   try {
     const { supabase } = await checkIsAdmin()
 
-    // 1. Cek apakah sudah ada data tabel
     const { count } = await supabase
       .from('daftar_informasi_tabel')
       .select('*', { count: 'exact', head: true })
@@ -143,7 +159,6 @@ export async function seedInitialDaftarInformasi() {
       }
     }
 
-    // 2. Lakukan iterasi insert tabel beserta item-itemnya
     for (const tbl of DAFTAR_INFORMASI_DEFAULT) {
       const { data: newTbl, error: tblErr } = await supabase
         .from('daftar_informasi_tabel')
@@ -177,11 +192,11 @@ export async function seedInitialDaftarInformasi() {
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Seed Daftar Informasi Error]', err)
     return {
       success: false,
-      error: err?.message || 'Terjadi kesalahan saat menginisialisasi data.',
+      error: sanitizeUserError(err, 'Terjadi kesalahan saat menginisialisasi data.'),
     }
   }
 }
@@ -197,12 +212,16 @@ export async function createDaftarInformasiTable(data: {
 }) {
   try {
     const { supabase } = await checkIsAdmin()
+    const cleanJudul = data.judul.trim()
+    if (!cleanJudul) {
+      return { success: false, error: 'Judul tabel tidak boleh kosong.' }
+    }
 
     const { data: newTbl, error } = await supabase
       .from('daftar_informasi_tabel')
       .insert({
-        judul: data.judul,
-        deskripsi: data.deskripsi || 'Tahun 2022 - 2026',
+        judul: cleanJudul,
+        deskripsi: data.deskripsi?.trim() || 'Tahun 2022 - 2026',
         action_type: data.action_type || 'unduh',
         urutan: data.urutan ?? 0,
       })
@@ -214,9 +233,9 @@ export async function createDaftarInformasiTable(data: {
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true, data: newTbl }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Create Table Error]', err)
-    return { success: false, error: err?.message || 'Gagal menambahkan tabel.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal menambahkan tabel.') }
   }
 }
 
@@ -231,12 +250,16 @@ export async function updateDaftarInformasiTable(
 ) {
   try {
     const { supabase } = await checkIsAdmin()
+    const cleanJudul = data.judul.trim()
+    if (!cleanJudul) {
+      return { success: false, error: 'Judul tabel tidak boleh kosong.' }
+    }
 
     const { error } = await supabase
       .from('daftar_informasi_tabel')
       .update({
-        judul: data.judul,
-        deskripsi: data.deskripsi,
+        judul: cleanJudul,
+        deskripsi: data.deskripsi?.trim(),
         action_type: data.action_type,
         urutan: data.urutan,
         updated_at: new Date().toISOString(),
@@ -248,9 +271,9 @@ export async function updateDaftarInformasiTable(
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Update Table Error]', err)
-    return { success: false, error: err?.message || 'Gagal memperbarui tabel.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal memperbarui tabel.') }
   }
 }
 
@@ -268,9 +291,9 @@ export async function deleteDaftarInformasiTable(id: number | bigint) {
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Delete Table Error]', err)
-    return { success: false, error: err?.message || 'Gagal menghapus tabel.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal menghapus tabel.') }
   }
 }
 
@@ -285,12 +308,20 @@ export async function createDaftarInformasiItem(data: {
 }) {
   try {
     const { supabase } = await checkIsAdmin()
+    const cleanNama = data.nama.trim()
+    if (!cleanNama) {
+      return { success: false, error: 'Nama data tidak boleh kosong.' }
+    }
+    const linkErr = validateLinksMap(data.links)
+    if (linkErr) {
+      return { success: false, error: linkErr }
+    }
 
     const { data: newItem, error } = await supabase
       .from('daftar_informasi_item')
       .insert({
         tabel_id: data.tabel_id,
-        nama: data.nama,
+        nama: cleanNama,
         links: data.links,
         urutan: data.urutan ?? 0,
       })
@@ -302,9 +333,9 @@ export async function createDaftarInformasiItem(data: {
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true, data: newItem }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Create Item Error]', err)
-    return { success: false, error: err?.message || 'Gagal menambahkan baris data.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal menambahkan baris data.') }
   }
 }
 
@@ -318,11 +349,19 @@ export async function updateDaftarInformasiItem(
 ) {
   try {
     const { supabase } = await checkIsAdmin()
+    const cleanNama = data.nama.trim()
+    if (!cleanNama) {
+      return { success: false, error: 'Nama data tidak boleh kosong.' }
+    }
+    const linkErr = validateLinksMap(data.links)
+    if (linkErr) {
+      return { success: false, error: linkErr }
+    }
 
     const { error } = await supabase
       .from('daftar_informasi_item')
       .update({
-        nama: data.nama,
+        nama: cleanNama,
         links: data.links,
         urutan: data.urutan,
         updated_at: new Date().toISOString(),
@@ -334,9 +373,9 @@ export async function updateDaftarInformasiItem(
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Update Item Error]', err)
-    return { success: false, error: err?.message || 'Gagal memperbarui baris data.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal memperbarui baris data.') }
   }
 }
 
@@ -354,9 +393,9 @@ export async function deleteDaftarInformasiItem(id: number | bigint) {
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Delete Item Error]', err)
-    return { success: false, error: err?.message || 'Gagal menghapus baris data.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal menghapus baris data.') }
   }
 }
 
@@ -372,9 +411,9 @@ export async function addTahunToTable(
   try {
     const { supabase } = await checkIsAdmin()
     const trimmedYear = newYear.trim()
-
-    if (!trimmedYear) {
-      return { success: false, error: 'Tahun tidak boleh kosong.' }
+    const yearErr = validateYearLabel(trimmedYear)
+    if (yearErr) {
+      return { success: false, error: yearErr }
     }
 
     let query = supabase.from('daftar_informasi_item').select('id, tabel_id, links')
@@ -385,29 +424,35 @@ export async function addTahunToTable(
     const { data: items, error: fetchErr } = await query
     if (fetchErr) throw fetchErr
 
-    if (items && items.length > 0) {
-      for (const item of items) {
-        const links = (item.links || {}) as Record<string, string>
-        if (!(trimmedYear in links)) {
-          const updatedLinks = { ...links, [trimmedYear]: '#' }
-          const { error: updErr } = await supabase
-            .from('daftar_informasi_item')
-            .update({
-              links: updatedLinks,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', item.id)
-          if (updErr) throw updErr
-        }
+    if (!items || items.length === 0) {
+      return {
+        success: false,
+        error:
+          'Tabel belum memiliki baris data. Tambahkan minimal 1 baris data terlebih dahulu untuk menambah kolom tahun.',
+      }
+    }
+
+    for (const item of items) {
+      const links = (item.links || {}) as Record<string, string>
+      if (!(trimmedYear in links)) {
+        const updatedLinks = { ...links, [trimmedYear]: '#' }
+        const { error: updErr } = await supabase
+          .from('daftar_informasi_item')
+          .update({
+            links: updatedLinks,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', item.id)
+        if (updErr) throw updErr
       }
     }
 
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[addTahunToTable Error]', err)
-    return { success: false, error: err?.message || 'Gagal menambahkan tahun.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal menambahkan tahun.') }
   }
 }
 
@@ -422,8 +467,9 @@ export async function editTahunInTable(
     const trimmedOld = oldYear.trim()
     const trimmedNew = newYear.trim()
 
-    if (!trimmedNew) {
-      return { success: false, error: 'Tahun baru tidak boleh kosong.' }
+    const yearErr = validateYearLabel(trimmedNew)
+    if (yearErr) {
+      return { success: false, error: yearErr }
     }
     if (trimmedOld === trimmedNew) {
       return { success: true }
@@ -459,9 +505,9 @@ export async function editTahunInTable(
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[editTahunInTable Error]', err)
-    return { success: false, error: err?.message || 'Gagal mengubah tahun.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal mengubah tahun.') }
   }
 }
 
@@ -507,8 +553,8 @@ export async function deleteTahunFromTable(
     revalidatePath('/admin/daftar-informasi')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[deleteTahunFromTable Error]', err)
-    return { success: false, error: err?.message || 'Gagal menghapus tahun.' }
+    return { success: false, error: sanitizeUserError(err, 'Gagal menghapus tahun.') }
   }
 }

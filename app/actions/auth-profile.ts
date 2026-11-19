@@ -2,11 +2,38 @@
 
 import { createClient } from '@/app/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getAppUrl } from '@/app/lib/email/mailer'
 
 export interface CompleteProfileInput {
   nama: string
   nik: string
   telepon: string
+}
+
+interface AuthRateRecord {
+  count: number
+  resetAt: number
+}
+
+const authRateLimitMap = new Map<string, AuthRateRecord>()
+
+function checkAuthRateLimit(key: string, maxAttempts: number, windowMs: number): boolean {
+  const now = Date.now()
+  if (authRateLimitMap.size > 1000) {
+    for (const [k, v] of authRateLimitMap.entries()) {
+      if (now > v.resetAt) authRateLimitMap.delete(k)
+    }
+  }
+  const existing = authRateLimitMap.get(key)
+  if (!existing || now > existing.resetAt) {
+    authRateLimitMap.set(key, { count: 1, resetAt: now + windowMs })
+    return true
+  }
+  if (existing.count >= maxAttempts) {
+    return false
+  }
+  existing.count += 1
+  return true
 }
 
 /**
@@ -31,11 +58,12 @@ export async function completeUserProfile(input: CompleteProfileInput) {
       return { success: false, error: 'Nama lengkap minimal terdiri dari 3 karakter.' }
     }
 
-    const nameRegex = /^[a-zA-Z\s'\.]+$/
+    const nameRegex = /^[a-zA-Z\s'\.,-]+$/
     if (!nameRegex.test(cleanNama)) {
       return {
         success: false,
-        error: "Nama lengkap hanya boleh berisi huruf, spasi, titik (.), dan tanda petik (').",
+        error:
+          "Nama lengkap hanya boleh berisi huruf, spasi, titik (.), koma (,), tanda hubung (-), dan tanda petik (').",
       }
     }
 
@@ -136,46 +164,147 @@ export async function completeUserProfile(input: CompleteProfileInput) {
 }
 
 /**
- * Mencari email terdaftar berdasarkan NIK (digunakan saat login melalui form dengan NIK)
+ * Login aman menggunakan Email atau NIK 16 digit di sisi server (mencegah enumerasi NIK ke email di browser).
  */
-export async function getEmailByNik(nik: string) {
+export async function signInWithEmailOrNik(identifier: string, password: string): Promise<{
+  success: boolean
+  redirectTo?: string
+  error?: string
+}> {
   try {
-    const cleanNik = nik.trim().replace(/\D/g, '')
-    if (!/^\d{16}$/.test(cleanNik)) {
-      return { success: false, error: 'NIK harus terdiri dari 16 digit angka.' }
+    const rawInput = identifier.trim()
+    if (!rawInput || !password) {
+      return {
+        success: false,
+        error: 'Email/NIK dan kata sandi wajib diisi.',
+      }
+    }
+
+    const rateKey = `login:${rawInput.toLowerCase()}`
+    if (!checkAuthRateLimit(rateKey, 10, 5 * 60 * 1000)) {
+      return {
+        success: false,
+        error: 'Terlalu banyak percobaan masuk. Silakan tunggu beberapa menit lalu coba lagi.',
+      }
     }
 
     const supabase = await createClient()
+    let targetEmail = rawInput
 
-    // Panggil fungsi RPC get_email_by_nik yang aman (security definer)
-    const { data, error } = await supabase.rpc('get_email_by_nik', { p_nik: cleanNik })
+    const digitsOnly = rawInput.replace(/\D/g, '')
+    const isNik = digitsOnly.length === 16 && !rawInput.includes('@')
 
-    if (error) {
-      console.warn('[RPC get_email_by_nik fallback]', error)
-      // Fallback query langsung jika RPC belum dieksekusi
-      const { data: directData } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('nik', cleanNik)
-        .maybeSingle()
+    if (isNik) {
+      const { data: resolvedEmail } = await supabase.rpc('get_email_by_nik', {
+        p_nik: digitsOnly,
+      })
 
-      if (directData?.email) {
-        return { success: true, email: directData.email }
+      if (!resolvedEmail || typeof resolvedEmail !== 'string') {
+        return {
+          success: false,
+          error: 'Email/NIK atau kata sandi tidak cocok. Silakan periksa kembali.',
+        }
       }
-
-      return { success: false, error: 'NIK tidak ditemukan dalam sistem.' }
+      targetEmail = resolvedEmail
     }
 
-    if (!data) {
-      return { success: false, error: 'NIK tidak ditemukan dalam sistem.' }
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
+      email: targetEmail,
+      password,
+    })
+
+    if (error || !authData?.user) {
+      return {
+        success: false,
+        error: 'Email/NIK atau kata sandi tidak cocok. Silakan periksa kembali.',
+      }
     }
 
-    return { success: true, email: data as string }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', authData.user.id)
+      .maybeSingle()
+
+    const redirectTo = profile?.role === 'admin' ? '/admin' : '/permohonan-saya'
+    revalidatePath('/', 'layout')
+
+    return {
+      success: true,
+      redirectTo,
+    }
   } catch (err: unknown) {
-    console.error('[getEmailByNik Error]', err)
+    console.error('[signInWithEmailOrNik Error]', err)
     return {
       success: false,
-      error: 'Terjadi kesalahan saat memeriksa NIK.',
+      error: 'Email/NIK atau kata sandi tidak cocok. Silakan periksa kembali.',
+    }
+  }
+}
+
+/**
+ * Mengirim tautan reset kata sandi via Email atau NIK di sisi server dengan respons seragam (anti-enumerasi).
+ */
+export async function requestPasswordReset(identifier: string): Promise<{
+  success: boolean
+  message?: string
+  error?: string
+}> {
+  const uniformMessage =
+    'Jika email atau NIK tersebut terdaftar, tautan pemulihan kata sandi telah dikirim ke kotak masuk email Anda.'
+
+  try {
+    const rawInput = identifier.trim()
+    const digitsOnly = rawInput.replace(/\D/g, '')
+    const isNik = digitsOnly.length === 16 && !rawInput.includes('@')
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawInput)
+
+    if (!isNik && !isEmail) {
+      return {
+        success: false,
+        error: 'Masukkan alamat email yang valid atau NIK tepat 16 digit.',
+      }
+    }
+
+    const rateKey = `reset:${(isNik ? digitsOnly : rawInput).toLowerCase()}`
+    if (!checkAuthRateLimit(rateKey, 5, 10 * 60 * 1000)) {
+      return {
+        success: false,
+        error: 'Terlalu banyak permintaan pemulihan sandi. Silakan tunggu beberapa menit.',
+      }
+    }
+
+    const supabase = await createClient()
+    let targetEmail = isEmail ? rawInput : ''
+
+    if (isNik) {
+      const { data: resolvedEmail } = await supabase.rpc('get_email_by_nik', {
+        p_nik: digitsOnly,
+      })
+      if (resolvedEmail && typeof resolvedEmail === 'string') {
+        targetEmail = resolvedEmail
+      }
+    }
+
+    if (targetEmail) {
+      const redirectTo = `${getAppUrl()}/api/auth/callback?next=/update-sandi`
+      const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+        redirectTo,
+      })
+      if (error) {
+        console.warn('[requestPasswordReset Notice]', error.message)
+      }
+    }
+
+    return {
+      success: true,
+      message: uniformMessage,
+    }
+  } catch (err: unknown) {
+    console.error('[requestPasswordReset Exception]', err)
+    return {
+      success: true,
+      message: uniformMessage,
     }
   }
 }

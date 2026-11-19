@@ -4,6 +4,22 @@ import { createClient } from '@/app/lib/supabase/server'
 import { DEFAULT_EMAIL_TEMPLATES, EmailTemplateData } from './default-templates'
 
 const LOCAL_STORAGE_PATH = path.join(process.cwd(), 'app', 'lib', 'email', 'custom_templates.json')
+const VALID_TEMPLATE_KEYS = new Set(Object.keys(DEFAULT_EMAIL_TEMPLATES))
+
+export function isValidTemplateKey(key: string): boolean {
+  return VALID_TEMPLATE_KEYS.has(key)
+}
+
+interface EmailTemplateRow {
+  template_key: string
+  subjek: string | null
+  badge_label: string | null
+  judul_heading: string | null
+  pesan_pembuka: string | null
+  pesan_penutup: string | null
+  cta_label: string | null
+  updated_at?: string | null
+}
 
 /**
  * Membaca data custom dari file lokal jika database Supabase belum dimigrasi
@@ -11,21 +27,18 @@ const LOCAL_STORAGE_PATH = path.join(process.cwd(), 'app', 'lib', 'email', 'cust
 async function getLocalCustomTemplates(): Promise<Record<string, Partial<EmailTemplateData>>> {
   try {
     const raw = await fs.readFile(LOCAL_STORAGE_PATH, 'utf-8')
-    return JSON.parse(raw || '{}')
+    const parsed = JSON.parse(raw || '{}')
+    return parsed && typeof parsed === 'object' ? parsed : {}
   } catch {
     return {}
   }
 }
 
 /**
- * Menyimpan data custom ke file lokal sebagai fallback
+ * Menyimpan data custom ke file lokal sebagai fallback (melempar error bila filesystem read-only)
  */
 async function saveLocalCustomTemplates(data: Record<string, Partial<EmailTemplateData>>) {
-  try {
-    await fs.writeFile(LOCAL_STORAGE_PATH, JSON.stringify(data, null, 2), 'utf-8')
-  } catch (err) {
-    console.error('[TemplateStore] Gagal menyimpan ke fallback lokal:', err)
-  }
+  await fs.writeFile(LOCAL_STORAGE_PATH, JSON.stringify(data, null, 2), 'utf-8')
 }
 
 /**
@@ -47,30 +60,33 @@ export async function getAllEmailTemplates(): Promise<{
 
     if (!error && data && data.length > 0) {
       isUsingDatabase = true
-      data.forEach((row: any) => {
-        if (result[row.template_key]) {
+      ;(data as EmailTemplateRow[]).forEach((row) => {
+        if (VALID_TEMPLATE_KEYS.has(row.template_key) && result[row.template_key]) {
           result[row.template_key] = {
             ...result[row.template_key],
             subjek: row.subjek || result[row.template_key].subjek,
             badge_label: row.badge_label || result[row.template_key].badge_label,
             judul_heading: row.judul_heading || result[row.template_key].judul_heading,
             pesan_pembuka: row.pesan_pembuka || result[row.template_key].pesan_pembuka,
-            pesan_penutup: row.pesan_penutup !== undefined ? row.pesan_penutup : result[row.template_key].pesan_penutup,
+            pesan_penutup:
+              row.pesan_penutup !== undefined && row.pesan_penutup !== null
+                ? row.pesan_penutup
+                : result[row.template_key].pesan_penutup,
             cta_label: row.cta_label || result[row.template_key].cta_label,
-            updated_at: row.updated_at,
+            updated_at: row.updated_at || undefined,
           }
         }
       })
       return { templates: result, isUsingDatabase }
     }
-  } catch (err) {
+  } catch {
     // Supabase table mungkin belum dibuat / belum dimigrasi
   }
 
   // Gunakan fallback lokal
   const localData = await getLocalCustomTemplates()
   Object.keys(localData).forEach((key) => {
-    if (result[key]) {
+    if (VALID_TEMPLATE_KEYS.has(key) && result[key]) {
       result[key] = {
         ...result[key],
         ...localData[key],
@@ -82,17 +98,18 @@ export async function getAllEmailTemplates(): Promise<{
 }
 
 /**
- * Mengambil satu template spesifik berdasarkan kunci
+ * Mengambil satu template spesifik berdasarkan kunci resmi
  */
 export async function getEmailTemplateByKey(templateKey: string): Promise<EmailTemplateData> {
+  if (!isValidTemplateKey(templateKey)) {
+    throw new Error('Kunci template email tidak valid.')
+  }
   const { templates } = await getAllEmailTemplates()
   return templates[templateKey] || DEFAULT_EMAIL_TEMPLATES[templateKey]
 }
 
 /**
- * Memperbarui template email:
- * Jika tabel Supabase ada, simpan ke Supabase.
- * Jika tabel Supabase belum ada (belum dimigrasi), simpan ke file lokal.
+ * Memperbarui template email ke Supabase atau fallback lokal.
  */
 export async function saveEmailTemplate(
   templateKey: string,
@@ -105,10 +122,13 @@ export async function saveEmailTemplate(
     cta_label: string
   }
 ): Promise<{ success: boolean; storage: 'database' | 'local'; error?: string }> {
+  if (!isValidTemplateKey(templateKey)) {
+    return { success: false, storage: 'database', error: 'Kunci template tidak valid.' }
+  }
+
   try {
     const supabase = await createClient()
 
-    // Coba simpan ke Supabase
     const { error } = await supabase.from('email_templates').upsert(
       {
         template_key: templateKey,
@@ -129,10 +149,9 @@ export async function saveEmailTemplate(
       return { success: true, storage: 'database' }
     }
   } catch {
-    // Abaikan error Supabase, beralih ke penyimpanan fallback lokal
+    // Abaikan error Supabase, lanjut ke fallback lokal
   }
 
-  // Simpan ke fallback lokal
   try {
     const local = await getLocalCustomTemplates()
     local[templateKey] = {
@@ -142,8 +161,14 @@ export async function saveEmailTemplate(
     }
     await saveLocalCustomTemplates(local)
     return { success: true, storage: 'local' }
-  } catch (err: any) {
-    return { success: false, storage: 'local', error: err?.message || 'Gagal menyimpan template' }
+  } catch (err: unknown) {
+    console.error('[TemplateStore] Gagal menyimpan ke fallback lokal:', err)
+    return {
+      success: false,
+      storage: 'local',
+      error:
+        'Gagal menyimpan perubahan template. Pastikan tabel email_templates sudah aktif di database.',
+    }
   }
 }
 
@@ -151,14 +176,15 @@ export async function saveEmailTemplate(
  * Mengembalikan template ke pengaturan awal (bawaan dinas)
  */
 export async function resetEmailTemplate(templateKey: string): Promise<{ success: boolean }> {
-  const defaultTpl = DEFAULT_EMAIL_TEMPLATES[templateKey]
-  if (!defaultTpl) return { success: false }
+  if (!isValidTemplateKey(templateKey)) {
+    throw new Error('Kunci template tidak valid.')
+  }
 
   try {
     const supabase = await createClient()
     await supabase.from('email_templates').delete().eq('template_key', templateKey)
   } catch {
-    // Abaikan jika tabel tidak ada
+    // Abaikan jika tabel belum ada
   }
 
   try {
@@ -166,7 +192,7 @@ export async function resetEmailTemplate(templateKey: string): Promise<{ success
     delete local[templateKey]
     await saveLocalCustomTemplates(local)
   } catch {
-    // Abaikan
+    // Abaikan pada filesystem read-only
   }
 
   return { success: true }

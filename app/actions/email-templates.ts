@@ -7,6 +7,7 @@ import {
   getEmailTemplateByKey,
   saveEmailTemplate,
   resetEmailTemplate,
+  isValidTemplateKey,
 } from '@/app/lib/email/template-store'
 import {
   compileEmailHtml,
@@ -14,6 +15,7 @@ import {
 } from '@/app/lib/email/template-engine'
 import { sendEmail, getAdminNotificationEmail } from '@/app/lib/email/mailer'
 import { EmailTemplateData } from '@/app/lib/email/default-templates'
+import { sanitizeUserError } from '@/app/lib/security'
 
 async function checkIsAdmin() {
   const supabase = await createClient()
@@ -51,11 +53,11 @@ export async function getAdminEmailTemplates() {
       isUsingDatabase,
       defaultAdminEmail: getAdminNotificationEmail(),
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[getAdminEmailTemplates Error]', error)
     return {
       success: false,
-      error: error?.message || 'Terjadi kesalahan saat memuat template email',
+      error: sanitizeUserError(error, 'Terjadi kesalahan saat memuat template email.'),
     }
   }
 }
@@ -76,14 +78,39 @@ export async function updateAdminEmailTemplate(
 ) {
   try {
     await checkIsAdmin()
-    const result = await saveEmailTemplate(templateKey, formData)
+    if (!isValidTemplateKey(templateKey)) {
+      return { success: false, error: 'Kunci template tidak valid.' }
+    }
+    if (!formData.subjek?.trim() || !formData.judul_heading?.trim() || !formData.pesan_pembuka?.trim()) {
+      return {
+        success: false,
+        error: 'Subjek, judul heading, dan pesan pembuka tidak boleh kosong.',
+      }
+    }
+
+    const result = await saveEmailTemplate(templateKey, {
+      subjek: formData.subjek.trim(),
+      badge_label: formData.badge_label.trim() || 'Pemberitahuan Resmi',
+      judul_heading: formData.judul_heading.trim(),
+      pesan_pembuka: formData.pesan_pembuka.trim(),
+      pesan_penutup: formData.pesan_penutup.trim(),
+      cta_label: formData.cta_label.trim() || 'Buka Portal',
+    })
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || 'Gagal menyimpan perubahan template.',
+      }
+    }
+
     revalidatePath('/admin/email-templates')
     return { success: true, storage: result.storage }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[updateAdminEmailTemplate Error]', error)
     return {
       success: false,
-      error: error?.message || 'Gagal menyimpan perubahan template',
+      error: sanitizeUserError(error, 'Gagal menyimpan perubahan template.'),
     }
   }
 }
@@ -94,14 +121,17 @@ export async function updateAdminEmailTemplate(
 export async function resetAdminEmailTemplate(templateKey: string) {
   try {
     await checkIsAdmin()
+    if (!isValidTemplateKey(templateKey)) {
+      return { success: false, error: 'Kunci template tidak valid.' }
+    }
     await resetEmailTemplate(templateKey)
     revalidatePath('/admin/email-templates')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[resetAdminEmailTemplate Error]', error)
     return {
       success: false,
-      error: error?.message || 'Gagal mengembalikan template ke default',
+      error: sanitizeUserError(error, 'Gagal mengembalikan template ke default.'),
     }
   }
 }
@@ -121,6 +151,10 @@ export async function renderLivePreviewHtml(
   }
 ) {
   try {
+    await checkIsAdmin()
+    if (!isValidTemplateKey(templateKey)) {
+      return { success: false, error: 'Kunci template tidak valid.' }
+    }
     const current = await getEmailTemplateByKey(templateKey)
     const merged: EmailTemplateData = {
       ...current,
@@ -129,8 +163,11 @@ export async function renderLivePreviewHtml(
 
     const compiled = compileEmailHtml(merged, DUMMY_PREVIEW_CONTEXT)
     return { success: true, subject: compiled.subject, html: compiled.html }
-  } catch (error: any) {
-    return { success: false, error: error?.message || 'Gagal merender pratinjau' }
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Gagal merender pratinjau.'),
+    }
   }
 }
 
@@ -151,8 +188,12 @@ export async function sendAdminTestEmail(
 ) {
   try {
     await checkIsAdmin()
+    if (!isValidTemplateKey(templateKey)) {
+      return { success: false, error: 'Kunci template tidak valid.' }
+    }
 
-    if (!targetEmail || !targetEmail.includes('@')) {
+    const cleanTargetEmail = targetEmail.trim()
+    if (!cleanTargetEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanTargetEmail)) {
       return { success: false, error: 'Alamat email tujuan tidak valid.' }
     }
 
@@ -165,7 +206,7 @@ export async function sendAdminTestEmail(
     const compiled = compileEmailHtml(merged, DUMMY_PREVIEW_CONTEXT)
 
     const sendRes = await sendEmail({
-      to: targetEmail,
+      to: cleanTargetEmail,
       subject: `[UJI COBA CMS] ${compiled.subject}`,
       html: compiled.html,
     })
@@ -173,13 +214,13 @@ export async function sendAdminTestEmail(
     return {
       success: sendRes.success,
       mocked: sendRes.mocked,
-      error: sendRes.error,
+      error: sendRes.error ? 'Gagal mengirim email uji coba. Periksa konfigurasi SMTP.' : undefined,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[sendAdminTestEmail Error]', error)
     return {
       success: false,
-      error: error?.message || 'Gagal mengirim email uji coba',
+      error: sanitizeUserError(error, 'Gagal mengirim email uji coba.'),
     }
   }
 }

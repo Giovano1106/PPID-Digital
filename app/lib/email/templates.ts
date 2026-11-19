@@ -1,6 +1,13 @@
 // Template email HTML resmi PPID Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah
 // Didesain institusional, bersih, responsif, dan bebas AI slop
 
+import { escapeHtml, isSafePublicUrl } from '@/app/lib/security'
+import { getAppUrl } from './mailer'
+
+function safeUrl(url: string): string {
+  return escapeHtml(isSafePublicUrl(url) ? url : getAppUrl())
+}
+
 const BASE_HEADER = `
   <div style="background-color: #0e4891; padding: 24px 30px; text-align: center; color: #ffffff;">
     <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
@@ -74,7 +81,7 @@ export function templatePengajuanBaruAdmin(data: {
         Pemberitahuan Admin
       </span>
       <h2 style="margin: 4px 0 0 0; font-size: 18px; font-weight: 800; color: #0f172a;">
-        Permohonan Informasi Publik Baru Masuk (#${data.permohonanId})
+        Permohonan Informasi Publik Baru Masuk (#${escapeHtml(data.permohonanId)})
       </h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
         Yth. Tim Admin PPID Dinas CIKASDA Sulteng, seorang pemohon baru saja mengajukan permohonan informasi publik melalui portal PPID Digital. Mohon segera ditindaklanjuti sesuai SOP dan tenggat waktu layanan.
@@ -85,35 +92,35 @@ export function templatePengajuanBaruAdmin(data: {
       <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
         <tr>
           <td style="padding: 5px 0; color: #64748b; width: 140px; font-weight: 600;">Nomor Tiket:</td>
-          <td style="padding: 5px 0; color: #0f172a; font-weight: 700;">#${data.permohonanId}</td>
+          <td style="padding: 5px 0; color: #0f172a; font-weight: 700;">#${escapeHtml(data.permohonanId)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Nama Pemohon:</td>
-          <td style="padding: 5px 0; color: #0f172a; font-weight: 700;">${data.nama}</td>
+          <td style="padding: 5px 0; color: #0f172a; font-weight: 700;">${escapeHtml(data.nama)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">NIK:</td>
-          <td style="padding: 5px 0; color: #0f172a; font-family: monospace;">${data.nik || '-'}</td>
+          <td style="padding: 5px 0; color: #0f172a; font-family: monospace;">${escapeHtml(data.nik || '-')}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Kontak:</td>
-          <td style="padding: 5px 0; color: #0f172a;">${data.email} | ${data.telepon || '-'}</td>
+          <td style="padding: 5px 0; color: #0f172a;">${escapeHtml(data.email)} | ${escapeHtml(data.telepon || '-')}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Kategori Informasi:</td>
-          <td style="padding: 5px 0; color: #0e4891; font-weight: 700;">${data.jenisInformasi}</td>
+          <td style="padding: 5px 0; color: #0e4891; font-weight: 700;">${escapeHtml(data.jenisInformasi)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Tanggal Diajukan:</td>
-          <td style="padding: 5px 0; color: #0f172a;">${data.tanggal}</td>
+          <td style="padding: 5px 0; color: #0f172a;">${escapeHtml(data.tanggal)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Tenggat SLA (10 Hari):</td>
-          <td style="padding: 5px 0; color: #b91c1c; font-weight: 700;">${data.deadlineAwal}</td>
+          <td style="padding: 5px 0; color: #b91c1c; font-weight: 700;">${escapeHtml(data.deadlineAwal)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Bentuk Salinan:</td>
-          <td style="padding: 5px 0; color: #0f172a;">${data.caraMemperoleh}</td>
+          <td style="padding: 5px 0; color: #0f172a;">${escapeHtml(data.caraMemperoleh)}</td>
         </tr>
       </table>
 
@@ -122,13 +129,13 @@ export function templatePengajuanBaruAdmin(data: {
           Rincian Informasi yang Dibutuhkan:
         </p>
         <p style="margin: 0; font-size: 12px; color: #1e293b; line-height: 1.6; white-space: pre-line;">
-          ${data.deskripsi}
+          ${escapeHtml(data.deskripsi)}
         </p>
       </div>
     </div>
 
     <div style="text-align: center; margin: 28px 0 10px 0;">
-      <a href="${data.appUrl}/admin" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+      <a href="${safeUrl(`${data.appUrl}/admin`)}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
         Buka Konsol Admin PPID
       </a>
     </div>
@@ -152,10 +159,10 @@ export function templatePengajuanBaruPemohon(data: {
         Tanda Terima Pengajuan
       </span>
       <h2 style="margin: 4px 0 0 0; font-size: 18px; font-weight: 800; color: #0f172a;">
-        Permohonan Informasi Berhasil Diajukan (#${data.permohonanId})
+        Permohonan Informasi Berhasil Diajukan (#${escapeHtml(data.permohonanId)})
       </h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
-        Yth. Sdr/i. <strong>${data.nama}</strong>, permohonan informasi publik Anda telah berhasil terdaftar dalam sistem PPID Digital Dinas CIKASDA Provinsi Sulawesi Tengah.
+        Yth. Sdr/i. <strong>${escapeHtml(data.nama)}</strong>, permohonan informasi publik Anda telah berhasil terdaftar dalam sistem PPID Digital Dinas CIKASDA Provinsi Sulawesi Tengah.
       </p>
     </div>
 
@@ -163,19 +170,19 @@ export function templatePengajuanBaruPemohon(data: {
       <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
         <tr>
           <td style="padding: 5px 0; color: #64748b; width: 140px; font-weight: 600;">Nomor Registrasi:</td>
-          <td style="padding: 5px 0; color: #0f172a; font-weight: 700;">#${data.permohonanId}</td>
+          <td style="padding: 5px 0; color: #0f172a; font-weight: 700;">#${escapeHtml(data.permohonanId)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Kategori Informasi:</td>
-          <td style="padding: 5px 0; color: #0e4891; font-weight: 700;">${data.jenisInformasi}</td>
+          <td style="padding: 5px 0; color: #0e4891; font-weight: 700;">${escapeHtml(data.jenisInformasi)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Tanggal Pengajuan:</td>
-          <td style="padding: 5px 0; color: #0f172a;">${data.tanggal}</td>
+          <td style="padding: 5px 0; color: #0f172a;">${escapeHtml(data.tanggal)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #64748b; font-weight: 600;">Batas Waktu Layanan:</td>
-          <td style="padding: 5px 0; color: #0e4891; font-weight: 700;">Maks. 10 Hari Kerja (s.d. ${data.deadlineAwal})</td>
+          <td style="padding: 5px 0; color: #0e4891; font-weight: 700;">Maks. 10 Hari Kerja (s.d. ${escapeHtml(data.deadlineAwal)})</td>
         </tr>
       </table>
 
@@ -184,7 +191,7 @@ export function templatePengajuanBaruPemohon(data: {
           Rincian Permohonan Anda:
         </p>
         <p style="margin: 0; font-size: 12px; color: #1e293b; line-height: 1.6; white-space: pre-line;">
-          ${data.deskripsi}
+          ${escapeHtml(data.deskripsi)}
         </p>
       </div>
     </div>
@@ -194,7 +201,7 @@ export function templatePengajuanBaruPemohon(data: {
     </p>
 
     <div style="text-align: center; margin: 28px 0 10px 0;">
-      <a href="${data.appUrl}/permohonan-saya/${data.permohonanId}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+      <a href="${safeUrl(`${data.appUrl}/permohonan-saya/${encodeURIComponent(String(data.permohonanId))}`)}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
         Pantau Riwayat Permohonan Saya
       </a>
     </div>
@@ -215,22 +222,22 @@ export function templateStatusDiproses(data: {
         Pembaruan Status
       </span>
       <h2 style="margin: 4px 0 0 0; font-size: 18px; font-weight: 800; color: #0f172a;">
-        Permohonan Informasi #${data.permohonanId} Sedang Diproses
+        Permohonan Informasi #${escapeHtml(data.permohonanId)} Sedang Diproses
       </h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
-        Yth. Sdr/i. <strong>${data.nama}</strong>, berkas permohonan informasi publik Anda telah diverifikasi oleh petugas admin PPID dan saat ini <strong>sedang dalam proses penelaahan teknis</strong> pada bidang terkait di lingkungan Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah.
+        Yth. Sdr/i. <strong>${escapeHtml(data.nama)}</strong>, berkas permohonan informasi publik Anda telah diverifikasi oleh petugas admin PPID dan saat ini <strong>sedang dalam proses penelaahan teknis</strong> pada bidang terkait di lingkungan Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah.
       </p>
     </div>
 
     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 24px;">
       <p style="margin: 0; font-size: 12px; color: #334155;">
-        <strong>Kategori Informasi:</strong> ${data.jenisInformasi}<br>
+        <strong>Kategori Informasi:</strong> ${escapeHtml(data.jenisInformasi)}<br>
         <strong>Status Saat Ini:</strong> <span style="display: inline-block; background-color: #e2e8f0; color: #1e293b; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; text-transform: uppercase;">DIPROSES</span>
       </p>
     </div>
 
     <div style="text-align: center; margin: 28px 0 10px 0;">
-      <a href="${data.appUrl}/permohonan-saya/${data.permohonanId}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px;">
+      <a href="${safeUrl(`${data.appUrl}/permohonan-saya/${encodeURIComponent(String(data.permohonanId))}`)}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px;">
         Lihat Status Permohonan
       </a>
     </div>
@@ -252,10 +259,10 @@ export function templateJawabanAdmin(data: {
         Keputusan Resmi
       </span>
       <h2 style="margin: 4px 0 0 0; font-size: 18px; font-weight: 800; color: #0f172a;">
-        Tanggapan Resmi Permohonan Informasi #${data.permohonanId}
+        Tanggapan Resmi Permohonan Informasi #${escapeHtml(data.permohonanId)}
       </h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
-        Yth. Sdr/i. <strong>${data.nama}</strong>, PPID Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah telah menerbitkan tanggapan resmi atas permohonan informasi publik Anda.
+        Yth. Sdr/i. <strong>${escapeHtml(data.nama)}</strong>, PPID Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah telah menerbitkan tanggapan resmi atas permohonan informasi publik Anda.
       </p>
     </div>
 
@@ -264,7 +271,7 @@ export function templateJawabanAdmin(data: {
         Isi Jawaban Resmi / Keputusan Admin:
       </p>
       <div style="font-size: 13px; color: #14532d; line-height: 1.6; white-space: pre-line;">
-        ${data.jawabanAdmin}
+        ${escapeHtml(data.jawabanAdmin)}
       </div>
     </div>
 
@@ -273,7 +280,7 @@ export function templateJawabanAdmin(data: {
     </p>
 
     <div style="text-align: center; margin: 28px 0 10px 0;">
-      <a href="${data.appUrl}/permohonan-saya/${data.permohonanId}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
+      <a href="${safeUrl(`${data.appUrl}/permohonan-saya/${encodeURIComponent(String(data.permohonanId))}`)}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
         Buka Detail & Lampiran Dokumen
       </a>
     </div>
@@ -295,29 +302,29 @@ export function templatePerpanjanganSLA(data: {
         Pemberitahuan Resmi
       </span>
       <h2 style="margin: 4px 0 0 0; font-size: 18px; font-weight: 800; color: #0f172a;">
-        Perpanjangan Waktu Layanan Informasi #${data.permohonanId}
+        Perpanjangan Waktu Layanan Informasi #${escapeHtml(data.permohonanId)}
       </h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
-        Yth. Sdr/i. <strong>${data.nama}</strong>, berdasarkan ketentuan Pasal 22 ayat (7) Undang-Undang No. 14 Tahun 2008 tentang Keterbukaan Informasi Publik, PPID Dinas CIKASDA Prov. Sulteng memberitahukan perpanjangan batas waktu layanan permohonan informasi Anda selama <strong>7 (tujuh) hari kerja</strong>.
+        Yth. Sdr/i. <strong>${escapeHtml(data.nama)}</strong>, berdasarkan ketentuan Pasal 22 ayat (7) Undang-Undang No. 14 Tahun 2008 tentang Keterbukaan Informasi Publik, PPID Dinas CIKASDA Prov. Sulteng memberitahukan perpanjangan batas waktu layanan permohonan informasi Anda selama <strong>7 (tujuh) hari kerja</strong>.
       </p>
     </div>
 
     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 24px;">
       <p style="margin: 0 0 6px 0; font-size: 12px; color: #64748b;">
-        <strong>Tenggat Waktu Baru:</strong> <span style="color: #0e4891; font-weight: 700;">${data.deadlineAkhir}</span>
+        <strong>Tenggat Waktu Baru:</strong> <span style="color: #0e4891; font-weight: 700;">${escapeHtml(data.deadlineAkhir)}</span>
       </p>
       <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
         <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">
           Alasan Teknis Perpanjangan:
         </p>
-        <p style="margin: 0; font-size: 12px; color: #1e293b; line-height: 1.6;">
-          ${data.alasan}
+        <p style="margin: 0; font-size: 12px; color: #1e293b; line-height: 1.6; white-space: pre-line;">
+          ${escapeHtml(data.alasan)}
         </p>
       </div>
     </div>
 
     <div style="text-align: center; margin: 28px 0 10px 0;">
-      <a href="${data.appUrl}/permohonan-saya/${data.permohonanId}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px;">
+      <a href="${safeUrl(`${data.appUrl}/permohonan-saya/${encodeURIComponent(String(data.permohonanId))}`)}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px;">
         Pantau Riwayat Permohonan
       </a>
     </div>
@@ -338,10 +345,10 @@ export function templatePenolakanPermohonan(data: {
         Pemberitahuan Resmi
       </span>
       <h2 style="margin: 4px 0 0 0; font-size: 18px; font-weight: 800; color: #0f172a;">
-        Penolakan Permohonan Informasi #${data.permohonanId}
+        Penolakan Permohonan Informasi #${escapeHtml(data.permohonanId)}
       </h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; line-height: 1.5;">
-        Yth. Sdr/i. <strong>${data.nama}</strong>, setelah melalui proses verifikasi dan penelaahan materi permohonan, PPID Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah menyatakan bahwa permohonan informasi publik Anda <strong>belum dapat dipenuhi</strong>.
+        Yth. Sdr/i. <strong>${escapeHtml(data.nama)}</strong>, setelah melalui proses verifikasi dan penelaahan materi permohonan, PPID Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah menyatakan bahwa permohonan informasi publik Anda <strong>belum dapat dipenuhi</strong>.
       </p>
     </div>
 
@@ -350,7 +357,7 @@ export function templatePenolakanPermohonan(data: {
         Alasan Penolakan:
       </p>
       <p style="margin: 0; font-size: 12px; color: #881337; line-height: 1.6; white-space: pre-line;">
-        ${data.alasan}
+        ${escapeHtml(data.alasan)}
       </p>
     </div>
 
@@ -359,7 +366,7 @@ export function templatePenolakanPermohonan(data: {
     </p>
 
     <div style="text-align: center; margin: 28px 0 10px 0;">
-      <a href="${data.appUrl}/permohonan-saya/${data.permohonanId}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px;">
+      <a href="${safeUrl(`${data.appUrl}/permohonan-saya/${encodeURIComponent(String(data.permohonanId))}`)}" style="display: inline-block; background-color: #0e4891; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; padding: 12px 28px; border-radius: 8px;">
         Lihat Detail Permohonan
       </a>
     </div>

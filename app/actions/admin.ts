@@ -2,7 +2,12 @@
 
 import { createClient } from '@/app/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { sendStatusUpdateNotification } from '@/app/actions/email'
+import { dispatchStatusUpdateNotification } from '@/app/lib/email/notifications'
+import {
+  addWorkingDaysWita,
+  isSafePublicUrl,
+  sanitizeUserError,
+} from '@/app/lib/security'
 
 // Helper function to check admin role
 async function checkIsAdmin() {
@@ -49,130 +54,211 @@ export async function getAdminPermohonan() {
 
     if (error) throw error
     return { success: true, data }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
 export async function setPermohonanDiproses(id: number) {
   try {
+    if (!Number.isInteger(id) || id <= 0) {
+      return { success: false, error: 'ID permohonan tidak valid.' }
+    }
     const { supabase } = await checkIsAdmin()
+
+    const { data: current } = await supabase
+      .from('permohonan')
+      .select('status')
+      .eq('id', id)
+      .single()
+
+    if (!current) {
+      return { success: false, error: 'Permohonan tidak ditemukan.' }
+    }
+    if (current.status === 'dijawab' || current.status === 'ditolak') {
+      return { success: false, error: 'Permohonan yang sudah selesai tidak dapat diubah ke diproses.' }
+    }
 
     const { error } = await supabase
       .from('permohonan')
-      .update({ status: 'diproses' })
+      .update({ status: 'diproses', updated_at: new Date().toISOString() })
       .eq('id', id)
 
     if (error) throw error
     revalidatePath('/admin')
 
-    // Kirim notifikasi email ke pemohon (asynchronous, non-blocking)
-    sendStatusUpdateNotification(id, 'diproses').catch((err) => {
+    dispatchStatusUpdateNotification(id, 'diproses').catch((err) => {
       console.error('[Email Notification Error] setPermohonanDiproses:', err)
     })
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
 export async function setPermohonanJawab(id: number, jawaban: string) {
   try {
+    if (!Number.isInteger(id) || id <= 0) {
+      return { success: false, error: 'ID permohonan tidak valid.' }
+    }
+    const cleanJawaban = jawaban?.trim() || ''
+    if (!cleanJawaban || cleanJawaban.length > 8000) {
+      return { success: false, error: 'Jawaban resmi wajib diisi (maksimal 8000 karakter).' }
+    }
+
     const { supabase } = await checkIsAdmin()
 
     const { error } = await supabase
       .from('permohonan')
-      .update({ 
+      .update({
         status: 'dijawab',
-        jawaban_admin: jawaban
+        jawaban_admin: cleanJawaban,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
 
     if (error) throw error
     revalidatePath('/admin')
 
-    // Kirim notifikasi email ke pemohon beserta teks jawaban resmi
-    sendStatusUpdateNotification(id, 'dijawab', { jawabanAdmin: jawaban }).catch((err) => {
+    dispatchStatusUpdateNotification(id, 'dijawab', { jawabanAdmin: cleanJawaban }).catch((err) => {
       console.error('[Email Notification Error] setPermohonanJawab:', err)
     })
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
 export async function setPermohonanTolak(id: number, alasan: string) {
   try {
+    if (!Number.isInteger(id) || id <= 0) {
+      return { success: false, error: 'ID permohonan tidak valid.' }
+    }
+    const cleanAlasan = alasan?.trim().replace(/^\[DITOLAK\]\s*Alasan:\s*/i, '').trim() || ''
+    if (!cleanAlasan || cleanAlasan.length > 4000) {
+      return { success: false, error: 'Alasan penolakan wajib diisi (maksimal 4000 karakter).' }
+    }
+
     const { supabase } = await checkIsAdmin()
+
+    const { data: current } = await supabase
+      .from('permohonan')
+      .select('status')
+      .eq('id', id)
+      .single()
+
+    if (!current) {
+      return { success: false, error: 'Permohonan tidak ditemukan.' }
+    }
+    if (current.status === 'dijawab' || current.status === 'ditolak') {
+      return { success: false, error: 'Permohonan yang sudah selesai tidak dapat ditolak.' }
+    }
 
     const { error } = await supabase
       .from('permohonan')
-      .update({ 
+      .update({
         status: 'ditolak',
-        jawaban_admin: alasan
+        jawaban_admin: cleanAlasan,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
 
     if (error) throw error
     revalidatePath('/admin')
 
-    // Kirim notifikasi email ke pemohon beserta alasan penolakan
-    sendStatusUpdateNotification(id, 'tolak', { alasan }).catch((err) => {
+    dispatchStatusUpdateNotification(id, 'tolak', { alasan: cleanAlasan }).catch((err) => {
       console.error('[Email Notification Error] setPermohonanTolak:', err)
     })
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
-export async function setPermohonanPerpanjang(id: number, alasan: string, deadline_akhir: string) {
+export async function setPermohonanPerpanjang(
+  id: number,
+  alasan: string,
+  _ignoredDeadline?: string
+) {
+  void _ignoredDeadline
   try {
+    if (!Number.isInteger(id) || id <= 0) {
+      return { success: false, error: 'ID permohonan tidak valid.' }
+    }
+    const cleanAlasan = alasan?.trim() || ''
+    if (!cleanAlasan || cleanAlasan.length > 2000) {
+      return { success: false, error: 'Alasan perpanjangan wajib diisi (maksimal 2000 karakter).' }
+    }
+
     const { supabase } = await checkIsAdmin()
+
+    const { data: current } = await supabase
+      .from('permohonan')
+      .select('status, diperpanjang, deadline_awal, created_at')
+      .eq('id', id)
+      .single()
+
+    if (!current) {
+      return { success: false, error: 'Permohonan tidak ditemukan.' }
+    }
+    if (current.diperpanjang) {
+      return { success: false, error: 'Batas waktu SLA permohonan ini sudah pernah diperpanjang.' }
+    }
+    if (current.status === 'dijawab' || current.status === 'ditolak') {
+      return { success: false, error: 'Permohonan yang sudah selesai tidak dapat diperpanjang.' }
+    }
+
+    const serverDeadlineAkhir = addWorkingDaysWita(
+      current.deadline_awal || current.created_at,
+      7
+    )
 
     const { error } = await supabase
       .from('permohonan')
-      .update({ 
+      .update({
         diperpanjang: true,
-        alasan_perpanjangan: alasan,
-        deadline_akhir: deadline_akhir
+        alasan_perpanjangan: cleanAlasan,
+        deadline_akhir: serverDeadlineAkhir,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
 
     if (error) throw error
     revalidatePath('/admin')
 
-    // Kirim notifikasi email ke pemohon dengan alasan perpanjangan & deadline baru
-    sendStatusUpdateNotification(id, 'perpanjang', { alasan, deadlineAkhir: deadline_akhir }).catch((err) => {
+    dispatchStatusUpdateNotification(id, 'perpanjang', {
+      alasan: cleanAlasan,
+      deadlineAkhir: serverDeadlineAkhir,
+    }).catch((err) => {
       console.error('[Email Notification Error] setPermohonanPerpanjang:', err)
     })
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
@@ -199,35 +285,40 @@ export async function getAdminKonten() {
         dokumen: dokumenRes.data
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
 export async function updateKontenKategori(id: number, judul: string, isi_teks: string) {
   try {
     const { supabase } = await checkIsAdmin()
-    
+    const cleanJudul = judul.trim()
+    const cleanIsi = isi_teks.trim()
+    if (!cleanJudul) {
+      return { success: false, error: 'Judul kategori tidak boleh kosong.' }
+    }
+
     const { error } = await supabase
       .from('konten_landing')
-      .update({ judul, isi_teks })
+      .update({ judul: cleanJudul, isi_teks: cleanIsi })
       .eq('id', id)
 
     if (error) throw error
     revalidatePath('/admin/konten')
-    revalidatePath('/', 'layout') // Revalidate homepage and all its contents
-    revalidatePath('/informasi/[kategori]', 'page') // Revalidate dynamic category pages
+    revalidatePath('/', 'layout')
+    revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
@@ -249,7 +340,6 @@ export async function addKontenKategori(judul: string, isi_teks: string, customK
       sectionKey = `kategori_${Date.now()}`
     }
 
-    // Periksa apakah section_key sudah ada
     const { data: existing } = await supabase
       .from('konten_landing')
       .select('id')
@@ -278,9 +368,12 @@ export async function addKontenKategori(judul: string, isi_teks: string, customK
     revalidatePath('/', 'layout')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true, data }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error: addKontenKategori]', error)
-    return { success: false, error: error?.message || 'Gagal menambahkan kategori baru.' }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Gagal menambahkan kategori baru.'),
+    }
   }
 }
 
@@ -295,8 +388,13 @@ export async function deleteKontenKategori(id: number, section_key: string) {
       }
     }
 
-    // Bersihkan semua dokumen terkait kategori ini terlebih dahulu
-    await supabase.from('dokumen_publik').delete().eq('kategori_key', section_key)
+    // Bersihkan semua dokumen terkait kategori ini terlebih dahulu dan verifikasi hasilnya
+    const { error: docDelErr } = await supabase
+      .from('dokumen_publik')
+      .delete()
+      .eq('kategori_key', section_key)
+
+    if (docDelErr) throw docDelErr
 
     const { error } = await supabase
       .from('konten_landing')
@@ -309,22 +407,35 @@ export async function deleteKontenKategori(id: number, section_key: string) {
     revalidatePath('/', 'layout')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error: deleteKontenKategori]', error)
-    return { success: false, error: error?.message || 'Gagal menghapus kategori.' }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Gagal menghapus kategori.'),
+    }
   }
 }
 
 export async function addDokumen(kategori_key: string, nama_dokumen: string, file_url: string) {
   try {
-    const { supabase } = await checkIsAdmin()
-    
+    const { supabase, user } = await checkIsAdmin()
+    const cleanNama = nama_dokumen.trim()
+    const cleanUrl = file_url.trim()
+
+    if (!cleanNama) {
+      return { success: false, error: 'Nama dokumen tidak boleh kosong.' }
+    }
+    if (!isSafePublicUrl(cleanUrl)) {
+      return { success: false, error: 'URL dokumen tidak valid. Gunakan tautan http:// atau https://.' }
+    }
+
     const { error } = await supabase
       .from('dokumen_publik')
       .insert({
-        kategori_key,
-        nama_dokumen,
-        file_url
+        kategori_key: kategori_key.trim(),
+        nama_dokumen: cleanNama,
+        file_url: cleanUrl,
+        uploaded_by: user.id,
       })
 
     if (error) throw error
@@ -332,22 +443,31 @@ export async function addDokumen(kategori_key: string, nama_dokumen: string, fil
     revalidatePath('/', 'layout')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
 export async function updateDokumen(id: number | bigint, nama_dokumen: string, file_url: string) {
   try {
     const { supabase } = await checkIsAdmin()
-    
+    const cleanNama = nama_dokumen.trim()
+    const cleanUrl = file_url.trim()
+
+    if (!cleanNama) {
+      return { success: false, error: 'Nama dokumen tidak boleh kosong.' }
+    }
+    if (!isSafePublicUrl(cleanUrl)) {
+      return { success: false, error: 'URL dokumen tidak valid. Gunakan tautan http:// atau https://.' }
+    }
+
     const { error } = await supabase
       .from('dokumen_publik')
-      .update({ nama_dokumen, file_url })
+      .update({ nama_dokumen: cleanNama, file_url: cleanUrl })
       .eq('id', id)
 
     if (error) throw error
@@ -355,19 +475,19 @@ export async function updateDokumen(id: number | bigint, nama_dokumen: string, f
     revalidatePath('/', 'layout')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
 export async function deleteDokumen(id: number | bigint) {
   try {
     const { supabase } = await checkIsAdmin()
-    
+
     const { error } = await supabase
       .from('dokumen_publik')
       .delete()
@@ -378,12 +498,12 @@ export async function deleteDokumen(id: number | bigint) {
     revalidatePath('/', 'layout')
     revalidatePath('/informasi/[kategori]', 'page')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Admin Action Error]', error)
-    const msg = error?.message?.includes('Unauthorized') || error?.message?.includes('Forbidden') 
-      ? error.message 
-      : 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'
-    return { success: false, error: msg }
+    return {
+      success: false,
+      error: sanitizeUserError(error, 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.'),
+    }
   }
 }
 
@@ -395,7 +515,6 @@ export async function getAllPermohonanForReport() {
   try {
     const { supabase } = await checkIsAdmin()
 
-    // Fetch all requests ordered by date descending
     const { data, error } = await supabase
       .from('permohonan')
       .select(`
@@ -411,12 +530,20 @@ export async function getAllPermohonanForReport() {
 
     if (error) {
       console.error('[Admin Error] getAllPermohonanForReport:', error)
-      return { success: false, data: [] }
+      return {
+        success: false as const,
+        data: [],
+        error: 'Gagal memuat laporan permohonan.',
+      }
     }
 
-    return { success: true, data: data || [] }
-  } catch (err: any) {
+    return { success: true as const, data: data || [] }
+  } catch (err: unknown) {
     console.error('[Admin Error] getAllPermohonanForReport catch:', err)
-    return { success: false, data: [] }
+    return {
+      success: false as const,
+      data: [],
+      error: sanitizeUserError(err, 'Gagal memuat laporan permohonan.'),
+    }
   }
 }
