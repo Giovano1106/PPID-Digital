@@ -41,7 +41,7 @@ export default function AdminNav() {
   ]
 
   return (
-    <nav className="space-y-1.5">
+    <nav aria-label="Navigasi Admin Console" className="space-y-1">
       {navItems.map((item) => {
         const isActive = item.exact
           ? pathname === item.href
@@ -52,13 +52,19 @@ export default function AdminNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-xs font-bold transition-all ${
+            aria-current={isActive ? 'page' : undefined}
+            className={`flex items-center gap-3 rounded-lg border-l-[3px] px-3.5 py-2.5 min-h-[44px] text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e4891] focus-visible:ring-offset-2 ${
               isActive
-                ? 'bg-[#0e4891] text-white shadow-sm'
-                : 'text-slate-700 hover:bg-slate-100 hover:text-[#0e4891]'
+                ? 'border-l-[#0e4891] bg-blue-50/80 text-[#0e4891] font-bold'
+                : 'border-l-transparent text-slate-700 font-semibold hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
-            <IconComponent weight="fill" size={18} />
+            <IconComponent
+              weight={isActive ? 'fill' : 'regular'}
+              size={18}
+              className="shrink-0"
+              aria-hidden="true"
+            />
             <span>{item.label}</span>
           </Link>
         )

@@ -1,48 +1,51 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { CaretLeft, CaretRight, Tray, ClockCountdown, HourglassMedium, CheckCircle } from '@phosphor-icons/react'
+import { useCallback, useEffect, useState } from 'react'
+import { CaretLeft, CaretRight, WarningCircle, ArrowsClockwise } from '@phosphor-icons/react'
 import Toast, { ToastType } from '@/components/Toast'
 import SkeletonCard from '@/components/SkeletonCard'
 import AdminHeader from '@/components/admin/AdminHeader'
-import AdminPermohonanTable from '@/components/admin/AdminPermohonanTable'
+import AdminPermohonanTable, { Permohonan } from '@/components/admin/AdminPermohonanTable'
 import AdminPermohonanModals from '@/components/admin/AdminPermohonanModals'
-
 import {
   getAdminPermohonan,
   setPermohonanDiproses,
   setPermohonanJawab,
   setPermohonanTolak,
-  setPermohonanPerpanjang
+  setPermohonanPerpanjang,
 } from '@/app/actions/admin'
 import { createClient } from '@/app/lib/supabase/client'
 
-type Profile = {
-  nama: string
-  nik: string | null
-  email: string | null
-  telepon: string | null
+const ITEMS_PER_PAGE = 10
+
+function getTodayWitaYmd(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Makassar',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
 }
 
-type Permohonan = {
-  id: number
-  user_id: string
-  jenis_informasi: string
-  deskripsi: string
-  cara_memperoleh: string
-  status: 'diajukan' | 'diproses' | 'dijawab' | 'ditolak'
-  jawaban_admin: string | null
-  deadline_awal: string | null
-  diperpanjang: boolean
-  alasan_perpanjangan: string | null
-  deadline_akhir: string | null
-  created_at: string
-  profiles?: Profile | null
+function extractDeadlineYmd(deadlineStr: string | null): string | null {
+  if (!deadlineStr) return null
+  const match = deadlineStr.trim().match(/^(\d{4}-\d{2}-\d{2})/)
+  if (match) return match[1]
+  const parsed = new Date(deadlineStr)
+  if (Number.isNaN(parsed.getTime())) return null
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Makassar',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(parsed)
 }
 
 export default function AdminDashboardPage() {
   const [listPermohonan, setListPermohonan] = useState<Permohonan[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
 
   // State Filter, Search & Pagination
@@ -50,7 +53,6 @@ export default function AdminDashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [expandedIds, setExpandedIds] = useState<Record<number, boolean>>({})
-  const ITEMS_PER_PAGE = 10
 
   // State Toast, Confirm Modal & Laporan
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
@@ -62,25 +64,74 @@ export default function AdminDashboardPage() {
   const [selectedItem, setSelectedItem] = useState<Permohonan | null>(null)
   const [inputText, setInputText] = useState('')
 
-  // Fetch semua permohonan menggunakan Server Actions
-  const fetchPermohonan = async (isBackground = false) => {
-    if (!isBackground) setLoading(true)
-    const result = await getAdminPermohonan()
+  const showToast = useCallback((message: string, type: ToastType = 'success') => {
+    setToast({ message, type })
+  }, [])
 
-    if (result.success && result.data) {
-      setListPermohonan(result.data as Permohonan[])
-    } else {
-      if (!isBackground) showToast('Gagal memuat data: ' + result.error, 'error')
-    }
-    if (!isBackground) setLoading(false)
-  }
+  const fetchPermohonan = useCallback(
+    async (isBackground = false) => {
+      if (!isBackground) {
+        setIsRefreshing(true)
+        setFetchError(null)
+      }
+
+      try {
+        const result = await getAdminPermohonan()
+        if (result.success && result.data) {
+          setListPermohonan(result.data as Permohonan[])
+          setFetchError(null)
+        } else {
+          const message = result.error || 'Gagal memuat daftar permohonan informasi.'
+          if (!isBackground) {
+            setFetchError(message)
+            showToast(message, 'error')
+          }
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Terjadi gangguan koneksi saat memuat data permohonan.'
+        if (!isBackground) {
+          setFetchError(message)
+          showToast(message, 'error')
+        }
+      } finally {
+        if (!isBackground) {
+          setLoading(false)
+          setIsRefreshing(false)
+        }
+      }
+    },
+    [showToast]
+  )
 
   useEffect(() => {
-    fetchPermohonan()
+    let ignore = false
+
+    getAdminPermohonan()
+      .then((result) => {
+        if (ignore) return
+        if (result.success && result.data) {
+          setListPermohonan(result.data as Permohonan[])
+          setFetchError(null)
+        } else {
+          setFetchError(result.error || 'Gagal memuat daftar permohonan informasi.')
+        }
+        setLoading(false)
+      })
+      .catch((err: unknown) => {
+        if (ignore) return
+        setFetchError(
+          err instanceof Error
+            ? err.message
+            : 'Terjadi gangguan koneksi saat memuat data permohonan.'
+        )
+        setLoading(false)
+      })
 
     const supabase = createClient()
 
-    // 1. Setup Supabase Realtime WebSocket subscription
     const channel = supabase
       .channel('admin-permohonan-realtime')
       .on(
@@ -94,32 +145,27 @@ export default function AdminDashboardPage() {
           if (payload.eventType === 'INSERT') {
             showToast('Ada permohonan informasi publik baru masuk.', 'info')
           }
-          fetchPermohonan(true)
+          void fetchPermohonan(true)
         }
       )
       .subscribe()
 
-    // 2. Auto-refresh saat admin beralih kembali ke tab ini
     const handleFocus = () => {
-      fetchPermohonan(true)
+      void fetchPermohonan(true)
     }
     window.addEventListener('focus', handleFocus)
 
-    // 3. Fallback polling pasif berkala (setiap 20 detik)
     const intervalId = setInterval(() => {
-      fetchPermohonan(true)
+      void fetchPermohonan(true)
     }, 20000)
 
     return () => {
+      ignore = true
       supabase.removeChannel(channel)
       window.removeEventListener('focus', handleFocus)
       clearInterval(intervalId)
     }
-  }, [])
-
-  const showToast = (message: string, type: ToastType = 'success') => {
-    setToast({ message, type })
-  }
+  }, [fetchPermohonan, showToast])
 
   // Update status (Diproses)
   const openProcessModal = (item: Permohonan) => {
@@ -129,17 +175,21 @@ export default function AdminDashboardPage() {
   const executeSetDiproses = async () => {
     if (!confirmProcessItem) return
     setUpdatingId(confirmProcessItem.id)
-    
-    const result = await setPermohonanDiproses(confirmProcessItem.id)
 
-    setConfirmProcessItem(null)
-    if (!result.success) {
-      showToast('Gagal memperbarui status: ' + result.error, 'error')
-    } else {
-      showToast('Status permohonan berhasil diubah menjadi DIPROSES.', 'info')
-      fetchPermohonan()
+    try {
+      const result = await setPermohonanDiproses(confirmProcessItem.id)
+      setConfirmProcessItem(null)
+      if (!result.success) {
+        showToast('Gagal memperbarui status: ' + (result.error || 'Kesalahan sistem'), 'error')
+      } else {
+        showToast('Status permohonan berhasil diubah menjadi Diproses.', 'info')
+        await fetchPermohonan(true)
+      }
+    } catch {
+      showToast('Terjadi gangguan koneksi saat memperbarui status permohonan.', 'error')
+    } finally {
+      setUpdatingId(null)
     }
-    setUpdatingId(null)
   }
 
   // Jawab permohonan (Dijawab)
@@ -154,17 +204,25 @@ export default function AdminDashboardPage() {
     if (!selectedItem || !inputText.trim()) return
 
     setUpdatingId(selectedItem.id)
-    
-    const result = await setPermohonanJawab(selectedItem.id, inputText.trim())
-
-    if (!result.success) {
-      showToast('Gagal mengirim jawaban: ' + result.error, 'error')
-    } else {
-      showToast('Jawaban resmi berhasil dikirimkan ke pemohon!')
-      setActiveModal(null)
-      fetchPermohonan()
+    try {
+      const result = await setPermohonanJawab(selectedItem.id, inputText.trim())
+      if (!result.success) {
+        showToast('Gagal mengirim jawaban: ' + (result.error || 'Kesalahan sistem'), 'error')
+      } else {
+        showToast('Jawaban resmi berhasil dikirimkan ke pemohon.')
+        setActiveModal(null)
+        if (filterStatus === 'menunggu') {
+          const remainingCount = Math.max(0, filteredList.length - 1)
+          const nextMaxPage = Math.max(1, Math.ceil(remainingCount / ITEMS_PER_PAGE))
+          setCurrentPage((prev) => Math.min(prev, nextMaxPage))
+        }
+        await fetchPermohonan(true)
+      }
+    } catch {
+      showToast('Terjadi gangguan koneksi saat mengirim jawaban resmi.', 'error')
+    } finally {
+      setUpdatingId(null)
     }
-    setUpdatingId(null)
   }
 
   // Tolak permohonan (Ditolak)
@@ -179,21 +237,28 @@ export default function AdminDashboardPage() {
     if (!selectedItem || !inputText.trim()) return
 
     setUpdatingId(selectedItem.id)
-    
-    const alasanLengkap = `[DITOLAK] Alasan: ${inputText.trim()}`
-    const result = await setPermohonanTolak(selectedItem.id, alasanLengkap)
-
-    if (!result.success) {
-      showToast('Gagal menolak permohonan: ' + result.error, 'error')
-    } else {
-      showToast('Permohonan informasi telah ditolak.', 'info')
-      setActiveModal(null)
-      fetchPermohonan()
+    try {
+      const result = await setPermohonanTolak(selectedItem.id, inputText.trim())
+      if (!result.success) {
+        showToast('Gagal menolak permohonan: ' + (result.error || 'Kesalahan sistem'), 'error')
+      } else {
+        showToast('Permohonan informasi telah ditolak.', 'info')
+        setActiveModal(null)
+        if (filterStatus === 'menunggu') {
+          const remainingCount = Math.max(0, filteredList.length - 1)
+          const nextMaxPage = Math.max(1, Math.ceil(remainingCount / ITEMS_PER_PAGE))
+          setCurrentPage((prev) => Math.min(prev, nextMaxPage))
+        }
+        await fetchPermohonan(true)
+      }
+    } catch {
+      showToast('Terjadi gangguan koneksi saat menolak permohonan.', 'error')
+    } finally {
+      setUpdatingId(null)
     }
-    setUpdatingId(null)
   }
 
-  // Perpanjang SLA (+7 Hari Kerja)
+  // Perpanjang SLA (+7 Hari Kerja WITA dihitung server)
   const openPerpanjangModal = (item: Permohonan) => {
     setSelectedItem(item)
     setInputText('')
@@ -205,50 +270,28 @@ export default function AdminDashboardPage() {
     if (!selectedItem || !inputText.trim()) return
 
     setUpdatingId(selectedItem.id)
-
-    let baseDate: Date
-    if (selectedItem.deadline_awal) {
-      const parts = selectedItem.deadline_awal.split('T')[0].split('-').map(Number)
-      baseDate = new Date(parts[0], parts[1] - 1, parts[2])
-    } else {
-      baseDate = new Date(selectedItem.created_at)
+    try {
+      const result = await setPermohonanPerpanjang(selectedItem.id, inputText.trim())
+      if (!result.success) {
+        showToast('Gagal memperpanjang SLA: ' + (result.error || 'Kesalahan sistem'), 'error')
+      } else {
+        showToast('Batas waktu SLA berhasil diperpanjang +7 Hari Kerja WITA.')
+        setActiveModal(null)
+        await fetchPermohonan(true)
+      }
+    } catch {
+      showToast('Terjadi gangguan koneksi saat memperpanjang batas waktu SLA.', 'error')
+    } finally {
+      setUpdatingId(null)
     }
-    baseDate.setHours(0, 0, 0, 0)
-
-    let count = 0
-    const newDeadline = new Date(baseDate)
-    while (count < 7) {
-      newDeadline.setDate(newDeadline.getDate() + 1)
-      const day = newDeadline.getDay()
-      if (day !== 0 && day !== 6) count++
-    }
-    const yyyy = newDeadline.getFullYear()
-    const mm = String(newDeadline.getMonth() + 1).padStart(2, '0')
-    const dd = String(newDeadline.getDate()).padStart(2, '0')
-    const deadlineAkhirStr = `${yyyy}-${mm}-${dd}`
-
-    const result = await setPermohonanPerpanjang(
-      selectedItem.id,
-      inputText.trim(),
-      deadlineAkhirStr
-    )
-
-    if (!result.success) {
-      showToast('Gagal memperpanjang SLA: ' + result.error, 'error')
-    } else {
-      showToast('Batas waktu SLA berhasil diperpanjang +7 Hari Kerja!')
-      setActiveModal(null)
-      fetchPermohonan()
-    }
-    setUpdatingId(null)
   }
 
-  // Toggle Expand Deskripsi
   const toggleExpand = (id: number) => {
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
-  // Hitung statistik ringkas
+  // Statistik operasional
+  const todayWitaYmd = getTodayWitaYmd()
   const totalCount = listPermohonan.length
   const countDiajukan = listPermohonan.filter((p) => p.status === 'diajukan').length
   const countDiproses = listPermohonan.filter((p) => p.status === 'diproses').length
@@ -256,29 +299,41 @@ export default function AdminDashboardPage() {
   const countDitolak = listPermohonan.filter((p) => p.status === 'ditolak').length
   const countMenunggu = countDiajukan + countDiproses
   const countSelesai = countDijawab + countDitolak
+  const countOverdue = listPermohonan.filter((p) => {
+    if (p.status === 'dijawab' || p.status === 'ditolak') return false
+    const ymd = extractDeadlineYmd(p.deadline_akhir || p.deadline_awal)
+    return ymd !== null && ymd < todayWitaYmd
+  }).length
 
   // Chained Filter (Status + Search Query)
   const filteredList = listPermohonan.filter((item) => {
-    if (filterStatus === 'menunggu' && (item.status !== 'diajukan' && item.status !== 'diproses')) {
+    if (filterStatus === 'menunggu' && item.status !== 'diajukan' && item.status !== 'diproses') {
       return false
     }
-    if (filterStatus === 'selesai' && (item.status !== 'dijawab' && item.status !== 'ditolak')) {
+    if (filterStatus === 'selesai' && item.status !== 'dijawab' && item.status !== 'ditolak') {
       return false
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
+      const ticketId = `#${item.id}`
       const nama = (item.profiles?.nama || '').toLowerCase()
       const nik = (item.profiles?.nik || '').toLowerCase()
       const deskripsi = (item.deskripsi || '').toLowerCase()
       const jenis = (item.jenis_informasi || '').toLowerCase()
-      return nama.includes(q) || nik.includes(q) || deskripsi.includes(q) || jenis.includes(q)
+      return (
+        ticketId.includes(q) ||
+        item.id.toString().includes(q) ||
+        nama.includes(q) ||
+        nik.includes(q) ||
+        deskripsi.includes(q) ||
+        jenis.includes(q)
+      )
     }
 
     return true
   })
 
-  // Pesan empty state yang kontekstual
   const getEmptyMessage = () => {
     if (searchQuery.trim()) {
       return `Tidak ditemukan permohonan yang cocok dengan kata kunci "${searchQuery}".`
@@ -292,8 +347,12 @@ export default function AdminDashboardPage() {
     return 'Belum ada permohonan informasi publik yang masuk ke sistem.'
   }
 
-  const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE)
-  const paginatedList = filteredList.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+  const totalPages = Math.max(1, Math.ceil(filteredList.length / ITEMS_PER_PAGE))
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
+  const paginatedList = filteredList.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE
+  )
 
   return (
     <div className="font-plus-jakarta pb-12">
@@ -306,9 +365,14 @@ export default function AdminDashboardPage() {
         />
       )}
 
-      {/* ADMIN HEADER */}
+      {/* ADMIN HEADER + OPERATIONAL SLA LEDGER */}
       <AdminHeader
         totalCount={totalCount}
+        countDiajukan={countDiajukan}
+        countDiproses={countDiproses}
+        countDijawab={countDijawab}
+        countDitolak={countDitolak}
+        countOverdue={countOverdue}
         countMenunggu={countMenunggu}
         countSelesai={countSelesai}
         searchQuery={searchQuery}
@@ -317,63 +381,53 @@ export default function AdminDashboardPage() {
         setFilterStatus={setFilterStatus}
         setCurrentPage={setCurrentPage}
         setShowLaporanModal={setShowLaporanModal}
-        fetchPermohonan={fetchPermohonan}
+        fetchPermohonan={() => {
+          void fetchPermohonan(false)
+        }}
+        isRefreshing={isRefreshing}
       />
 
-      {/* STATS BADGES */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Permohonan</span>
-            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
-              <Tray size={16} weight="bold" />
-            </span>
+      {/* FETCH ERROR ALERT WITH RETRY */}
+      {fetchError && (
+        <div
+          role="alert"
+          className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-start gap-3">
+            <WarningCircle
+              weight="fill"
+              size={22}
+              className="text-rose-600 shrink-0 mt-0.5"
+              aria-hidden="true"
+            />
+            <div>
+              <p className="text-sm font-bold text-rose-900">
+                Gagal Memuat Data Permohonan
+              </p>
+              <p className="text-xs text-rose-800 font-medium mt-0.5 leading-relaxed">
+                {fetchError}
+              </p>
+            </div>
           </div>
-          <div className="mt-3">
-            <p className="text-3xl font-black text-slate-900 tracking-tight">{totalCount}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Semua berkas masuk</p>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true)
+              void fetchPermohonan(false)
+            }}
+            disabled={isRefreshing}
+            className="min-h-[44px] px-4 py-2 rounded-lg bg-[#0e4891] hover:bg-[#0a366f] text-white text-xs font-bold disabled:opacity-50 transition-colors inline-flex items-center justify-center gap-2 shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e4891] focus-visible:ring-offset-2"
+          >
+            <ArrowsClockwise
+              weight="bold"
+              size={15}
+              className={isRefreshing ? 'animate-spin' : ''}
+              aria-hidden="true"
+            />
+            <span>Coba Lagi</span>
+          </button>
         </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0e4891]">Perlu Diproses</span>
-            <span className="w-7 h-7 rounded-lg bg-blue-50 text-[#0e4891] flex items-center justify-center">
-              <ClockCountdown size={16} weight="bold" />
-            </span>
-          </div>
-          <div className="mt-3">
-            <p className="text-3xl font-black text-[#0e4891] tracking-tight">{countDiajukan}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Menunggu verifikasi admin</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Sedang Diproses</span>
-            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-              <HourglassMedium size={16} weight="bold" />
-            </span>
-          </div>
-          <div className="mt-3">
-            <p className="text-3xl font-black text-slate-900 tracking-tight">{countDiproses}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Kajian teknis bidang</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Selesai / Dijawab</span>
-            <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-              <CheckCircle size={16} weight="bold" />
-            </span>
-          </div>
-          <div className="mt-3">
-            <p className="text-3xl font-black text-slate-900 tracking-tight">{countDijawab}</p>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">Tanggapan telah terbit</p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* LIST PERMOHONAN */}
       {loading ? (
@@ -382,8 +436,8 @@ export default function AdminDashboardPage() {
           <SkeletonCard />
           <SkeletonCard />
         </div>
-      ) : filteredList.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center text-xs font-bold text-slate-500 leading-relaxed">
+      ) : fetchError && listPermohonan.length === 0 ? null : filteredList.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-xs font-bold text-slate-600 leading-relaxed">
           {getEmptyMessage()}
         </div>
       ) : (
@@ -400,28 +454,38 @@ export default function AdminDashboardPage() {
       )}
 
       {/* PAGINATION CONTROLS */}
-      {!loading && totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-4 mt-8 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-bold text-slate-500">
-            Halaman {currentPage} dari {totalPages} <span className="font-medium">({filteredList.length} Total Data)</span>
+      {!loading && filteredList.length > ITEMS_PER_PAGE && (
+        <nav
+          aria-label="Navigasi halaman daftar permohonan"
+          className="flex flex-wrap items-center justify-between gap-4 mt-6 bg-white p-4 rounded-xl border border-slate-200"
+        >
+          <p className="text-xs font-bold text-slate-600 tabular-nums">
+            Halaman {safeCurrentPage} dari {totalPages}{' '}
+            <span className="font-medium text-slate-500">
+              ({filteredList.length} Total Data)
+            </span>
           </p>
           <div className="flex items-center gap-2">
             <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+              type="button"
+              disabled={safeCurrentPage <= 1}
+              onClick={() => setCurrentPage(Math.max(safeCurrentPage - 1, 1))}
+              aria-label="Halaman sebelumnya"
+              className="min-h-[44px] px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-colors cursor-pointer inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e4891] focus-visible:ring-offset-2"
             >
-              <CaretLeft weight="bold" size={14} /> Sebelumnya
+              <CaretLeft weight="bold" size={14} aria-hidden="true" /> Sebelumnya
             </button>
             <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+              type="button"
+              disabled={safeCurrentPage >= totalPages}
+              onClick={() => setCurrentPage(Math.min(safeCurrentPage + 1, totalPages))}
+              aria-label="Halaman berikutnya"
+              className="min-h-[44px] px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 transition-colors cursor-pointer inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e4891] focus-visible:ring-offset-2"
             >
-              Selanjutnya <CaretRight weight="bold" size={14} />
+              Selanjutnya <CaretRight weight="bold" size={14} aria-hidden="true" />
             </button>
           </div>
-        </div>
+        </nav>
       )}
 
       {/* SEMUA MODAL DISATUKAN */}
@@ -439,6 +503,7 @@ export default function AdminDashboardPage() {
         executeSetDiproses={executeSetDiproses}
         showLaporanModal={showLaporanModal}
         setShowLaporanModal={setShowLaporanModal}
+        selectedItem={selectedItem}
       />
     </div>
   )

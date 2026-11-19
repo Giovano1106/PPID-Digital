@@ -41,14 +41,23 @@ export default function AdminBreadcrumb() {
 
   return (
     <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+      <ol className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-600">
         {breadcrumbs.map((item, index) => (
           <li key={`${item.href}-${index}`} className="flex items-center gap-1.5">
-            {index > 0 && <span className="text-slate-300">/</span>}
+            {index > 0 && (
+              <span className="text-slate-400 select-none" aria-hidden="true">
+                /
+              </span>
+            )}
             {item.active ? (
-              <span className="text-[#0e4891] font-bold">{item.label}</span>
+              <span aria-current="page" className="text-[#0e4891] font-bold">
+                {item.label}
+              </span>
             ) : (
-              <Link href={item.href} className="hover:text-[#0e4891] transition-colors">
+              <Link
+                href={item.href}
+                className="hover:text-[#0e4891] transition-colors rounded-sm px-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e4891] focus-visible:ring-offset-2"
+              >
                 {item.label}
               </Link>
             )}

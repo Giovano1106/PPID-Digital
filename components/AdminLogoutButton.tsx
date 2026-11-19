@@ -9,13 +9,13 @@ import Toast, { ToastType } from '@/components/Toast'
 
 export default function AdminLogoutButton() {
   const router = useRouter()
-  const supabase = createClient()
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   const handleLogout = async () => {
     setLoading(true)
+    const supabase = createClient()
     await supabase.auth.signOut()
     setShowModal(false)
     setLoading(false)
@@ -31,9 +31,9 @@ export default function AdminLogoutButton() {
       <button
         type="button"
         onClick={() => setShowModal(true)}
-        className="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-all shadow-2xs cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 min-h-[44px] text-xs font-bold text-rose-700 hover:bg-rose-100 hover:text-rose-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-2"
       >
-        <SignOut weight="bold" size={16} /> Keluar Akun
+        <SignOut weight="bold" size={16} aria-hidden="true" /> Keluar Akun
       </button>
 
       <ConfirmModal
