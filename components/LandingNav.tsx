@@ -81,9 +81,9 @@ export default function LandingNav() {
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3.5">
-            <div className="flex items-center gap-1.5">
-              <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={40} height={40} className="w-9 h-9 object-contain" />
-              <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={40} height={40} className="w-9 h-9 object-contain" />
+            <div className="flex items-center gap-2.5 shrink-0">
+              <Image src="/logo-sulteng.png" alt="Logo Sulteng" width={28} height={38} className="h-9 w-auto object-contain" />
+              <Image src="/logo-cikasda.png" alt="Logo CIKASDA" width={84} height={32} className="h-7 w-auto object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-base tracking-tight text-slate-900 leading-none">

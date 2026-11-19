@@ -232,10 +232,11 @@ export default async function HomePage() {
           <div data-animate="footer-content" className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
             {/* Brand */}
             <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center gap-1.5">
-                  <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={40} height={40} className="w-10 h-10 object-contain" />
-                  <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={40} height={40} className="w-10 h-10 object-contain" />
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <div className="inline-flex items-center gap-2.5 bg-white px-3 py-1.5 rounded-lg shrink-0">
+                  <Image src="/logo-sulteng.png" alt="Logo Sulteng" width={28} height={38} className="h-9 w-auto object-contain" />
+                  <div className="h-5 w-px bg-slate-200 shrink-0" />
+                  <Image src="/logo-cikasda.png" alt="Logo CIKASDA" width={84} height={32} className="h-7 w-auto object-contain" />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-extrabold text-base tracking-tight text-white leading-none">

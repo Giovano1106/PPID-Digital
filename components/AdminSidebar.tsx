@@ -28,9 +28,9 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
       {/* MOBILE TOP BAR WITH LABELED HAMBURGER */}
       <div className="md:hidden bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-40">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={36} height={36} className="w-8 h-8 object-contain" />
-            <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={36} height={36} className="w-8 h-8 object-contain" />
+          <div className="flex items-center gap-2 shrink-0">
+            <Image src="/logo-sulteng.png" alt="Logo Sulteng" width={26} height={35} className="h-8 w-auto object-contain" />
+            <Image src="/logo-cikasda.png" alt="Logo CIKASDA" width={74} height={28} className="h-7 w-auto object-contain" />
           </div>
           <div className="min-w-0">
             <span className="font-extrabold text-sm tracking-tight text-slate-900 block leading-tight">
@@ -81,12 +81,12 @@ export default function AdminSidebar({ adminName }: AdminSidebarProps) {
         }`}
       >
         <div>
-          <div className="flex items-center gap-3 mb-7 pb-5 border-b border-slate-200">
+          <div className="flex items-center gap-2.5 mb-7 pb-5 border-b border-slate-200">
             <div className="flex items-center gap-1.5 shrink-0">
-              <Image src="/logo-sulteng.webp" alt="Logo Sulteng" width={40} height={40} className="w-9 h-9 object-contain" />
-              <Image src="/logo-cikasda.webp" alt="Logo CIKASDA" width={40} height={40} className="w-9 h-9 object-contain" />
+              <Image src="/logo-sulteng.png" alt="Logo Sulteng" width={24} height={32} className="h-8 w-auto object-contain" />
+              <Image src="/logo-cikasda.png" alt="Logo CIKASDA" width={58} height={22} className="h-[22px] w-auto object-contain" />
             </div>
-            <div className="overflow-hidden">
+            <div className="overflow-hidden min-w-0">
               <span className="font-extrabold text-sm tracking-tight text-slate-900 block leading-tight truncate">
                 Admin Console
               </span>

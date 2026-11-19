@@ -90,10 +90,10 @@ export default function LoginPage() {
           <div className="relative mb-4.5 inline-flex items-center gap-3.5 bg-white px-4 py-2.5 rounded-2xl shadow-lg border border-white/80 ring-4 ring-white/15 transition-transform duration-300 hover:scale-[1.02]">
             <div className="flex items-center justify-center shrink-0">
               <Image
-                src="/logo-sulteng.webp"
+                src="/logo-sulteng.png"
                 alt="Logo Provinsi Sulawesi Tengah"
-                width={36}
-                height={44}
+                width={30}
+                height={40}
                 className="h-10 w-auto object-contain"
                 priority
               />
@@ -101,10 +101,10 @@ export default function LoginPage() {
             <div className="h-7 w-px bg-slate-200 shrink-0" />
             <div className="flex items-center justify-center shrink-0 px-0.5">
               <Image
-                src="/logo-cikasda.webp"
+                src="/logo-cikasda.png"
                 alt="Logo Dinas CIKASDA"
-                width={100}
-                height={38}
+                width={95}
+                height={36}
                 className="h-9 w-auto object-contain"
                 priority
               />
