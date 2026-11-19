@@ -4,18 +4,19 @@ import { createClient } from '@/app/lib/supabase/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const tokenHash = searchParams.get('token_hash')
+  const otpType = searchParams.get('type')
   const next = searchParams.get('next') ?? '/permohonan-saya'
   const oauth = searchParams.get('oauth')
+
+  const isSafePath = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')
+  const targetPath = isSafePath ? next : '/permohonan-saya'
 
   if (code) {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Cegah Open Redirect (CWE-601): Pastikan path lokal valid (diawali '/' tunggal, bukan '//' atau backslash)
-      const isSafePath = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')
-      const targetPath = isSafePath ? next : '/permohonan-saya'
-
       // Alur pemulihan kata sandi harus selalu menuju /update-sandi, termasuk untuk Admin
       if (targetPath === '/update-sandi') {
         return NextResponse.redirect(`${origin}/update-sandi`)
@@ -40,6 +41,16 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.redirect(redirectUrl.toString())
+    }
+  } else if (tokenHash && otpType === 'recovery') {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'recovery',
+    })
+
+    if (!error) {
+      return NextResponse.redirect(`${origin}/update-sandi`)
     }
   }
 

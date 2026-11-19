@@ -1,8 +1,11 @@
 'use server'
 
 import { createClient } from '@/app/lib/supabase/server'
+import { createAdminClient, isSupabaseAdminConfigured } from '@/app/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { getAppUrl } from '@/app/lib/email/mailer'
+import { getAppUrl, sendEmail } from '@/app/lib/email/mailer'
+import { getEmailTemplateByKey } from '@/app/lib/email/template-store'
+import { compileEmailHtml } from '@/app/lib/email/template-engine'
 
 export interface CompleteProfileInput {
   nama: string
@@ -287,12 +290,66 @@ export async function requestPasswordReset(identifier: string): Promise<{
     }
 
     if (targetEmail) {
-      const redirectTo = `${getAppUrl()}/api/auth/callback?next=/update-sandi`
-      const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
-        redirectTo,
-      })
-      if (error) {
-        console.warn('[requestPasswordReset Notice]', error.message)
+      const hasSmtpPass = Boolean(process.env.SMTP_PASS?.trim())
+
+      if (isSupabaseAdminConfigured() && hasSmtpPass) {
+        const adminClient = createAdminClient()
+        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+          type: 'recovery',
+          email: targetEmail,
+        })
+
+        if (linkError) {
+          console.warn('[requestPasswordReset generateLink Notice]', linkError.message)
+        } else if (linkData?.properties?.hashed_token) {
+          const { data: profileRow } = await adminClient
+            .from('profiles')
+            .select('nama')
+            .ilike('email', targetEmail)
+            .maybeSingle()
+
+          const userMeta = linkData.user?.user_metadata as
+            | { nama?: string; full_name?: string; name?: string }
+            | undefined
+          const resolvedNama =
+            profileRow?.nama?.trim() ||
+            userMeta?.nama?.trim() ||
+            userMeta?.full_name?.trim() ||
+            userMeta?.name?.trim() ||
+            'Pengguna Portal PPID'
+
+          const recoveryUrl = `${getAppUrl()}/update-sandi?token_hash=${encodeURIComponent(
+            linkData.properties.hashed_token
+          )}&type=recovery`
+
+          const resetTemplate = await getEmailTemplateByKey('reset_sandi')
+          const compiled = compileEmailHtml(resetTemplate, {
+            nama: resolvedNama,
+            email: targetEmail,
+            link_portal: recoveryUrl,
+          })
+
+          const sendResult = await sendEmail({
+            to: targetEmail,
+            subject: compiled.subject,
+            html: compiled.html,
+          })
+
+          if (!sendResult.success) {
+            console.error('[requestPasswordReset SendEmail Error]', sendResult.error)
+          }
+        }
+      } else {
+        console.warn(
+          '[requestPasswordReset] SUPABASE_SERVICE_ROLE_KEY atau SMTP_PASS belum disetel, menggunakan mailer Supabase default.'
+        )
+        const redirectTo = `${getAppUrl()}/api/auth/callback?next=/update-sandi`
+        const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+          redirectTo,
+        })
+        if (error) {
+          console.warn('[requestPasswordReset Notice]', error.message)
+        }
       }
     }
 

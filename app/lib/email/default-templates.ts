@@ -147,4 +147,22 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<string, EmailTemplateData> = {
       { key: '{{link_portal}}', label: 'Tautan Portal Pemohon', example: 'http://localhost:3000/permohonan-saya/14', description: 'Tautan langsung untuk melihat keputusan dan mengajukan keberatan', canUseIn: ['Pesan Penutup', 'Tombol CTA'] },
     ],
   },
+  reset_sandi: {
+    template_key: 'reset_sandi',
+    nama_template: 'Pemulihan Kata Sandi (Lupa Sandi)',
+    target_penerima: 'pemohon',
+    subjek: '[PPID CIKASDA] Tautan Atur Ulang Kata Sandi Akun',
+    badge_label: 'Pemulihan Keamanan Akun',
+    judul_heading: 'Permintaan Atur Ulang Kata Sandi',
+    pesan_pembuka:
+      'Yth. {{nama}}, kami menerima permintaan untuk mengatur ulang kata sandi akun Portal PPID Digital Dinas Cipta Karya dan Sumber Daya Air Provinsi Sulawesi Tengah yang terdaftar pada alamat email {{email}}.',
+    pesan_penutup:
+      'Tautan pemulihan ini bersifat rahasia dan hanya berlaku untuk satu kali penggunaan. Jika Anda tidak merasa mengajukan permintaan pengaturan ulang kata sandi, harap abaikan email ini dan jangan bagikan tautan kepada siapa pun.',
+    cta_label: 'Atur Ulang Kata Sandi Sekarang',
+    available_variables: [
+      { key: '{{nama}}', label: 'Nama Pengguna', example: 'Budi Santoso, S.T.', description: 'Nama lengkap pemilik akun', canUseIn: ['Subjek', 'Pesan Pembuka', 'Pesan Penutup'] },
+      { key: '{{email}}', label: 'Email Akun', example: 'budi.santoso@email.com', description: 'Alamat email tujuan pemulihan akun', canUseIn: ['Subjek', 'Pesan Pembuka', 'Pesan Penutup'] },
+      { key: '{{link_portal}}', label: 'Tautan Reset Sandi', example: 'http://localhost:3000/update-sandi', description: 'Tautan satu kali untuk membuat kata sandi baru', canUseIn: ['Pesan Penutup', 'Tombol CTA'] },
+    ],
+  },
 }

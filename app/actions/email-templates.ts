@@ -12,10 +12,27 @@ import {
 import {
   compileEmailHtml,
   DUMMY_PREVIEW_CONTEXT,
+  EmailRenderContext,
 } from '@/app/lib/email/template-engine'
-import { sendEmail, getAdminNotificationEmail } from '@/app/lib/email/mailer'
+import { sendEmail, getAdminNotificationEmail, getAppUrl } from '@/app/lib/email/mailer'
 import { EmailTemplateData } from '@/app/lib/email/default-templates'
 import { sanitizeUserError } from '@/app/lib/security'
+
+function buildPreviewContext(templateKey: string): EmailRenderContext {
+  if (templateKey === 'reset_sandi') {
+    return {
+      ...DUMMY_PREVIEW_CONTEXT,
+      link_portal: `${getAppUrl()}/update-sandi?token_hash=contoh-token-verifikasi&type=recovery`,
+    }
+  }
+  if (templateKey === 'pengajuan_baru_admin') {
+    return {
+      ...DUMMY_PREVIEW_CONTEXT,
+      link_portal: `${getAppUrl()}/admin`,
+    }
+  }
+  return DUMMY_PREVIEW_CONTEXT
+}
 
 async function checkIsAdmin() {
   const supabase = await createClient()
@@ -161,7 +178,7 @@ export async function renderLivePreviewHtml(
       ...overrides,
     }
 
-    const compiled = compileEmailHtml(merged, DUMMY_PREVIEW_CONTEXT)
+    const compiled = compileEmailHtml(merged, buildPreviewContext(templateKey))
     return { success: true, subject: compiled.subject, html: compiled.html }
   } catch (error: unknown) {
     return {
@@ -203,7 +220,7 @@ export async function sendAdminTestEmail(
       ...(overrides || {}),
     }
 
-    const compiled = compileEmailHtml(merged, DUMMY_PREVIEW_CONTEXT)
+    const compiled = compileEmailHtml(merged, buildPreviewContext(templateKey))
 
     const sendRes = await sendEmail({
       to: cleanTargetEmail,
