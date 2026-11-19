@@ -33,12 +33,13 @@ export async function GET() {
     const latencyMs = Date.now() - startTime
 
     if (error) {
+      console.error('[Health Check DB Error]', error.message)
       return NextResponse.json(
         {
           status: 'degraded',
           database: {
             status: 'error',
-            message: error.message,
+            message: 'Database connection error',
             latencyMs,
           },
           timestamp: new Date().toISOString(),
@@ -65,12 +66,12 @@ export async function GET() {
       }
     )
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Internal Server Error'
+    console.error('[Health Check Exception]', err)
 
     return NextResponse.json(
       {
         status: 'unhealthy',
-        error: errorMessage,
+        error: 'Internal server error',
         latencyMs: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },

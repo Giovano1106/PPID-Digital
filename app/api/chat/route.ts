@@ -34,7 +34,7 @@ function checkRateLimit(ip: string): boolean {
 
 // Membersihkan rate limit map lama secara berkala
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
+  const cleanupTimer = setInterval(() => {
     const now = Date.now()
     for (const [key, record] of rateLimitMap.entries()) {
       if (now > record.resetAt) {
@@ -42,6 +42,12 @@ if (typeof setInterval !== 'undefined') {
       }
     }
   }, 5 * 60 * 1000)
+  cleanupTimer.unref?.()
+}
+
+interface RawHistoryEntry {
+  role?: unknown
+  text?: unknown
 }
 
 export async function POST(req: NextRequest) {
@@ -79,11 +85,11 @@ export async function POST(req: NextRequest) {
     const userMessage = rawMessage.slice(0, 400)
 
     // - Ambil maksimal 3 riwayat percakapan terakhir
-    const sanitizedHistory = rawHistory.slice(-3).map((item: any) => ({
-      role: item.role === 'user' ? 'user' : 'model',
+    const sanitizedHistory = rawHistory.slice(-3).map((item: RawHistoryEntry) => ({
+      role: item?.role === 'user' ? 'user' : 'model',
       parts: [
         {
-          text: String(item.text || '').slice(0, 300),
+          text: String(item?.text || '').slice(0, 300),
         },
       ],
     }))
@@ -143,12 +149,13 @@ export async function POST(req: NextRequest) {
     }
 
     const selectedModel = process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash-lite'
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:streamGenerateContent?alt=sse&key=${apiKey}`
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:streamGenerateContent?alt=sse`
 
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
       },
       body: JSON.stringify(geminiPayload),
     })
@@ -240,7 +247,7 @@ export async function POST(req: NextRequest) {
         'X-Content-Type-Options': 'nosniff',
       },
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[POST /api/chat Error]:', err)
     return NextResponse.json(
       {

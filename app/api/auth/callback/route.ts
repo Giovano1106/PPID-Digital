@@ -12,9 +12,16 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Periksa role user setelah autentikasi berhasil (menggunakan data.user dari exchangeCodeForSession)
-      const user = data?.user
+      // Cegah Open Redirect (CWE-601): Pastikan path lokal valid (diawali '/' tunggal, bukan '//' atau backslash)
+      const isSafePath = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')
+      const targetPath = isSafePath ? next : '/permohonan-saya'
 
+      // Alur pemulihan kata sandi harus selalu menuju /update-sandi, termasuk untuk Admin
+      if (targetPath === '/update-sandi') {
+        return NextResponse.redirect(`${origin}/update-sandi`)
+      }
+
+      const user = data?.user
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -27,10 +34,6 @@ export async function GET(request: Request) {
         }
       }
 
-      // Bangun URL redirect dengan membawa penanda oauth=google jika ada
-      // Cegah Open Redirect (CWE-601): Pastikan path lokal valid (diawali '/' tunggal, bukan '//' atau mengandung backslash)
-      const isSafePath = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')
-      const targetPath = isSafePath ? next : '/permohonan-saya'
       const redirectUrl = new URL(targetPath, origin)
       if (oauth) {
         redirectUrl.searchParams.set('oauth', oauth)
