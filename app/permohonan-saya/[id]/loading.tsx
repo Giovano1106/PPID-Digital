@@ -1,5 +1,3 @@
-import { ArrowLeft, Clock, FileText, CheckCircle } from '@phosphor-icons/react/dist/ssr'
-
 export default function LoadingDetailPermohonan() {
   return (
     <main className="min-h-screen bg-slate-50 font-plus-jakarta py-12">

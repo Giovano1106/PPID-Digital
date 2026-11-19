@@ -9,10 +9,10 @@ import {
 import {
   MagnifyingGlass,
   ArrowSquareOut,
-  DownloadSimple,
   Table as TableIcon,
   XCircle,
 } from '@phosphor-icons/react'
+import { isSafePublicUrl } from '@/app/lib/security'
 
 interface DaftarInformasiPublikViewProps {
   tables: DaftarInformasiTable[]
@@ -102,9 +102,9 @@ export default function DaftarInformasiPublikView({
           <h3 className="font-bold text-slate-900 text-base mb-1">
             Informasi Tidak Ditemukan
           </h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
             Tidak ditemukan dokumen atau informasi yang cocok dengan kata kunci{' '}
-            <span className="font-bold text-slate-800 font-mono">"{searchQuery}"</span>.
+            <span className="font-bold text-slate-800 font-mono">&ldquo;{searchQuery}&rdquo;</span>.
           </p>
           <button
             onClick={() => setSearchQuery('')}
@@ -169,13 +169,16 @@ export default function DaftarInformasiPublikView({
                         </td>
                         {tableYears.map((th) => {
                           const targetUrl = (row.links as Record<string, string>)[th] || '#'
-                          const isExternal = targetUrl.startsWith('http')
-                          const isInternalRoute = targetUrl.startsWith('/')
-                          const hasLink = targetUrl && targetUrl !== '#'
+                          const isValidUrl = isSafePublicUrl(targetUrl, {
+                            allowRelativePath: true,
+                          })
+                          const isExternal = isValidUrl && /^https?:\/\//i.test(targetUrl)
+                          const isInternalRoute =
+                            isValidUrl && targetUrl.startsWith('/') && !targetUrl.startsWith('//')
 
                           return (
                             <td key={th} className="py-4 px-4 text-center">
-                              {hasLink ? (
+                              {isValidUrl ? (
                                 isExternal ? (
                                   <a
                                     href={targetUrl}
@@ -200,20 +203,19 @@ export default function DaftarInformasiPublikView({
                                     <span>{actionLabel}</span>
                                   </Link>
                                 ) : (
-                                  <a
-                                    href={targetUrl}
-                                    className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline transition-colors"
-                                    title={`${actionLabel} ${row.nama} (${th})`}
+                                  <span
+                                    className="text-xs font-medium text-slate-400 select-none"
+                                    aria-label="Belum tersedia"
                                   >
-                                    {actionLabel}
-                                  </a>
+                                    -
+                                  </span>
                                 )
                               ) : (
                                 <span
-                                  className="text-xs md:text-sm font-semibold text-[#0e4891] hover:underline cursor-pointer"
-                                  title={`Link ${row.nama} (${th})`}
+                                  className="text-xs font-medium text-slate-400 select-none"
+                                  aria-label="Belum tersedia"
                                 >
-                                  {actionLabel}
+                                  -
                                 </span>
                               )}
                             </td>

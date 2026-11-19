@@ -8,13 +8,12 @@ import {
   Flag,
   CheckCircle,
   Clock,
-  Handshake,
-  ArrowRight
+  Handshake
 } from '@phosphor-icons/react/dist/ssr'
 
 // Utility untuk mengubah string menjadi title case yang rapi
 function formatTitle(str: string) {
-  return str.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+  return str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
 
 // Komponen Client untuk merender PDF Viewer atau List
@@ -36,7 +35,7 @@ export async function generateStaticParams() {
     if (data && data.length > 0) {
       return data.map((d) => ({ kategori: d.section_key }))
     }
-  } catch (e) {
+  } catch {
     // fallback
   }
   return [

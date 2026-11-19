@@ -15,10 +15,10 @@ export default function PermohonanRealtimeListener({
   permohonanId,
 }: PermohonanRealtimeListenerProps) {
   const router = useRouter()
-  const supabase = createClient()
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   useEffect(() => {
+    const supabase = createClient()
     // 1. Setup Supabase Realtime WebSocket subscription
     const channelName = permohonanId
       ? `realtime-detail-${permohonanId}`
@@ -80,7 +80,7 @@ export default function PermohonanRealtimeListener({
       window.removeEventListener('focus', handleFocus)
       clearInterval(interval)
     }
-  }, [userId, permohonanId, router, supabase])
+  }, [userId, permohonanId, router])
 
   return (
     <>

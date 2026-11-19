@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { FileText, ArrowUpRight } from '@phosphor-icons/react'
+import { isSafePublicUrl, sanitizeDrivePreviewUrl } from '@/app/lib/security'
 
 type DokumenPublik = {
   id: bigint
@@ -15,17 +16,9 @@ export default function DokumenViewer({ dokumenList }: { dokumenList: DokumenPub
     dokumenList.length > 0 ? dokumenList[0] : null
   )
 
-  // Fungsi utilitas untuk mengekstrak ID Google Drive dan mengonversinya ke format preview
+  // Fungsi utilitas untuk mengekstrak ID Google Drive dan mengonversinya ke format preview aman
   const getDrivePreviewUrl = (url: string) => {
-    try {
-      if (url.includes('drive.google.com/file/d/')) {
-        const id = url.split('/d/')[1].split('/')[0]
-        return `https://drive.google.com/file/d/${id}/preview`
-      }
-      return url // fallback
-    } catch {
-      return url
-    }
+    return sanitizeDrivePreviewUrl(url) || (isSafePublicUrl(url) ? url : null)
   }
 
   if (dokumenList.length === 0) {
@@ -82,21 +75,34 @@ export default function DokumenViewer({ dokumenList }: { dokumenList: DokumenPub
           <>
             <div className="p-4 md:p-5 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-4">
               <h2 className="font-bold text-base text-slate-900 truncate pr-4">{selectedDoc.nama_dokumen}</h2>
-              <a 
-                href={selectedDoc.file_url} 
-                target="_blank" 
-                rel="noreferrer"
-                className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-colors flex-shrink-0 inline-flex items-center gap-1.5"
-              >
-                Buka Tab Baru <ArrowUpRight weight="bold" size={14} />
-              </a>
+              {isSafePublicUrl(selectedDoc.file_url) ? (
+                <a 
+                  href={selectedDoc.file_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs bg-[#0e4891] hover:bg-[#0a366f] text-white font-bold px-4 py-2.5 rounded-lg shadow-sm transition-colors flex-shrink-0 inline-flex items-center gap-1.5"
+                >
+                  Buka Tab Baru <ArrowUpRight weight="bold" size={14} />
+                </a>
+              ) : (
+                <span className="text-xs text-slate-500 font-medium px-3 py-2">
+                  Tautan tidak valid
+                </span>
+              )}
             </div>
             <div className="flex-grow bg-slate-100 relative">
-              <iframe 
-                src={getDrivePreviewUrl(selectedDoc.file_url)} 
-                className="absolute inset-0 w-full h-full border-0 rounded-b-2xl"
-                allow="autoplay"
-              ></iframe>
+              {getDrivePreviewUrl(selectedDoc.file_url) ? (
+                <iframe 
+                  src={getDrivePreviewUrl(selectedDoc.file_url) ?? undefined} 
+                  title={`Pratinjau ${selectedDoc.nama_dokumen}`}
+                  className="absolute inset-0 w-full h-full border-0 rounded-b-2xl"
+                  allow="autoplay"
+                ></iframe>
+              ) : (
+                <div className="flex items-center justify-center h-full px-6 text-center text-sm text-slate-600 font-medium">
+                  Pratinjau dokumen tidak tersedia untuk tautan ini.
+                </div>
+              )}
             </div>
           </>
         ) : (

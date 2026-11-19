@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (data && data.length > 0) {
       categories = data.map((d) => d.section_key)
     }
-  } catch (e) {
+  } catch {
     // fallback
   }
 

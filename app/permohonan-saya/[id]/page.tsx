@@ -5,6 +5,7 @@ import { ArrowLeft, Timer, ChatTeardropText, Info, FileText, ArrowUpRight } from
 import PermohonanRealtimeListener from '@/components/PermohonanRealtimeListener'
 import SurveiKepuasanCard from '@/components/SurveiKepuasanCard'
 import { getSurveiByPermohonanId } from '@/app/actions/survei'
+import { extractSafeDriveUrls, sanitizeDrivePreviewUrl } from '@/app/lib/security'
 
 export default async function PermohonanDetailPage({
   params,
@@ -13,6 +14,10 @@ export default async function PermohonanDetailPage({
 }) {
   const resolvedParams = await params
   const permohonanId = resolvedParams.id
+
+  if (!/^\d+$/.test(permohonanId)) {
+    notFound()
+  }
   
   const supabase = await createClient()
 
@@ -102,26 +107,8 @@ export default async function PermohonanDetailPage({
   const activeDeadline = permohonan.deadline_akhir || permohonan.deadline_awal
   const sisaHari = calculateDaysRemaining(activeDeadline)
 
-  // Fungsi mengekstrak URL Google Drive dari teks jawaban_admin
-  const extractDriveUrls = (text: string | null) => {
-    if (!text) return []
-    // Deteksi url dengan http/https
-    const urlRegex = /(https?:\/\/[^\s]+)/g
-    const urls = text.match(urlRegex) || []
-    return urls.filter(url => url.includes('drive.google.com/file/d/'))
-  }
-
-  const driveUrls = extractDriveUrls(permohonan.jawaban_admin)
-
-  // Fungsi mengonversi URL Google Drive ke format preview
-  const getDrivePreviewUrl = (url: string) => {
-    try {
-      const id = url.split('/d/')[1].split('/')[0]
-      return `https://drive.google.com/file/d/${id}/preview`
-    } catch {
-      return url
-    }
-  }
+  // Ekstraksi URL Google Drive yang aman dari teks jawaban_admin
+  const driveUrls = extractSafeDriveUrls(permohonan.jawaban_admin)
 
   return (
     <main className="min-h-screen bg-slate-50 font-plus-jakarta py-12 selection:bg-[#0e4891] selection:text-white">
@@ -171,9 +158,13 @@ export default async function PermohonanDetailPage({
               <div className="flex-1">
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Tenggat Waktu SLA</p>
                 <p className="text-sm font-bold text-slate-900">
-                  {new Date(activeDeadline).toLocaleDateString('id-ID', {
-                    day: 'numeric', month: 'long', year: 'numeric'
-                  })}
+                  {activeDeadline
+                    ? new Date(activeDeadline).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })
+                    : '-'}
                 </p>
               </div>
               
@@ -245,28 +236,38 @@ export default async function PermohonanDetailPage({
                     </h4>
                     
                     <div className="grid gap-6">
-                      {driveUrls.map((url: string, index: number) => (
-                        <div key={index} className="bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[500px]">
-                          <div className="bg-white p-3 border-b border-slate-200 flex justify-between items-center">
-                            <span className="text-xs font-bold text-slate-600">Lampiran Dokumen {index + 1}</span>
-                            <a 
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[10px] font-bold bg-[#0e4891] hover:bg-[#0a366f] text-white px-3 py-1.5 rounded transition-colors inline-flex items-center gap-1"
-                            >
-                              Buka di Tab Baru <ArrowUpRight weight="bold" size={12} />
-                            </a>
+                      {driveUrls.map((url: string, index: number) => {
+                        const previewUrl = sanitizeDrivePreviewUrl(url)
+                        return (
+                          <div key={url} className="bg-slate-100 rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[500px]">
+                            <div className="bg-white p-3 border-b border-slate-200 flex justify-between items-center">
+                              <span className="text-xs font-bold text-slate-600">Lampiran Dokumen {index + 1}</span>
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] font-bold bg-[#0e4891] hover:bg-[#0a366f] text-white px-3 py-1.5 rounded transition-colors inline-flex items-center gap-1"
+                              >
+                                Buka di Tab Baru <ArrowUpRight weight="bold" size={12} />
+                              </a>
+                            </div>
+                            <div className="flex-grow relative">
+                              {previewUrl ? (
+                                <iframe
+                                  src={previewUrl}
+                                  title={`Lampiran Dokumen ${index + 1}`}
+                                  className="absolute inset-0 w-full h-full border-0"
+                                  allow="autoplay"
+                                ></iframe>
+                              ) : (
+                                <div className="flex items-center justify-center h-full text-xs text-slate-600 font-medium px-4 text-center">
+                                  Pratinjau tidak tersedia. Gunakan tombol Buka di Tab Baru.
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex-grow relative">
-                            <iframe 
-                              src={getDrivePreviewUrl(url)} 
-                              className="absolute inset-0 w-full h-full border-0"
-                              allow="autoplay"
-                            ></iframe>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}

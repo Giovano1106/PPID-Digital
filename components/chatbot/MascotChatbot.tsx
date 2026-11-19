@@ -16,6 +16,10 @@ import {
 
 gsap.registerPlugin(useGSAP)
 
+interface StoredChatMessage extends Omit<ChatMessage, 'timestamp'> {
+  timestamp: string
+}
+
 const SESSION_STORAGE_KEY = 'ppid_cikasda_chat_session_v1'
 
 interface MascotChatbotProps {
@@ -42,22 +46,29 @@ export default function MascotChatbot({
 
   // 1. Muat riwayat percakapan dari sessionStorage saat pertama kali load di klien
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(SESSION_STORAGE_KEY)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMessages(
-            parsed.map((m: any) => ({
-              ...m,
-              timestamp: new Date(m.timestamp),
-              isStreaming: false,
-            }))
-          )
+    let cancelled = false
+    Promise.resolve().then(() => {
+      if (cancelled) return
+      try {
+        const saved = sessionStorage.getItem(SESSION_STORAGE_KEY)
+        if (saved) {
+          const parsed: unknown = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(
+              (parsed as StoredChatMessage[]).map((m) => ({
+                ...m,
+                timestamp: new Date(m.timestamp),
+                isStreaming: false,
+              }))
+            )
+          }
         }
+      } catch {
+        // Abaikan jika storage disabled/private mode
       }
-    } catch {
-      // Abaikan jika storage disabled/private mode
+    })
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -312,11 +323,12 @@ export default function MascotChatbot({
             : msg
         )
       )
-    } catch (err: any) {
+    } catch (err: unknown) {
       setIsTyping(false)
+      const errMessage = err instanceof Error ? err.message : ''
       const fallbackText =
-        err?.message && err.message.includes('Terlalu banyak')
-          ? err.message
+        errMessage && errMessage.includes('Terlalu banyak')
+          ? errMessage
           : 'Mohon maaf, saat ini koneksi ke asisten sedang mengalami kendala jaringan.\n\nAnda dapat menanyakan langsung kepada petugas PPID CIKASDA via WhatsApp di 0812-4217-0628 atau email cikasda.sulteng@gmail.com pada jam kerja (Senin s/d Jumat, 08.00 - 16.00 WITA).'
 
       setMessages((prev) => [

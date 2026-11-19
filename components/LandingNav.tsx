@@ -17,9 +17,8 @@ export default function LandingNav() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
-  const supabase = createClient()
-
   useEffect(() => {
+    const supabase = createClient()
     const fetchUser = async () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser()
       setUser(currentUser)
@@ -45,6 +44,7 @@ export default function LandingNav() {
 
   const confirmLogout = async () => {
     setLoggingOut(true)
+    const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)
     setIsAdmin(false)

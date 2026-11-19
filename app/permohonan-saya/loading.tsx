@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText } from '@phosphor-icons/react/dist/ssr'
+import { FileText } from '@phosphor-icons/react/dist/ssr'
 
 export default function LoadingPermohonanSaya() {
   return (
