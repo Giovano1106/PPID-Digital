@@ -4,6 +4,46 @@ interface SendEmailOptions {
   to: string
   subject: string
   html: string
+  text?: string
+}
+
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<a[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, '$2 ($1)')
+    .replace(/<\/(p|div|tr|h1|h2|h3|h4|li)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&copy;/gi, '(c)')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function normalizeFromAddress(rawFrom: string | undefined, fallbackUser: string): string {
+  const trimmed = (rawFrom || '').trim()
+  if (!trimmed) {
+    return `"PPID Digital CIKASDA Sulteng" <${fallbackUser}>`
+  }
+  // Jika seluruh string `"Nama <email>"` terbungkus tanda kutip luar, rapikan ke format RFC `"Nama" <email>`
+  const wrappedMatch = trimmed.match(/^"([^"]+)"$/)
+  if (wrappedMatch) {
+    const inner = wrappedMatch[1]
+    const parts = inner.match(/^(.*)<([^<>]+)>$/)
+    if (parts) {
+      const displayName = parts[1].trim().replace(/"/g, '')
+      const addr = parts[2].trim()
+      return displayName ? `"${displayName}" <${addr}>` : addr
+    }
+  }
+  return trimmed
 }
 
 export function getAdminNotificationEmail(): string {
@@ -22,7 +62,7 @@ export function getAppUrl(): string {
  * Memiliki fitur graceful fallback: Jika kredensial SMTP belum diatur di .env.local,
  * sistem akan mencatat ringkasan email ke log server tanpa menyebabkan aplikasi error.
  */
-export async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<{
+export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<{
   success: boolean
   mocked?: boolean
   error?: string
@@ -33,7 +73,7 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions): Promis
     const secure = port === 465 || process.env.SMTP_SECURE === 'true'
     const user = process.env.SMTP_USER || 'sipardig2026@gmail.com'
     const pass = process.env.SMTP_PASS?.trim()
-    const from = process.env.SMTP_FROM || `"PPID Digital CIKASDA Sulteng" <${user}>`
+    const from = normalizeFromAddress(process.env.SMTP_FROM, user)
 
     // Jika sandi aplikasi (app password) belum diset, gunakan mode simulasi (mock)
     if (!pass) {
@@ -63,10 +103,14 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions): Promis
       },
     })
 
+    const plainText = text?.trim() || htmlToPlainText(html)
+
     const info = await transporter.sendMail({
       from,
+      replyTo: user,
       to: safeTo,
       subject: safeSubject,
+      text: plainText,
       html,
     })
 

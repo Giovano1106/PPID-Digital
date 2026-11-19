@@ -151,7 +151,7 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<string, EmailTemplateData> = {
     template_key: 'reset_sandi',
     nama_template: 'Pemulihan Kata Sandi (Lupa Sandi)',
     target_penerima: 'pemohon',
-    subjek: '[PPID CIKASDA] Tautan Atur Ulang Kata Sandi Akun',
+    subjek: 'Atur Ulang Kata Sandi Akun - PPID Digital CIKASDA Sulteng',
     badge_label: 'Pemulihan Keamanan Akun',
     judul_heading: 'Permintaan Atur Ulang Kata Sandi',
     pesan_pembuka:

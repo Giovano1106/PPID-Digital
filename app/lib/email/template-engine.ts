@@ -301,24 +301,6 @@ export function compileEmailHtml(
         ${ctaLabel}
       </a>
     </div>
-
-    ${
-      template.template_key === 'reset_sandi'
-        ? `
-      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-top: 20px;">
-        <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">
-          Tautan Alternatif
-        </p>
-        <p style="margin: 0 0 8px 0; font-size: 11px; color: #64748b; line-height: 1.5;">
-          Jika tombol di atas tidak dapat diklik, salin dan tempel tautan berikut ke browser Anda:
-        </p>
-        <p style="margin: 0; font-size: 11px; color: #0e4891; word-break: break-all; line-height: 1.5;">
-          ${escapeHtml(safePortalUrl)}
-        </p>
-      </div>
-    `
-        : ''
-    }
   `
 
   return {
