@@ -1,15 +1,36 @@
-import { google } from 'googleapis'
+import { google, drive_v3 } from 'googleapis'
 import { Readable } from 'stream'
+
+export type GoogleDriveAuthMethod = 'apps_script' | 'oauth2' | 'service_account' | 'none'
+
+/**
+ * Mengidentifikasi metode otorisasi Google Drive aktif dari environment variable.
+ */
+export function getGoogleDriveAuthMethod(): GoogleDriveAuthMethod {
+  if (process.env.GOOGLE_DRIVE_SCRIPT_URL?.trim()) {
+    return 'apps_script'
+  }
+  if (
+    process.env.GOOGLE_CLIENT_ID?.trim() &&
+    process.env.GOOGLE_CLIENT_SECRET?.trim() &&
+    process.env.GOOGLE_REFRESH_TOKEN?.trim()
+  ) {
+    return 'oauth2'
+  }
+  if (
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim() &&
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.trim()
+  ) {
+    return 'service_account'
+  }
+  return 'none'
+}
 
 /**
  * Memeriksa apakah kredensial Google Drive sudah disetel (mendukung Google Apps Script, OAuth2, atau Service Account).
  */
 export function isGoogleDriveConfigured(): boolean {
-  return Boolean(
-    process.env.GOOGLE_DRIVE_SCRIPT_URL ||
-    (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN) ||
-    (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY)
-  )
+  return getGoogleDriveAuthMethod() !== 'none'
 }
 
 export interface UploadDriveResult {
@@ -17,6 +38,85 @@ export interface UploadDriveResult {
   fileName: string
   webViewLink: string
   webContentLink?: string
+  folderPath?: string
+}
+
+function sanitizeDriveFolderSegment(segment: string): string {
+  const cleaned = String(segment || '')
+    .replace(/[\x00-\x1f\x7f]/g, '')
+    .replace(/[/\\:*?"<>|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80)
+
+  if (!cleaned || cleaned === '.' || cleaned === '..') {
+    return ''
+  }
+  return cleaned
+}
+
+function escapeDriveQueryLiteral(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
+
+async function ensureDriveFolderPath(
+  drive: drive_v3.Drive,
+  rootFolderId: string | undefined,
+  segments: string[]
+): Promise<{ folderId?: string; folderPath?: string }> {
+  const cleanSegments = segments
+    .map(sanitizeDriveFolderSegment)
+    .filter(Boolean)
+    .slice(0, 3)
+
+  let currentParentId = rootFolderId?.trim() || undefined
+  if (cleanSegments.length === 0) {
+    return { folderId: currentParentId, folderPath: undefined }
+  }
+
+  for (const seg of cleanSegments) {
+    const escapedName = escapeDriveQueryLiteral(seg)
+    const parentFilter = currentParentId
+      ? ` and '${escapeDriveQueryLiteral(currentParentId)}' in parents`
+      : ''
+    const query = `mimeType = 'application/vnd.google-apps.folder' and name = '${escapedName}' and trashed = false${parentFilter}`
+
+    const listRes = await drive.files.list({
+      q: query,
+      spaces: 'drive',
+      pageSize: 1,
+      fields: 'files(id, name)',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    })
+
+    const existingId = listRes.data.files?.[0]?.id
+    if (existingId) {
+      currentParentId = existingId
+      continue
+    }
+
+    const createFolderRes = await drive.files.create({
+      requestBody: {
+        name: seg,
+        mimeType: 'application/vnd.google-apps.folder',
+        ...(currentParentId ? { parents: [currentParentId] } : {}),
+      },
+      fields: 'id, name',
+      supportsAllDrives: true,
+    })
+
+    const createdId = createFolderRes.data.id
+    if (!createdId) {
+      throw new Error(`Gagal membuat subfolder Google Drive "${seg}".`)
+    }
+    currentParentId = createdId
+  }
+
+  return {
+    folderId: currentParentId,
+    folderPath: cleanSegments.join(' / '),
+  }
 }
 
 /**
@@ -31,11 +131,13 @@ export async function uploadFileToGoogleDrive({
   fileName,
   mimeType,
   folderId,
+  folderPathSegments,
 }: {
   buffer: Buffer
   fileName: string
   mimeType: string
   folderId?: string
+  folderPathSegments?: string[]
 }): Promise<UploadDriveResult> {
   const targetFolderId = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID
 
@@ -43,6 +145,10 @@ export async function uploadFileToGoogleDrive({
   if (process.env.GOOGLE_DRIVE_SCRIPT_URL) {
     const base64Data = buffer.toString('base64')
     const scriptUrl = process.env.GOOGLE_DRIVE_SCRIPT_URL.trim()
+    const cleanSegments = (folderPathSegments || [])
+      .map(sanitizeDriveFolderSegment)
+      .filter(Boolean)
+      .slice(0, 3)
 
     const res = await fetch(scriptUrl, {
       method: 'POST',
@@ -52,6 +158,7 @@ export async function uploadFileToGoogleDrive({
         mimeType: mimeType || 'application/pdf',
         base64: base64Data,
         folderId: targetFolderId ? targetFolderId.trim() : '',
+        folderPathSegments: cleanSegments,
       }),
     })
 
@@ -69,6 +176,7 @@ export async function uploadFileToGoogleDrive({
       fileId,
       fileName,
       webViewLink,
+      folderPath: typeof data.folderPath === 'string' ? data.folderPath : undefined,
     }
   }
 
@@ -88,7 +196,14 @@ export async function uploadFileToGoogleDrive({
     })
 
     const drive = google.drive({ version: 'v3', auth: oauth2Client })
-    return uploadViaDriveApi(drive, buffer, fileName, mimeType, targetFolderId)
+    return uploadViaDriveApi(
+      drive,
+      buffer,
+      fileName,
+      mimeType,
+      targetFolderId,
+      folderPathSegments
+    )
   }
 
   // METODE 3: Service Account JWT
@@ -106,7 +221,14 @@ export async function uploadFileToGoogleDrive({
     })
 
     const drive = google.drive({ version: 'v3', auth })
-    return uploadViaDriveApi(drive, buffer, fileName, mimeType, targetFolderId)
+    return uploadViaDriveApi(
+      drive,
+      buffer,
+      fileName,
+      mimeType,
+      targetFolderId,
+      folderPathSegments
+    )
   }
 
   throw new Error(
@@ -115,12 +237,19 @@ export async function uploadFileToGoogleDrive({
 }
 
 async function uploadViaDriveApi(
-  drive: any,
+  drive: drive_v3.Drive,
   buffer: Buffer,
   fileName: string,
   mimeType: string,
-  targetFolderId?: string
+  targetFolderId?: string,
+  folderPathSegments?: string[]
 ): Promise<UploadDriveResult> {
+  const { folderId: resolvedFolderId, folderPath } = await ensureDriveFolderPath(
+    drive,
+    targetFolderId,
+    folderPathSegments || []
+  )
+
   const stream = new Readable()
   stream.push(buffer)
   stream.push(null)
@@ -129,8 +258,8 @@ async function uploadViaDriveApi(
     name: fileName,
   }
 
-  if (targetFolderId && targetFolderId.trim()) {
-    requestBody.parents = [targetFolderId.trim()]
+  if (resolvedFolderId) {
+    requestBody.parents = [resolvedFolderId]
   }
 
   const createRes = await drive.files.create({
@@ -140,6 +269,7 @@ async function uploadViaDriveApi(
       body: stream,
     },
     fields: 'id, name, webViewLink, webContentLink',
+    supportsAllDrives: true,
   })
 
   const fileId = createRes.data.id
@@ -154,9 +284,11 @@ async function uploadViaDriveApi(
         role: 'reader',
         type: 'anyone',
       },
+      supportsAllDrives: true,
     })
-  } catch (permErr: any) {
-    console.warn('[Google Drive Permission Notice]:', permErr?.message)
+  } catch (permErr: unknown) {
+    const errMsg = permErr instanceof Error ? permErr.message : String(permErr)
+    console.warn('[Google Drive Permission Notice]:', errMsg)
   }
 
   const webViewLink =
@@ -168,5 +300,6 @@ async function uploadViaDriveApi(
     fileName: createRes.data.name || fileName,
     webViewLink,
     webContentLink: createRes.data.webContentLink || undefined,
+    folderPath,
   }
 }

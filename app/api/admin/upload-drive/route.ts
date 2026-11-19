@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/app/lib/supabase/server'
 import { uploadFileToGoogleDrive, isGoogleDriveConfigured } from '@/app/lib/gdrive'
 import { revalidatePath } from 'next/cache'
+import { validateUploadedDocument } from '@/app/lib/security'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,10 @@ export async function POST(req: NextRequest) {
     const kategoriKey = (formData.get('kategori_key') as string)?.trim()
     const customNamaDokumen = (formData.get('nama_dokumen') as string)?.trim()
     const rawOnly = formData.get('raw_only') === 'true' || kategoriKey === 'raw_upload'
+    const folderScope = ((formData.get('folder_scope') as string) || '').trim().toLowerCase()
+    const tableTitle = ((formData.get('table_title') as string) || '').trim()
+    const tahun = ((formData.get('tahun') as string) || '').trim()
+    const permohonanId = ((formData.get('permohonan_id') as string) || '').trim()
 
     if (!file) {
       return NextResponse.json(
@@ -65,25 +70,60 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Batasi ukuran maksimal berkas (25 MB)
-    const MAX_SIZE = 25 * 1024 * 1024
-    if (file.size > MAX_SIZE) {
+    // Validasi ukuran, ekstensi allowlist, MIME type, dan magic bytes berkas
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const validation = validateUploadedDocument(file, buffer)
+
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: 'Ukuran berkas melebihi batas maksimal 25 MB.' },
+        { error: validation.error || 'Format berkas dokumen tidak valid.' },
         { status: 400 }
       )
     }
 
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    const fileName = file.name
-    const mimeType = file.type || 'application/pdf'
+    // Tentukan struktur subfolder otomatis sesuai bagian asal unggahan
+    let folderPathSegments: string[] = []
+    if (folderScope === 'informasi' || (!folderScope && !rawOnly && kategoriKey)) {
+      let categoryLabel = kategoriKey
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+      if (kategoriKey) {
+        const { data: kontenRow } = await supabase
+          .from('konten_landing')
+          .select('judul')
+          .eq('section_key', kategoriKey)
+          .maybeSingle()
+        if (kontenRow?.judul?.trim()) {
+          categoryLabel = kontenRow.judul.trim()
+        }
+      }
+      folderPathSegments = ['Informasi Publik', categoryLabel]
+    } else if (folderScope === 'daftar_informasi') {
+      folderPathSegments = ['Daftar Informasi Publik']
+      if (tableTitle) {
+        folderPathSegments.push(tableTitle.slice(0, 70))
+      }
+      if (tahun && /^[a-zA-Z0-9\s\-]{2,20}$/.test(tahun)) {
+        folderPathSegments.push(tahun)
+      }
+    } else if (folderScope === 'jawaban_permohonan') {
+      const witaYear = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Makassar',
+        year: 'numeric',
+      }).format(new Date())
+      folderPathSegments = ['Jawaban Permohonan', witaYear]
+      if (/^\d+$/.test(permohonanId)) {
+        folderPathSegments.push(`Tiket #${permohonanId}`)
+      }
+    }
 
     // 4. Unggah ke Google Drive
     const driveResult = await uploadFileToGoogleDrive({
       buffer,
-      fileName,
-      mimeType,
+      fileName: validation.safeFileName,
+      mimeType: validation.safeMimeType,
+      folderPathSegments,
     })
 
     if (rawOnly) {
@@ -92,11 +132,12 @@ export async function POST(req: NextRequest) {
         fileUrl: driveResult.webViewLink,
         fileName: driveResult.fileName,
         fileId: driveResult.fileId,
+        folderPath: driveResult.folderPath,
       })
     }
 
     // 5. Simpan catatan ke tabel dokumen_publik
-    const namaDokumen = customNamaDokumen || fileName.replace(/\.[^/.]+$/, '')
+    const namaDokumen = customNamaDokumen || validation.safeFileName.replace(/\.[^/.]+$/, '')
 
     const { data: newDoc, error: insertErr } = await supabase
       .from('dokumen_publik')
@@ -121,11 +162,12 @@ export async function POST(req: NextRequest) {
       success: true,
       data: newDoc,
       fileUrl: driveResult.webViewLink,
+      folderPath: driveResult.folderPath,
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Upload to Drive Error]', err)
     return NextResponse.json(
-      { error: err?.message || 'Gagal mengunggah berkas ke Google Drive.' },
+      { error: 'Gagal mengunggah berkas ke Google Drive. Silakan coba kembali.' },
       { status: 500 }
     )
   }
